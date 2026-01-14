@@ -9,6 +9,21 @@
 
 class PlayerController : public Entity
 {
+    // functions
+public:
+    void Start() override;
+    void Update() override;
+    void Draw() override;
+
+    void TakDamage() override;
+    void Die() override;
+
+private:
+    void HandleMovement();
+
+    // vars
+private:
+    float _moveSpeed = 0;
 };
 
 

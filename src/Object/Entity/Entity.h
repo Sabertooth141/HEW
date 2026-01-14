@@ -14,6 +14,9 @@ public:
     void Update() override;
     void Draw() override;
 
+    virtual void TakDamage();
+    virtual void Die();
+
 protected:
     float currHp = 0;
     float maxHp = 0;

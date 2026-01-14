@@ -14,4 +14,10 @@ add_executable(HEW src/main.cpp
         src/Object/Entity/Player/PlayerController.h
         src/Object/Entity/Entity.cpp
         src/Object/Entity/Entity.h
-        src/Object/Entity/Entity.h)
+        src/Object/Entity/Entity.h
+        src/Game.cpp
+        src/Game.h
+        src/World/Tile.h
+        src/World/Tileset.cpp
+        src/World/Tileset.h
+        src/World/Tileset.h)
