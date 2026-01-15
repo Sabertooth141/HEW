@@ -3,7 +3,7 @@ project(HEW)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(HEW src/main.cpp
+add_executable(HEW
         src/conioex.h
         src/conioex.cpp
         src/Object/Object.cpp
@@ -20,4 +20,9 @@ add_executable(HEW src/main.cpp
         src/World/Tile.h
         src/World/Tileset.cpp
         src/World/Tileset.h
-        src/World/Tileset.h)
+        src/World/Tileset.h
+        src/World/Camera.cpp
+        src/World/Camera.h
+        src/World/Camera.h
+        src/World/Scene.cpp
+        src/World/Scene.h)

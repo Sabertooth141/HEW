@@ -15,21 +15,31 @@ struct TileDef
     uint16_t flags;
 };
 
-enum TileFlags
+struct TileMap
 {
+    int width;
+    int height;
 
+    std::vector<uint16_t> tiles;
 };
 
+enum TileFlags : uint16_t
+{
+    TF_NONE = 0,
+    TF_SOLID = 1 << 0,
+    TF_WALL = 2 << 0
+};
 
 class Tileset
 {
     // functions
 public:
     // loads sprite
-    bool Load(const char* dir);
-    [[nodiscard]] const TileDef& GetTileDef(uint16_t id) const;
+    bool Load(const char* dir, TileFlags flag);
 
-    [[nodiscard]] bool IsSolid(uint16_t id) const;
+    TileDef GetTileDef(uint16_t id) const;
+
+    bool IsSolid(uint16_t id) const;
 
     // vars
 private:

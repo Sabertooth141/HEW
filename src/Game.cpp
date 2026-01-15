@@ -3,3 +3,35 @@
 //
 
 #include "Game.h"
+
+#include "World/Tileset.h"
+
+void Game::Initialize()
+{
+    InitConioEx(VIEW_WIDTH, VIEW_HEIGHT, FONT_WIDTH, FONT_HEIGHT, true);
+}
+
+void Game::Start()
+{
+
+}
+
+void Game::Update()
+{
+
+}
+
+void Game::ShutDown()
+{
+
+}
+
+void Game::Draw()
+{
+
+}
+
+int main()
+{
+
+}
