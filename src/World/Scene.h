@@ -18,7 +18,7 @@ class Scene
 {
     // functions
 public:
-    Scene();
+    Scene() = default;
     void Load();
     void Update();
     void Draw(const Camera& cam);

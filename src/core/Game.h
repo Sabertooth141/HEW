@@ -9,14 +9,15 @@
 #define VIEW_HEIGHT 600
 #define FONT_WIDTH 1
 #define FONT_HEIGHT 1
-#include "World/Camera.h"
-#include "World/Scene.h"
+#include "../World/Camera.h"
+#include "../World/Scene.h"
 
 class Game
 {
     // functions
 public:
-    void Initialize();
+    Game();
+    bool Initialize();
     void Start();
     void Update();
     void Draw();

@@ -9,14 +9,42 @@
 class Camera
 {
 public:
-    Camera(int inX, int inY, int inWidth, int inHeight);
+    Camera();
+
+    void Initialize(float startX, float startY, int viewWidth, int viewHeight);
+
+    void SetPosition(float inX, float inY);
+    void Move(float dx, float dy);
+    void FollowTarget(float targetX, float targetY, float smoothing = 0.1f);
+
+    void SetBounds(float inMinX, float inMinY, float inMaxX, float inMaxY);
+    void ClearBounds();
+    void ClampToBounds();
+
+    [[nodiscard]] float GetLeft() const;
+    [[nodiscard]] float GetRight() const;
+    [[nodiscard]] float GetTop() const;
+    [[nodiscard]] float GetBottom() const;
+
+    [[nodiscard]] float GetX() const { return x; }
+    [[nodiscard]] float GetY() const { return y; }
+    [[nodiscard]] int GetViewWidth() const { return viewW; }
+    [[nodiscard]] int GetViewHeight() const { return viewH; }
+
+    [[nodiscard]] int WorldToScreenX(float worldX) const;
+    [[nodiscard]] int WorldToScreenY(float worldY) const;
+    [[nodiscard]] float ScreenToWorldX(int screenX) const;
+    [[nodiscard]] float ScreenToWorldY(int screenY) const;
+
+    [[nodiscard]] bool IsVisible(float worldX, float worldY, int width, int height) const;
 
 private:
-    int x = 0;
-    int y = 0;
+    float x, y;
 
-    int viewW = 0;
-    int viewH = 0;
+    int viewW, viewH;
+
+    bool hasBounds;
+    float minX, minY, maxX, maxY;
 };
 
 
