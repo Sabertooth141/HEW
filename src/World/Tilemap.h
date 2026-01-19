@@ -34,7 +34,7 @@ public:
     [[nodiscard]] bool IsPlatformAt(int x, int y) const;
 
     // RENDERING
-    void Draw(const Camera& cam);
+    void Draw(const Camera& cam) const;
 
     // MAP LOADING
     bool LoadFromArr(const unsigned char* data, int width, int height);

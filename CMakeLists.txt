@@ -6,9 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(HEW
         src/lib/conioex.h
         src/lib/conioex.cpp
-        src/Object/Object.cpp
-        src/Object/Object.h
-        src/Object/Object.h
         src/Object/Entity/Player/PlayerController.cpp
         src/Object/Entity/Player/PlayerController.h
         src/Object/Entity/Player/PlayerController.h
@@ -21,7 +18,7 @@ add_executable(HEW
         src/World/Camera.cpp
         src/World/Camera.h
         src/World/Camera.h
-        src/World/Scene.cpp
-        src/World/Scene.h
         src/World/Tilemap.cpp
-        src/World/Tilemap.h)
+        src/World/Tilemap.h
+        src/Object/Object.cpp
+        src/Object/Object.h)

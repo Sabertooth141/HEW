@@ -4,6 +4,8 @@
 
 #include "Tilemap.h"
 
+#include "Camera.h"
+
 Tilemap::Tilemap() : tiles(nullptr), widthTiles(0), heightTiles(0), tileSize(16)
 {
 }
@@ -132,13 +134,74 @@ bool Tilemap::IsPlatformAt(const int x, const int y) const
     return tiles[GetIndex(x, y)].IsPlatform();
 }
 
-void Tilemap::Draw(const Camera& cam)
+void Tilemap::Draw(const Camera& cam) const
 {
     if (tiles == nullptr)
     {
         return;
     }
 
+    float camLeft = cam.GetLeft();
+    float camTop = cam.GetTop();
+    float camRight = cam.GetRight();
+    float camBottom = cam.GetBottom();
+
+    int startDrawX = WorldToTileX(camLeft) - 1;
+    int startDrawY = WorldToTileY(camTop) - 1;
+    int endDrawX = WorldToTileX(camRight) + 1;
+    int endDrawY = WorldToTileY(camBottom) + 1;
+
+    if (startDrawX < 0)
+    {
+        startDrawX = 0;
+    }
+    if (startDrawY < 0)
+    {
+        startDrawY = 0;
+    }
+
+    if (endDrawX >= widthTiles)
+    {
+        endDrawX = widthTiles - 1;
+    }
+    if (endDrawY >= heightTiles)
+    {
+        endDrawY = heightTiles - 1;
+    }
+
+    for (int tileY = startDrawY; tileY <= endDrawY; tileY++)
+    {
+        for (int tileX = startDrawX; tileX <= endDrawX; tileX++)
+        {
+            Tile tile = GetTile(tileX, tileY);
+            if (tile.flag == TileFlag::AIR)
+            {
+                continue;
+            }
+
+            float worldX = TileToWorldX(tileX);
+            float worldY = TileToWorldY(tileY);
+
+            int screenX = static_cast<int>(worldX - camLeft);
+            int screenY = static_cast<int>(worldY - camTop);
+
+            COLORS color = tile.GetColor();
+
+            for (int py = 0; py < heightTiles; py++)
+            {
+                for (int px = 0; px < widthTiles; px++)
+                {
+                    int drawX = screenX + px;
+                    int drawY = screenY + py;
+
+                    if (drawX >= 0 && drawX < cam.GetViewWidth() && drawY >= 0 && drawY < cam.GetViewHeight())
+                    {
+                        DrawPixel(drawX, drawY, color);
+                    }
+                }
+            }
+        }
+    }
 
 }
 

@@ -4,18 +4,15 @@
 
 #include "PlayerController.h"
 
-void PlayerController::Start()
+void PlayerController::Start(float x, float y)
 {
-    transform.x = 0;
-    transform.y = 0;
 }
 
-void PlayerController::Update()
+void PlayerController::Update(float deltaTime, const Tilemap& tileMap)
 {
-    HandleMovement();
 }
 
-void PlayerController::Draw()
+void PlayerController::Draw(const Camera& cam)
 {
 
 }

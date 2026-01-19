@@ -5,16 +5,21 @@
 #ifndef HEW_PLAYERCONTROLLER_H
 #define HEW_PLAYERCONTROLLER_H
 #include "../Entity.h"
+#include "../../../World/Camera.h"
+#include "../../../World/Tilemap.h"
 
+
+class Camera;
 
 class PlayerController : public Entity
 {
     // functions
 public:
-    void Start() override;
-    void Update() override;
-    void Draw() override;
+    PlayerController();
 
+    void Start(float x, float y);
+    void Update(float deltaTime, const Tilemap& tileMap) override;
+    void Draw(const Camera& cam) override;
     void TakDamage() override;
     void Die() override;
 
@@ -23,7 +28,7 @@ private:
 
     // vars
 private:
-    float _moveSpeed = 0;
+    float moveSpeed = 0;
 };
 
 

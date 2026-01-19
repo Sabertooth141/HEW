@@ -9,8 +9,10 @@
 #define VIEW_HEIGHT 600
 #define FONT_WIDTH 1
 #define FONT_HEIGHT 1
+#define TILE_SIZE 16
+#include "../Object/Entity/Player/PlayerController.h"
 #include "../World/Camera.h"
-#include "../World/Scene.h"
+#include "../World/Tilemap.h"
 
 class Game
 {
@@ -19,16 +21,25 @@ public:
     Game();
     bool Initialize();
     void Start();
-    void Update();
-    void Draw();
     void ShutDown();
+
+private:
+    void Update(float deltaTime);
+    void Draw();
+
+    void HandleGlobalInput();
+
+    // FOR TESTING ONLY
+    void LoadTestLevel();
 
     // vars
 private:
     bool isGameRunning = false;
 
     Camera cam;
-    Scene scene;
+    Tilemap tileMap;
+    PlayerController playerController;
+    DWORD lastFrameTime;
 };
 
 
