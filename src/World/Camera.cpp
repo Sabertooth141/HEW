@@ -137,7 +137,7 @@ float Camera::ScreenToWorldY(const int screenY) const
     return static_cast<float>(screenY) + GetTop();
 }
 
-bool Camera::IsVisible(const float worldX, const float worldY, const int width, const int height) const
+bool Camera::IsVisible(const float worldX, const float worldY, const float width, const float height) const
 {
     return !(worldX + static_cast<float>(width) < GetLeft() ||
         worldX > GetRight() ||

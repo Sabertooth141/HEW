@@ -9,26 +9,28 @@
 #include "../../../World/Tilemap.h"
 
 
+struct PlayerConfig : EntityConfig
+{
+    float sprintSpeed;
+};
+
 class Camera;
 
 class PlayerController : public Entity
 {
     // functions
 public:
-    PlayerController();
+    explicit PlayerController(const PlayerConfig& config);
 
-    void Start(float x, float y);
+    void Start(float x, float y) override;
     void Update(float deltaTime, const Tilemap& tileMap) override;
     void Draw(const Camera& cam) override;
-    void TakDamage() override;
     void Die() override;
 
-private:
-    void HandleMovement();
 
     // vars
 private:
-    float moveSpeed = 0;
+    float sprintSpeed;
 };
 
 

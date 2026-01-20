@@ -5,6 +5,7 @@
 #include "Tilemap.h"
 
 #include "Camera.h"
+#include "../lib/Shape.h"
 
 Tilemap::Tilemap() : tiles(nullptr), widthTiles(0), heightTiles(0), tileSize(16)
 {
@@ -104,7 +105,7 @@ float Tilemap::TileToWorldY(const int tileY) const
     return static_cast<float>(tileY * tileSize);
 }
 
-bool Tilemap::IsSolidAt(const int x, const int y) const
+bool Tilemap::IsSolidAt(const float x, const float y) const
 {
     if (!IsValidTile(x, y))
     {
@@ -119,7 +120,7 @@ bool Tilemap::IsSolidAt(const int x, const int y) const
     return tiles[GetIndex(x, y)].IsSolid();
 }
 
-bool Tilemap::IsPlatformAt(const int x, const int y) const
+bool Tilemap::IsPlatformAt(const float x, const float y) const
 {
     if (!IsValidTile(x, y))
     {
@@ -187,19 +188,7 @@ void Tilemap::Draw(const Camera& cam) const
 
             COLORS color = tile.GetColor();
 
-            for (int py = 0; py < heightTiles; py++)
-            {
-                for (int px = 0; px < widthTiles; px++)
-                {
-                    int drawX = screenX + px;
-                    int drawY = screenY + py;
-
-                    if (drawX >= 0 && drawX < cam.GetViewWidth() && drawY >= 0 && drawY < cam.GetViewHeight())
-                    {
-                        DrawPixel(drawX, drawY, color);
-                    }
-                }
-            }
+            DrawRect(screenX, screenY, screenX + widthTiles, screenY + heightTiles, color);
         }
     }
 

@@ -30,8 +30,8 @@ public:
     [[nodiscard]] float TileToWorldY(int tileY) const;
 
     // COLLISION
-    [[nodiscard]] bool IsSolidAt(int x, int y) const;
-    [[nodiscard]] bool IsPlatformAt(int x, int y) const;
+    [[nodiscard]] bool IsSolidAt(float x, float y) const;
+    [[nodiscard]] bool IsPlatformAt(float x, float y) const;
 
     // RENDERING
     void Draw(const Camera& cam) const;

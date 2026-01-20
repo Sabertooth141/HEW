@@ -36,7 +36,7 @@ public:
     [[nodiscard]] float ScreenToWorldX(int screenX) const;
     [[nodiscard]] float ScreenToWorldY(int screenY) const;
 
-    [[nodiscard]] bool IsVisible(float worldX, float worldY, int width, int height) const;
+    [[nodiscard]] bool IsVisible(float worldX, float worldY, float width, float height) const;
 
 private:
     float x, y;

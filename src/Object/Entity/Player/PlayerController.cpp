@@ -4,6 +4,11 @@
 
 #include "PlayerController.h"
 
+PlayerController::PlayerController(const PlayerConfig& config) : Entity(config),
+                                                                 sprintSpeed(config.sprintSpeed)
+{
+}
+
 void PlayerController::Start(float x, float y)
 {
 }
@@ -14,21 +19,12 @@ void PlayerController::Update(float deltaTime, const Tilemap& tileMap)
 
 void PlayerController::Draw(const Camera& cam)
 {
-
 }
 
 void PlayerController::HandleMovement()
 {
-
-}
-
-void PlayerController::TakDamage()
-{
-
 }
 
 void PlayerController::Die()
 {
-
 }
-
