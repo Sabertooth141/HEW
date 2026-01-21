@@ -6,19 +6,25 @@
 
 class Camera;
 
-Entity::Entity(const EntityConfig& config) : Object(config),
-                                             velX(config.velX), velY(config.velY),
-                                             gravity(config.gravity),
-                                             maxFallSpeed(config.maxFallSpeed),
-                                             currHp(config.currHp), maxHp(config.maxHp), isFacingRight(config.isFacingRight),
-                                             moveSpeed(config.moveSpeed)
+Entity::Entity()
+= default;
 
+void Entity::Initialize(const EntityConfig& config)
 {
+    Object::Initialize(config);
+
+    velX = config.velX;
+    velY = config.velY;
+    gravity = config.gravity;
+    maxFallSpeed = config.maxFallSpeed;
+    currHp = config.currHp;
+    maxHp = config.maxHp;
+    isFacingRight = config.isFacingRight;
 }
 
-void Entity::Start(const float x, const float y)
+void Entity::Start()
 {
-    Object::Start(x, y);
+    Object::Start();
 }
 
 void Entity::Update(const float deltaTime, const Tilemap& tileMap)
@@ -26,6 +32,8 @@ void Entity::Update(const float deltaTime, const Tilemap& tileMap)
     Object::Update(deltaTime, tileMap);
     ApplyPhysics(deltaTime);
     isGrounded = CheckGrounded(tileMap);
+
+    HandleMovement(deltaTime, tileMap);
 }
 
 void Entity::Draw(const Camera& cam)
@@ -33,8 +41,37 @@ void Entity::Draw(const Camera& cam)
     Object::Draw(cam);
 }
 
-void Entity::HandleMovement()
+void Entity::HandleMovement(const float deltaTime, const Tilemap& tileMap)
 {
+    float newX = x + velX * deltaTime;
+
+    if (!CheckCollisionX(tileMap, newX))
+    {
+        x = newX;
+    }
+    else
+    {
+        velX = 0;
+    }
+
+    float newY = y + velY * deltaTime;
+
+    if (!CheckCollisionY(tileMap, newY))
+    {
+        y = newY;
+    }
+    else
+    {
+        if (velY > 0)
+        {
+            const int tileY = tileMap.WorldToTileY(newY + height);
+            y = tileMap.TileToWorldY(tileY) - height;
+            isGrounded = true;
+        }
+        velY = 0;
+    }
+
+    isGrounded = CheckGrounded(tileMap);
 }
 
 void Entity::TakDamage(const float inDamage)

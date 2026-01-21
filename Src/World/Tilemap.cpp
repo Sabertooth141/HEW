@@ -5,7 +5,7 @@
 #include "Tilemap.h"
 
 #include "Camera.h"
-#include "../lib/Shape.h"
+#include "../Lib/Shape.h"
 
 Tilemap::Tilemap() : tiles(nullptr), widthTiles(0), heightTiles(0), tileSize(16)
 {
@@ -16,16 +16,16 @@ Tilemap::~Tilemap()
     Shutdown();
 }
 
-bool Tilemap::Initialize(const int width, const int height, const int tileSize)
+bool Tilemap::Initialize(const int width, const int height, const int inTileSize)
 {
-    if (widthTiles <= 0 || heightTiles <= 0 || tileSize <= 0)
+    if (width <= 0 || height <= 0 || inTileSize <= 0)
     {
         return false;
     }
 
     this->widthTiles = width;
     this->heightTiles = height;
-    this->tileSize = tileSize;
+    this->tileSize = inTileSize;
 
     const int totalTiles = this->widthTiles * this->heightTiles;
     this->tiles = new Tile[totalTiles];
@@ -107,7 +107,10 @@ float Tilemap::TileToWorldY(const int tileY) const
 
 bool Tilemap::IsSolidAt(const float x, const float y) const
 {
-    if (!IsValidTile(x, y))
+    const int tileX = WorldToTileX(x);
+    const int tileY = WorldToTileY(y);
+
+    if (!IsValidTile(tileX, tileY))
     {
         return false;
     }
@@ -117,12 +120,15 @@ bool Tilemap::IsSolidAt(const float x, const float y) const
         return false;
     }
 
-    return tiles[GetIndex(x, y)].IsSolid();
+    return tiles[GetIndex(tileX, tileY)].IsSolid();
 }
 
 bool Tilemap::IsPlatformAt(const float x, const float y) const
 {
-    if (!IsValidTile(x, y))
+    const int tileX = WorldToTileX(x);
+    const int tileY = WorldToTileY(y);
+
+    if (!IsValidTile(tileX, tileY))
     {
         return false;
     }
@@ -132,7 +138,7 @@ bool Tilemap::IsPlatformAt(const float x, const float y) const
         return false;
     }
 
-    return tiles[GetIndex(x, y)].IsPlatform();
+    return tiles[GetIndex(tileX, tileY)].IsPlatform();
 }
 
 void Tilemap::Draw(const Camera& cam) const
@@ -188,7 +194,7 @@ void Tilemap::Draw(const Camera& cam) const
 
             COLORS color = tile.GetColor();
 
-            DrawRect(screenX, screenY, screenX + widthTiles, screenY + heightTiles, color);
+            DrawRect(screenX, screenY, screenX + tileSize - 1, screenY + tileSize - 1, color);
         }
     }
 

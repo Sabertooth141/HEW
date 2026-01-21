@@ -4,16 +4,24 @@
 
 #include "Object.h"
 
-#include "../lib/Shape.h"
+#include "../Lib/Shape.h"
 
-Object::Object(const ObjectConfig& config) : x(config.x), y(config.y), width(config.width), height(config.y), color(config.color)
+
+Object::Object() : x(0), y(0), width(0), height(0), color()
 {
 }
 
-void Object::Start(const float inX, const float inY)
+void Object::Initialize(const ObjectConfig& config)
 {
-    x = inX;
-    y = inY;
+    x = config.x;
+    y = config.y;
+    width = config.width;
+    height = config.height;
+    color = config.color;
+}
+
+void Object::Start()
+{
 }
 
 void Object::Update(float deltaTime, const Tilemap& tileMap)
@@ -30,8 +38,8 @@ void Object::Draw(const Camera& cam)
     const int screenX = cam.WorldToScreenX(x);
     const int screenY = cam.WorldToScreenY(y);
 
-    DrawRect(static_cast<int>(x), static_cast<int>(y),
-             static_cast<int>(x + width), static_cast<int>(y + height),
+    DrawRect(screenX, screenY,
+             screenX + width, screenY + height,
              color, true);
 }
 

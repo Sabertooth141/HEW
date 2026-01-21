@@ -5,7 +5,7 @@
 #ifndef HEW_OBJECT_H
 #define HEW_OBJECT_H
 
-#include "../lib/conioex.h"
+#include "../Lib/conioex.h"
 #include "../World/Camera.h"
 
 struct ObjectConfig {
@@ -19,17 +19,18 @@ class Tilemap;
 class Object
 {
 public:
-    explicit Object(const ObjectConfig& config);
+    Object();
     virtual ~Object() = default;
 
-    virtual void Start(float inX, float inY);
+    virtual void Initialize(const ObjectConfig& config);
+    virtual void Start();
     virtual void Update(float deltaTime, const Tilemap& tileMap);
     virtual void Draw(const Camera& cam);
 
     virtual float GetX() { return x;}
     virtual float GetY() { return y;}
     virtual float GetCenterX() {return x + width / 2; }
-    virtual float GetCenterY() {return x + height / 2; }
+    virtual float GetCenterY() {return y + height / 2; }
     virtual void SetPosition(float inX, float inY);
 
     virtual float GetWidth() { return width; }

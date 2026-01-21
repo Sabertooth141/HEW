@@ -16,7 +16,6 @@ struct EntityConfig : ObjectConfig
     float maxFallSpeed;
     float currHp;
     float maxHp;
-    float moveSpeed;
     bool isFacingRight;
 };
 
@@ -26,13 +25,14 @@ class Tilemap;
 class Entity : public Object
 {
 public:
-    explicit Entity(const EntityConfig& config);
+    Entity();
 
-    void Start(float x, float y) override;
+    void Initialize(const EntityConfig& config);
+    void Start() override;
     void Update(float deltaTime, const Tilemap& tileMap) override;
     void Draw(const Camera& cam) override;
 
-    virtual void HandleMovement();
+    virtual void HandleMovement(float deltaTime, const Tilemap& tileMap);
 
     virtual void TakDamage(float inDamage);
     virtual void Die();
@@ -48,19 +48,19 @@ protected:
     virtual bool CheckGrounded(const Tilemap& tilemap);
 
 protected:
-    float velX;
-    float velY;
+    float velX{};
+    float velY{};
 
-    float gravity;
-    float maxFallSpeed;
+    float gravity{};
+    float maxFallSpeed{};
 
-    float currHp;
-    float maxHp;
+    float currHp{};
+    float maxHp{};
 
     bool isGrounded = false;
-    bool isFacingRight;
+    bool isFacingRight{};
 
-    float moveSpeed;
+    float currSpeed{};
 };
 
 

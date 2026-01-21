@@ -5,7 +5,7 @@
 #ifndef HEW_TILE_H
 #define HEW_TILE_H
 #include <cstdint>
-#include "../lib/conioex.h"
+#include "../Lib/conioex.h"
 
 enum class TileFlag : unsigned char
 {

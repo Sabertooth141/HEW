@@ -5,14 +5,24 @@
 #ifndef HEW_GAME_H
 #define HEW_GAME_H
 
-#define VIEW_WIDTH 800
-#define VIEW_HEIGHT 600
-#define FONT_WIDTH 1
-#define FONT_HEIGHT 1
+#define VIEW_WIDTH 400
+#define VIEW_HEIGHT 300
+#define FONT_WIDTH 2
+#define FONT_HEIGHT 2
 #define TILE_SIZE 16
+
+#define TARGET_FPS 60
+#define FRAME_TIME (1.0f / TARGET_FPS)
+
 #include "../Object/Entity/Player/PlayerController.h"
+#include "../VFX/VFXManager.h"
 #include "../World/Camera.h"
 #include "../World/Tilemap.h"
+
+struct GlobalInputConfig
+{
+    KeyBinding quitGame = {PK_ESC};
+};
 
 class Game
 {
@@ -39,7 +49,14 @@ private:
     Camera cam;
     Tilemap tileMap;
     PlayerController playerController;
-    DWORD lastFrameTime;
+    VFXManager vfx;
+
+    DWORD lastFrameTime = 0;
+
+    PlayerConfig playerConfig{};
+    VFXConfig vfxConfig{};
+
+    GlobalInputConfig globalInputConfig;
 };
 
 

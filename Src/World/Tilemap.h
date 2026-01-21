@@ -15,7 +15,7 @@ public:
     ~Tilemap();
 
     // GAME LOOP
-    bool Initialize(int width, int height, int tileSize);
+    bool Initialize(int width, int height, int inTileSize);
     void Shutdown();
 
     // TILE ACCESS

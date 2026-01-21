@@ -23,4 +23,12 @@ add_executable(HEW
         src/Object/Object.cpp
         src/Object/Object.h
         src/lib/Shape.h
-        src/lib/Shape.cpp)
+        src/lib/Shape.cpp
+        src/Config/EntityConfigs.h
+        src/Config/EntityConfigs.h
+        src/Systems/TimeManager.cpp
+        src/Systems/TimeManager.h
+        src/Systems/TimeManager.h
+        src/Config/SystemConfigs.h
+        Src/VFX/VFXManager.cpp
+        Src/VFX/VFXManager.h)
