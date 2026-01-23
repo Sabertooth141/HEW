@@ -4,10 +4,18 @@
 
 #include "TimeManager.h"
 
+#include "../Core/Game.h"
+
 TimeManager::TimeManager()
+= default;
+
+void TimeManager::Initialize(const TimeManagerConfig& config)
 {
-    timeStopDuration = 0;
-    timeStopCooldownMax = 0;
+    timeStopCooldownMax = config.timeStopCooldownMax;
+
+    rewindCooldownMax = config.rewindCooldownMax;
+    rewindMagnitude = config.rewindMagnitude;
+    rewindBuffer.resize(static_cast<int>(rewindMagnitude * TARGET_FPS));
 }
 
 void TimeManager::ActivateTimeStop(const float duration)
@@ -43,9 +51,57 @@ void TimeManager::Update(const float deltaTime)
             DeactivateTimeStop();
         }
     }
+
+    if (rewindCooldownTimer > 0)
+    {
+        rewindCooldownTimer -= deltaTime;
+    }
 }
 
 float TimeManager::GetWorldDeltaTime(const float realDeltaTime) const
 {
     return isTimeStopped ? 0 : realDeltaTime;
+}
+
+void TimeManager::RecordPlayerSnapshot(const PlayerSnapshot& snapshot)
+{
+    rewindBuffer[rewindIndex] = snapshot;
+    rewindIndex = (rewindIndex + 1) % static_cast<int>(rewindBuffer.size());
+
+    if (snapshotsCnt < rewindBuffer.size())
+    {
+        snapshotsCnt += 1;
+    }
+}
+
+// THIS VERSION CHECKS IF TIME REWIND IS STILL IN COOLDOWN
+bool TimeManager::GetPlayerSnapshot(PlayerSnapshot& outputSnapshot)
+{
+    if (snapshotsCnt == 0)
+    {
+        return false;
+    }
+
+    if (rewindCooldownTimer > 0)
+    {
+        return false;
+    }
+
+    rewindCooldownTimer = rewindCooldownMax;
+    const int oldestIndex = snapshotsCnt < rewindBuffer.size() ? 0 : rewindIndex;
+    outputSnapshot = rewindBuffer[oldestIndex];
+
+    return true;
+}
+
+// THIS VERSION RETURNS SNAPSHOT NO MATTER THE COOLDOWN
+PlayerSnapshot TimeManager::GetPlayerSnapshot() const
+{
+    if (snapshotsCnt == 0)
+    {
+        return{};
+    }
+
+    const int oldestIndex = snapshotsCnt < rewindBuffer.size() ? 0 : rewindIndex;
+    return rewindBuffer[oldestIndex];
 }

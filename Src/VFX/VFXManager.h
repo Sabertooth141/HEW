@@ -8,8 +8,8 @@
 
 struct VFXConfig
 {
-    COLORREF normalPal;
-    COLORREF grayscale;
+    COLORREF normalPal[16];
+    COLORREF grayscale[16];
 };
 
 class VFXManager
@@ -19,12 +19,12 @@ public:
 
     void Initialize(const VFXConfig& config);
 
-    void ApplyGrayscale();
-    void ApplyNormalPal();
+    void ApplyGrayscale() const;
+    void ApplyNormalPal() const;
 
 private:
-    COLORREF grayscalePal{};
-    COLORREF normalPal{};
+    COLORREF grayscalePal[16]{};
+    COLORREF normalPal[16]{};
     bool paletteSaved = false;
 };
 

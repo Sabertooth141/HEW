@@ -31,7 +31,9 @@ struct InputConfig
     KeyBinding moveLeft = {PK_LEFT, PK_A};
     KeyBinding moveRight = {PK_RIGHT, PK_D};
     KeyBinding jump = {PK_SP, PK_W};
+
     KeyBinding timeStop = {PK_J};
+    KeyBinding timeRewind = {PK_K};
 };
 
 struct PlayerConfig : EntityConfig
@@ -40,6 +42,13 @@ struct PlayerConfig : EntityConfig
     float sprintSpeed;
     float jumpForce;
     float timeStopDuration;
+};
+
+struct PlayerSnapshot
+{
+    float x, y;
+    float velX, velY;
+    bool isFacingRight;
 };
 
 class Camera;
@@ -57,6 +66,7 @@ public:
     void Die() override;
 private:
     void HandleInput();
+    void HandleTimeRewind();
 
     // vars
 private:
@@ -66,6 +76,7 @@ private:
     float timeStopDuration;
 
     InputConfig input;
+    PlayerSnapshot snapshot;
 };
 
 

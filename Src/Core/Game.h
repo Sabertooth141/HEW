@@ -46,15 +46,13 @@ private:
 private:
     bool isGameRunning = false;
 
-    Camera cam;
-    Tilemap tileMap;
-    PlayerController playerController;
-    VFXManager vfx;
+    Camera cam{};
+    Tilemap tileMap{};
+    PlayerController playerController{};
+
+    VFXManager vfxManager{};
 
     DWORD lastFrameTime = 0;
-
-    PlayerConfig playerConfig{};
-    VFXConfig vfxConfig{};
 
     GlobalInputConfig globalInputConfig;
 };

@@ -6,16 +6,16 @@
 
 void VFXManager::Initialize(const VFXConfig& config)
 {
-    grayscalePal = config.grayscale;
-    normalPal = config.normalPal;
+    memcpy(normalPal, config.normalPal, sizeof(normalPal));
+    memcpy(grayscalePal, config.grayscale, sizeof(grayscalePal));
 }
 
-void VFXManager::ApplyGrayscale()
+void VFXManager::ApplyGrayscale() const
 {
-    SetPalette16(&grayscalePal);
+    SetPalette16(grayscalePal);
 }
 
-void VFXManager::ApplyNormalPal()
+void VFXManager::ApplyNormalPal() const
 {
-    SetPalette16(&normalPal);
+    SetPalette16(normalPal);
 }

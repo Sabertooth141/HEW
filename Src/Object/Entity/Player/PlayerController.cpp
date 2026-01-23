@@ -4,9 +4,10 @@
 
 #include "PlayerController.h"
 
+#include "../../../Lib/Shape.h"
 #include "../../../Systems/TimeManager.h"
 
-PlayerController::PlayerController() : walkSpeed(0), sprintSpeed(0), jumpForce(0), timeStopDuration(0)
+PlayerController::PlayerController() : walkSpeed(0), sprintSpeed(0), jumpForce(0), timeStopDuration(0), snapshot()
 {
 }
 
@@ -33,12 +34,23 @@ void PlayerController::Update(const float deltaTime, const Tilemap& tileMap)
 
     Entity::Update(deltaTime, tileMap);
 
+    snapshot.x = x;
+    snapshot.y = y;
+    snapshot.velX = velX;
+    snapshot.velY = velY;
+    snapshot.isFacingRight = isFacingRight;
 
+    TimeManager::Instance().RecordPlayerSnapshot(snapshot);
 }
 
 void PlayerController::Draw(const Camera& cam)
 {
     Entity::Draw(cam);
+
+    const PlayerSnapshot holoSnapshot = TimeManager::Instance().GetPlayerSnapshot();
+    const int screenX = cam.WorldToScreenX(holoSnapshot.x);
+    const int screenY = cam.WorldToScreenY(holoSnapshot.y);
+    DrawRect(screenX, screenY, screenX + width, screenY + height, RED, false);
 }
 
 void PlayerController::Die()
@@ -77,6 +89,26 @@ void PlayerController::HandleInput()
             TimeManager::Instance().ActivateTimeStop(timeStopDuration);
         }
     }
+
+    if (input.timeRewind.IsEdge())
+    {
+        HandleTimeRewind();
+    }
+}
+
+void PlayerController::HandleTimeRewind()
+{
+    PlayerSnapshot playerSnapshot{};
+    if (!TimeManager::Instance().GetPlayerSnapshot(playerSnapshot) )
+    {
+        return;
+    }
+
+    x = playerSnapshot.x;
+    y = playerSnapshot.y;
+    velX = playerSnapshot.velX;
+    velY = playerSnapshot.velY;
+    isFacingRight = playerSnapshot.isFacingRight;
 }
 
 

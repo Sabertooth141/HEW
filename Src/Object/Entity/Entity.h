@@ -32,8 +32,6 @@ public:
     void Update(float deltaTime, const Tilemap& tileMap) override;
     void Draw(const Camera& cam) override;
 
-    virtual void HandleMovement(float deltaTime, const Tilemap& tileMap);
-
     virtual void TakDamage(float inDamage);
     virtual void Die();
 
@@ -41,6 +39,7 @@ public:
     virtual bool IsFacingRight() { return isFacingRight; }
 
 protected:
+    virtual void HandleMovement(float deltaTime, const Tilemap& tileMap);
     virtual void ApplyPhysics(float deltaTime);
 
     virtual bool CheckCollisionX(const Tilemap& tilemap, float newX);

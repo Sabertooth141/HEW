@@ -72,16 +72,21 @@ bool Game::Initialize()
 
     constexpr float startX = 5 * TILE_SIZE;
     constexpr float startY = (TEST_MAP_HEIGHT - 6) * TILE_SIZE;
-    // playerController
 
+    // playerController
     PlayerConfig playerCfg = config::Player();
     playerCfg.x = startX;
     playerCfg.y = startY;
     playerController.Initialize(playerCfg);
 
-    const VFXConfig vfxCfg = sysCfg::VFX();
-    vfx.Initialize(vfxCfg);
+    // subsystems
+    const VFXConfig vfxCfg = sysCfg::VFXCfg();
+    vfxManager.Initialize(vfxCfg);
 
+    const TimeManagerConfig timeManagerCfg = sysCfg::TimeCfg();
+    TimeManager::Instance().Initialize(timeManagerCfg);
+
+    // camera
     cam.SetBounds(0, 0, tileMap.GetWidthPixels(), tileMap.GetHeightPixels());
     cam.SetPosition(playerController.GetCenterX(), playerController.GetCenterY());
 
@@ -138,15 +143,14 @@ void Game::ShutDown()
 
 void Game::Draw()
 {
-    // TODO: NEED TO FIX THIS
-    // if (TimeManager::Instance().IsTimeStopped())
-    // {
-    //     vfx.ApplyGrayscale();
-    // }
-    // else
-    // {
-    //     vfx.ApplyNormalPal();
-    // }
+    if (TimeManager::Instance().IsTimeStopped())
+    {
+        vfxManager.ApplyGrayscale();
+    }
+    else
+    {
+        vfxManager.ApplyNormalPal();
+    }
 
     ClearFrameBuffer();
     tileMap.Draw(cam);

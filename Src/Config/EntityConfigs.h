@@ -28,7 +28,7 @@ namespace config
         config.velX = 0;
         config.velY = 0;
         config.isFacingRight = true;
-        config.timeStopDuration = 5.0f;
+        config.timeStopDuration = 3.0f;
 
         return config;
     }

@@ -31,4 +31,6 @@ add_executable(HEW
         src/Systems/TimeManager.h
         src/Config/SystemConfigs.h
         Src/VFX/VFXManager.cpp
-        Src/VFX/VFXManager.h)
+        Src/VFX/VFXManager.h
+        Src/Object/Entity/Enemy/Enemy.cpp
+        Src/Object/Entity/Enemy/Enemy.h)

@@ -4,34 +4,34 @@
 
 #ifndef HEW_SYSTEMCONFIGS_H
 #define HEW_SYSTEMCONFIGS_H
+#include "../Systems/TimeManager.h"
 #include "../VFX/VFXManager.h"
 
 namespace sysCfg
 {
-    inline VFXConfig VFX()
+    inline VFXConfig VFXCfg()
     {
         VFXConfig config{};
+
         constexpr COLORREF normalPal[16] =
         {
-            BLACK, /* #000000	黒				*/
-            BLUE, /* #0000AA	青				*/
-            GREEN, /* #00AA00	緑				*/
-            CYAN, /* #00AAAA	シアン			*/
-            RED, /* #AA0000	赤				*/
-            MAGENTA, /* #AA00AA	マゼンタ		*/
-            BROWN, /* #AA5500	茶				*/
-            LIGHTGRAY, /* #AAAAAA	明るい灰色		*/
-            DARKGRAY, /* #555555	暗い灰色		*/
-            LIGHTBLUE, /* #5555FF	明るい青		*/
-            LIGHTGREEN, /* #55FF55	明るい緑		*/
-            LIGHTCYAN, /* #55FFFF	明るいシアン	*/
-            LIGHTRED, /* #FF5555	明るい赤		*/
-            LIGHTMAGENTA, /* #FF55FF	明るいマゼンタ	*/
-            YELLOW, /* #FFFF55	黄				*/
-            WHITE /* #FFFFFF	白				*/
+            0x00000000,  // BLACK        #000000
+            0x00AA0000,  // BLUE         #0000AA
+            0x0000AA00,  // GREEN        #00AA00
+            0x00AAAA00,  // CYAN         #00AAAA
+            0x000000AA,  // RED          #AA0000
+            0x00AA00AA,  // MAGENTA      #AA00AA
+            0x000055AA,  // BROWN        #AA5500
+            0x00AAAAAA,  // LIGHTGRAY    #AAAAAA
+            0x00555555,  // DARKGRAY     #555555
+            0x00FF5555,  // LIGHTBLUE    #5555FF
+            0x0055FF55,  // LIGHTGREEN   #55FF55
+            0x00FFFF55,  // LIGHTCYAN    #55FFFF
+            0x005555FF,  // LIGHTRED     #FF5555
+            0x00FF55FF,  // LIGHTMAGENTA #FF55FF
+            0x0055FFFF,  // YELLOW       #FFFF55
+            0x00FFFFFF   // WHITE        #FFFFFF
         };
-
-        config.normalPal = *normalPal;
 
         constexpr COLORREF grayPal[16] =
         {
@@ -52,7 +52,23 @@ namespace sysCfg
             0xCACACA, // YELLOW
             0xFFFFFF // WHITE
         };
-        config.grayscale = *grayPal;
+
+        memcpy(config.normalPal, normalPal, sizeof(normalPal));
+        memcpy(config.grayscale, grayPal, sizeof(grayPal));
+
+        return config;
+    }
+
+    inline TimeManagerConfig TimeCfg()
+    {
+        TimeManagerConfig config{};
+
+        // time stop
+        config.timeStopCooldownMax = 2;
+
+        // time rewind
+        config.rewindCooldownMax = 2;
+        config.rewindMagnitude = 0.5;
 
         return config;
     }
