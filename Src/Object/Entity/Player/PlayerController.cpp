@@ -48,9 +48,16 @@ void PlayerController::Draw(const Camera& cam)
     Entity::Draw(cam);
 
     const PlayerSnapshot holoSnapshot = TimeManager::Instance().GetPlayerSnapshot();
-    const int screenX = cam.WorldToScreenX(holoSnapshot.x);
-    const int screenY = cam.WorldToScreenY(holoSnapshot.y);
+    int screenX = cam.WorldToScreenX(holoSnapshot.x);
+    int screenY = cam.WorldToScreenY(holoSnapshot.y);
     DrawRect(screenX, screenY, screenX + width, screenY + height, RED, false);
+
+    if (attackHitbox.isActive)
+    {
+        screenX = cam.WorldToScreenX(attackHitbox.x);
+        screenY = cam.WorldToScreenY(attackHitbox.y);
+        DrawRect(screenX, screenY, screenX + attackHitbox.width, screenY + attackHitbox.height, LIGHTRED, false);
+    }
 }
 
 void PlayerController::Die()
@@ -62,10 +69,12 @@ void PlayerController::HandleInput()
 {
     if (input.moveLeft.IsPressed())
     {
+        isFacingRight = false;
         velX = -currSpeed;
     }
     else if (input.moveRight.IsPressed())
     {
+        isFacingRight = true;
         velX = currSpeed;
     }
     else
@@ -76,6 +85,11 @@ void PlayerController::HandleInput()
     if (input.jump.IsEdge() && isGrounded)
     {
         velY = -jumpForce;
+    }
+
+    if (input.attack.IsEdge())
+    {
+        Attack();
     }
 
     if (input.timeStop.IsEdge())
@@ -99,7 +113,7 @@ void PlayerController::HandleInput()
 void PlayerController::HandleTimeRewind()
 {
     PlayerSnapshot playerSnapshot{};
-    if (!TimeManager::Instance().GetPlayerSnapshot(playerSnapshot) )
+    if (!TimeManager::Instance().GetPlayerSnapshot(playerSnapshot))
     {
         return;
     }
@@ -110,5 +124,3 @@ void PlayerController::HandleTimeRewind()
     velY = playerSnapshot.velY;
     isFacingRight = playerSnapshot.isFacingRight;
 }
-
-

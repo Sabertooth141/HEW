@@ -14,15 +14,14 @@
 #define TARGET_FPS 60
 #define FRAME_TIME (1.0f / TARGET_FPS)
 
+#include <memory>
+#include <vector>
+
+#include "../Object/Entity/Enemy/Enemy.h"
 #include "../Object/Entity/Player/PlayerController.h"
 #include "../VFX/VFXManager.h"
 #include "../World/Camera.h"
 #include "../World/Tilemap.h"
-
-struct GlobalInputConfig
-{
-    KeyBinding quitGame = {PK_ESC};
-};
 
 class Game
 {

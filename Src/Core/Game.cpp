@@ -7,6 +7,7 @@
 #include "../Config/EntityConfigs.h"
 #include "../Config/SystemConfigs.h"
 #include "../Lib/conioex.h"
+#include "../Systems/EnemyManager.h"
 #include "../Systems/TimeManager.h"
 #define TEST_MAP_WIDTH 100
 #define TEST_MAP_HEIGHT 50
@@ -66,18 +67,29 @@ bool Game::Initialize()
     SetCursorType(NOCURSOR);
     SetCaption("HEW PROTOTYPE");
 
-    cam.Initialize(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH, VIEW_HEIGHT);
-
     LoadTestLevel();
 
-    constexpr float startX = 5 * TILE_SIZE;
-    constexpr float startY = (TEST_MAP_HEIGHT - 6) * TILE_SIZE;
+    // TODO: TEMP
+    constexpr float playerStartX = 5 * TILE_SIZE;
+    constexpr float playerStartY = (TEST_MAP_HEIGHT - 6) * TILE_SIZE;
 
     // playerController
     PlayerConfig playerCfg = config::Player();
-    playerCfg.x = startX;
-    playerCfg.y = startY;
+    playerCfg.x = playerStartX;
+    playerCfg.y = playerStartY;
+
     playerController.Initialize(playerCfg);
+
+    // TODO: TEMP
+    constexpr float enemyStartX = playerStartX + 20;
+    constexpr float enemyStartY = playerStartY;
+
+    // enemies
+    EnemyConfig enemyCfg = config::Enemy();
+    enemyCfg.x = enemyStartX;
+    enemyCfg.y = enemyStartY;
+
+    EnemyManager::Instance().CreateEnemy(enemyCfg);
 
     // subsystems
     const VFXConfig vfxCfg = sysCfg::VFXCfg();
@@ -87,6 +99,7 @@ bool Game::Initialize()
     TimeManager::Instance().Initialize(timeManagerCfg);
 
     // camera
+    cam.Initialize(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH, VIEW_HEIGHT);
     cam.SetBounds(0, 0, tileMap.GetWidthPixels(), tileMap.GetHeightPixels());
     cam.SetPosition(playerController.GetCenterX(), playerController.GetCenterY());
 
@@ -98,12 +111,16 @@ bool Game::Initialize()
 
 void Game::Start()
 {
+    for ( auto& e : EnemyManager::Instance().GetActiveEnemies() )
+    {
+        e->Start();
+    }
     playerController.Start();
 
     while (isGameRunning)
     {
-        DWORD currTime = timeGetTime();
-        float deltaTime = (currTime - lastFrameTime) / 1000.0f;
+        const DWORD currTime = timeGetTime();
+        float deltaTime = static_cast<float>(currTime - lastFrameTime) / 1000.0f;
 
         if (deltaTime > 0.1f)
         {
@@ -129,10 +146,20 @@ void Game::Update(const float deltaTime)
     TimeManager::Instance().Update(deltaTime);
 
     // enemies / other objects will use this delta time
-    float worldDelta = TimeManager::Instance().GetWorldDeltaTime(deltaTime);
+    const float worldDelta = TimeManager::Instance().GetWorldDeltaTime(deltaTime);
+
+
+    for (const auto& e : EnemyManager::Instance().GetActiveEnemies())
+    {
+        e->Update(worldDelta, tileMap);
+    }
 
     playerController.Update(deltaTime, tileMap);
-    cam.FollowTarget(playerController.GetCenterX(), playerController.GetCenterY(), 0.1f);
+
+    TargetPosition camTarget{};
+    camTarget.x = playerController.GetCenterX();
+    camTarget.y = playerController.GetCenterY();
+    cam.FollowTarget(camTarget, 0.1f);
 }
 
 void Game::ShutDown()
@@ -154,7 +181,14 @@ void Game::Draw()
 
     ClearFrameBuffer();
     tileMap.Draw(cam);
+
+    for (const auto& e : EnemyManager::Instance().GetActiveEnemies())
+    {
+        e->Draw(cam);
+    }
+
     playerController.Draw(cam);
+
     PrintFrameBuffer();
     FlipScreen();
 }

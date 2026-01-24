@@ -4,6 +4,9 @@
 
 #include "Entity.h"
 
+#include "../../Lib/Shape.h"
+#include "../../Systems/EnemyManager.h"
+
 class Camera;
 
 Entity::Entity()
@@ -20,6 +23,20 @@ void Entity::Initialize(const EntityConfig& config)
     currHp = config.currHp;
     maxHp = config.maxHp;
     isFacingRight = config.isFacingRight;
+
+    if (currHp == 0)
+    {
+        currHp = maxHp;
+    }
+
+    damage = config.damage;
+    attackCooldown = config.attackCooldown;
+    attackCooldownTimer = 0;
+    attackOffsetX = config.attackOffsetX;
+    attackOffsetY = config.attackOffsetY;
+    attackWidth = config.attackWidth;
+    attackHeight = config.attackHeight;
+    attackDuration = config.attackDuration;
 }
 
 void Entity::Start()
@@ -34,6 +51,27 @@ void Entity::Update(const float deltaTime, const Tilemap& tileMap)
     isGrounded = CheckGrounded(tileMap);
 
     HandleMovement(deltaTime, tileMap);
+
+    if (attackCooldownTimer > 0)
+    {
+        attackCooldownTimer -= deltaTime;
+    }
+
+    attackHitbox.Update(deltaTime, x, y);
+
+    if (attackHitbox.isActive)
+    {
+        for (const auto enemy : EnemyManager::Instance().GetActiveEnemies())
+        {
+            if (attackHitbox.CheckOverlap(enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight()))
+            {
+                enemy->TakeDamage(damage);
+
+                attackHitbox.isActive = false;
+                break;
+            }
+        }
+    }
 }
 
 void Entity::Draw(const Camera& cam)
@@ -74,7 +112,7 @@ void Entity::HandleMovement(const float deltaTime, const Tilemap& tileMap)
     isGrounded = CheckGrounded(tileMap);
 }
 
-void Entity::TakDamage(const float inDamage)
+void Entity::TakeDamage(const float inDamage)
 {
     currHp -= inDamage;
     if (currHp <= 0)
@@ -147,4 +185,26 @@ bool Entity::CheckGrounded(const Tilemap& tilemap)
 
     return tilemap.IsSolidAt(leftX, checkY) || tilemap.IsSolidAt(rightX, checkY)
         || tilemap.IsPlatformAt(leftX, checkY) || tilemap.IsPlatformAt(rightX, checkY);
+}
+
+void Entity::Attack()
+{
+    if (attackCooldownTimer > 0)
+    {
+        return;
+    }
+
+    float hitboxOffsetX;
+    if (isFacingRight)
+    {
+        hitboxOffsetX = width + attackOffsetX;
+    }
+    else
+    {
+        hitboxOffsetX = -attackOffsetX - attackWidth;
+    }
+    const float hitboxOffsetY = attackOffsetY;
+
+    attackHitbox.Activate(x, y, hitboxOffsetX, hitboxOffsetY, attackWidth, attackHeight, attackDuration);
+    attackCooldownTimer = attackCooldown;
 }

@@ -4,13 +4,9 @@
 
 #ifndef HEW_VFXMANAGER_H
 #define HEW_VFXMANAGER_H
-#include "../Object/Entity/Entity.h"
 
-struct VFXConfig
-{
-    COLORREF normalPal[16];
-    COLORREF grayscale[16];
-};
+#include "../Lib/conioex.h"
+#include "../Config/Structs.h"
 
 class VFXManager
 {

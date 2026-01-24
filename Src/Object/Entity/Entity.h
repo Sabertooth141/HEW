@@ -6,21 +6,10 @@
 #define HEW_ENTITY_H
 #include "../Object.h"
 #include "../../World/Camera.h"
+#include "../../Config/Structs.h"
+#include "../../Util/Hitbox.h"
+#include "../../World/Camera.h"
 #include "../../World/Tilemap.h"
-
-struct EntityConfig : ObjectConfig
-{
-    float velX;
-    float velY;
-    float gravity;
-    float maxFallSpeed;
-    float currHp;
-    float maxHp;
-    bool isFacingRight;
-};
-
-class Camera;
-class Tilemap;
 
 class Entity : public Object
 {
@@ -32,7 +21,7 @@ public:
     void Update(float deltaTime, const Tilemap& tileMap) override;
     void Draw(const Camera& cam) override;
 
-    virtual void TakDamage(float inDamage);
+    virtual void TakeDamage(float inDamage);
     virtual void Die();
 
     virtual bool IsGrounded() { return isGrounded; }
@@ -45,6 +34,9 @@ protected:
     virtual bool CheckCollisionX(const Tilemap& tilemap, float newX);
     virtual bool CheckCollisionY(const Tilemap& tilemap, float newY);
     virtual bool CheckGrounded(const Tilemap& tilemap);
+
+    virtual void Attack();
+    virtual Hitbox& GetAttackHitbox() { return attackHitbox; }
 
 protected:
     float velX{};
@@ -60,6 +52,21 @@ protected:
     bool isFacingRight{};
 
     float currSpeed{};
+
+    // attack var
+    Hitbox attackHitbox{};
+
+    float damage{};
+    float attackCooldown{};
+    float attackCooldownTimer{};
+
+    float attackOffsetX{};
+    float attackOffsetY{};
+    float attackWidth{};
+    float attackHeight{};
+
+    float attackDuration{};
+
 };
 
 

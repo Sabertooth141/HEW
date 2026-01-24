@@ -7,14 +7,8 @@
 
 #include "../Lib/conioex.h"
 #include "../World/Camera.h"
-
-struct ObjectConfig {
-    float x, y, width, height;
-    COLORS color;
-};
-
-class Camera;
-class Tilemap;
+#include "../Config/Structs.h"
+#include "../World/Tilemap.h"
 
 class Object
 {

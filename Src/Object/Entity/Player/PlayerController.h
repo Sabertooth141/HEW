@@ -8,48 +8,7 @@
 
 #include "../Entity.h"
 #include "../../../World/Camera.h"
-#include "../../../World/Tilemap.h"
-
-struct KeyBinding
-{
-    int primary = -1;
-    int secondary = -1;
-
-    [[nodiscard]] bool IsPressed() const
-    {
-        return ChkKeyPress(primary) || ChkKeyPress(secondary);
-    }
-
-    [[nodiscard]] bool IsEdge() const
-    {
-        return ChkKeyEdge(primary) || ChkKeyEdge(secondary);
-    }
-};
-
-struct InputConfig
-{
-    KeyBinding moveLeft = {PK_LEFT, PK_A};
-    KeyBinding moveRight = {PK_RIGHT, PK_D};
-    KeyBinding jump = {PK_SP, PK_W};
-
-    KeyBinding timeStop = {PK_J};
-    KeyBinding timeRewind = {PK_K};
-};
-
-struct PlayerConfig : EntityConfig
-{
-    float walkSpeed;
-    float sprintSpeed;
-    float jumpForce;
-    float timeStopDuration;
-};
-
-struct PlayerSnapshot
-{
-    float x, y;
-    float velX, velY;
-    bool isFacingRight;
-};
+#include "../../../Config/Structs.h"
 
 class Camera;
 

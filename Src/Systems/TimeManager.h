@@ -6,17 +6,8 @@
 #define HEW_TIMEMANAGER_H
 #include <vector>
 
-#include "../Object/Entity/Player/PlayerController.h"
+#include "../Config/Structs.h"
 
-struct TimeManagerConfig
-{
-    // TIME STOP
-    float timeStopCooldownMax;
-
-    // TIME REWIND
-    float rewindCooldownMax;
-    float rewindMagnitude;
-};
 
 class TimeManager
 {

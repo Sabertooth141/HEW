@@ -33,4 +33,9 @@ add_executable(HEW
         Src/VFX/VFXManager.cpp
         Src/VFX/VFXManager.h
         Src/Object/Entity/Enemy/Enemy.cpp
-        Src/Object/Entity/Enemy/Enemy.h)
+        Src/Object/Entity/Enemy/Enemy.h
+        Src/Config/Structs.h
+        Src/Config/Structs.h
+        Src/Util/HitBox.h
+        Src/Util/HitBox.h
+        Src/Systems/EnemyManager.h)
