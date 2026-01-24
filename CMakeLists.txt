@@ -38,4 +38,6 @@ add_executable(HEW
         Src/Config/Structs.h
         Src/Util/HitBox.h
         Src/Util/HitBox.h
-        Src/Systems/EnemyManager.h)
+        Src/Systems/EnemyManager.h
+        Src/World/TileSet.h
+        Src/World/TileSet.h)

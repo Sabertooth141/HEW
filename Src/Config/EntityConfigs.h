@@ -13,13 +13,13 @@ namespace config
     inline PlayerConfig Player()
     {
         PlayerConfig config{};
-        config.width = 16;
-        config.height = 24;
+        config.width = 48;
+        config.height = 64;
         config.color = LIGHTCYAN;
-        config.walkSpeed = 200.0f;
-        config.sprintSpeed = 400.0f;
-        config.jumpForce = 400.0f;
-        config.gravity = 800.0f;
+        config.walkSpeed = 300.0f;
+        config.sprintSpeed = 700.0f;
+        config.jumpForce = 500.0f;
+        config.gravity = 1000.0f;
         config.maxFallSpeed = 1000.0f;
 
         config.maxHp = 100;
@@ -43,8 +43,8 @@ namespace config
     inline EnemyConfig Enemy()
     {
         EnemyConfig config{};
-        config.width = 16;
-        config.height = 16;
+        config.width = 48;
+        config.height = 64;
         config.color = RED;
         config.gravity = 800.0f;
         config.maxFallSpeed = 1000.0f;

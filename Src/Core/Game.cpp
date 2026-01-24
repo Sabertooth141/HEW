@@ -4,11 +4,14 @@
 
 #include "Game.h"
 
+#include <format>
+
 #include "../Config/EntityConfigs.h"
 #include "../Config/SystemConfigs.h"
 #include "../Lib/conioex.h"
 #include "../Systems/EnemyManager.h"
 #include "../Systems/TimeManager.h"
+#include "../World/Tileset.h"
 #define TEST_MAP_WIDTH 100
 #define TEST_MAP_HEIGHT 50
 
@@ -111,7 +114,7 @@ bool Game::Initialize()
 
 void Game::Start()
 {
-    for ( auto& e : EnemyManager::Instance().GetActiveEnemies() )
+    for (auto& e : EnemyManager::Instance().GetActiveEnemies())
     {
         e->Start();
     }
@@ -182,10 +185,38 @@ void Game::Draw()
     ClearFrameBuffer();
     tileMap.Draw(cam);
 
+    // Bmp* testTileset = LoadBmp("../Assets/Tileset/SceneTileset/anim-0.bmp");
+    // DrawBmp(5, 5, testTileset, true);
+
+    // LoadTileset("../Assets/Tileset/SceneTileset/TestTileset.bmp");
+
+    // Check before drawing
+    // Bmp* testTile = tileset.GetTile(5);
+    // if (testTile != nullptr)
+    // {
+    //     DrawBmp(5 + 10, 1, testTile, true);
+    // }
+
+    COLORREF palette[16];
+    GetCurrentPalette(palette);
+
+    for (int i = 0; i < 16; i++)
+    {
+        char buffer[256];
+        sprintf(buffer, "Color %2d: R=%3d G=%3d B=%3d (0x%06X)\n",
+           i,
+           palette[i] & 0xFF,           // Red
+           (palette[i] >> 8) & 0xFF,    // Green
+           (palette[i] >> 16) & 0xFF,   // Blue
+           palette[i]);
+        OutputDebugString(buffer);
+    }
+
     for (const auto& e : EnemyManager::Instance().GetActiveEnemies())
     {
         e->Draw(cam);
     }
+    // vfxManager.ApplyNormalPal();
 
     playerController.Draw(cam);
 
@@ -203,12 +234,33 @@ void Game::HandleGlobalInput()
     }
 }
 
+void Game::LoadTileset(const char* filePath)
+{
+    Bmp* tilesetImage = LoadBmp(filePath, true);
+
+    // Check 1: Did the file load?
+    if (tilesetImage == nullptr)
+    {
+        printf("ERROR: Failed to load tileset from: %s\n", filePath);
+        return;
+    }
+
+    printf("Tileset loaded: %dx%d, %d-bit\n",
+           tilesetImage->width, tilesetImage->height, tilesetImage->colbit);
+
+    tileset.LoadTileset(tilesetImage, 32, 32);
+
+    // Check 2: How many tiles were created?
+    printf("Tiles extracted: %d\n", (int)tileset.tiles.size());
+}
+
 void Game::LoadTestLevel()
 {
     GenerateTestLevel();
     tileMap.Initialize(TEST_MAP_WIDTH, TEST_MAP_HEIGHT, TILE_SIZE);
     tileMap.LoadFromArr(testMapData, TEST_MAP_WIDTH, TEST_MAP_HEIGHT);
 }
+
 
 int main()
 {

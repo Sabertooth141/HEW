@@ -44,12 +44,17 @@ inline const TileProperties& GetTileProperties(TileFlag flag)
 struct Tile
 {
     TileFlag flag;
+    int tileID;
 
-    Tile() : flag(TileFlag::AIR)
+    Tile() : flag(TileFlag::AIR), tileID(-1)
     {
     }
 
-    explicit Tile(const TileFlag flag) : flag(flag)
+    explicit Tile(const TileFlag flag) : flag(flag), tileID(-1)
+    {
+    }
+
+    explicit Tile(const TileFlag flag, const int tileID) : flag(flag), tileID(tileID)
     {
     }
 
@@ -57,6 +62,7 @@ struct Tile
     [[nodiscard]] bool IsPlatform() const { return GetTileProperties(flag).isPlatform; }
     [[nodiscard]] bool IsDamaging() const { return GetTileProperties(flag).isDamaging; }
     [[nodiscard]] COLORS GetColor() const { return GetTileProperties(flag).color; }
+    [[nodiscard]] int GetTileID() const { return tileID; }
 };
 
 #endif //HEW_TILE_H

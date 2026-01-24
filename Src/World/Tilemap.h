@@ -5,8 +5,7 @@
 #ifndef HEW_TILEMAP_H
 #define HEW_TILEMAP_H
 #include "Tile.h"
-
-class Camera;
+#include "../World/Camera.h"
 
 class Tilemap
 {

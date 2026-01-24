@@ -1,0 +1,29 @@
+{
+    "activeFile": "",
+    "expandedProjectPaths": [
+        ".",
+        "cmake-build-debug"
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "1_Industrial_Tileset_1.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "map1.tmx": {
+            "scale": 0.5056770833333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 564.5895560819858,
+                "y": 267.95756514574106
+            }
+        }
+    },
+    "openFiles": [
+    ],
+    "project": "",
+    "recentFiles": [
+        "1_Industrial_Tileset_1.tsx",
+        "map1.tmx"
+    ]
+}

@@ -4,7 +4,6 @@
 
 #include "Entity.h"
 
-#include "../../Lib/Shape.h"
 #include "../../Systems/EnemyManager.h"
 
 class Camera;
