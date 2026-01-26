@@ -22,19 +22,44 @@ int GameConfig::FONT_HEIGHT = 2;
 
 void GameConfig::CalculateViewportSize()
 {
-    int screenW = GetSystemMetrics(SM_CXSCREEN);
-    int screenH = GetSystemMetrics(SM_CYSCREEN);
+    // Get ACTUAL screen resolution (ignoring Windows scaling)
+    DEVMODE dm;
+    dm.dmSize = sizeof(DEVMODE);
+    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dm);
 
+    int screenW = dm.dmPelsWidth;   // Real resolution
+    int screenH = dm.dmPelsHeight;  // Real resolution
+
+    // Also get DPI scaling factor
+    HDC hdc = GetDC(NULL);
+    int dpiX = GetDeviceCaps(hdc, LOGPIXELSX);
+    int dpiY = GetDeviceCaps(hdc, LOGPIXELSY);
+    ReleaseDC(NULL, hdc);
+
+    float dpiScale = dpiX / 96.0f;  // 96 DPI = 100% scaling
+
+    char debug[512];
+    sprintf_s(debug,
+        "Real Screen: %dx%d | DPI Scale: %.2f (%.0f%%) | Scaled: %dx%d\n",
+        screenW, screenH, dpiScale, dpiScale * 100.0f,
+        GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    OutputDebugString(debug);
+
+    // Use REAL resolution for calculations
     const int BASELINE_SCREEN_WIDTH = 2880;
     const int BASELINE_SCREEN_HEIGHT = 1620;
 
-    // ===== ADJUST FONT SIZE FOR SMALLER SCREENS =====
+    // Adjust font based on REAL resolution
     if (screenW >= 2880) {
         FONT_WIDTH = 2;
         FONT_HEIGHT = 2;
     }
     else if (screenW >= 1920) {
-        // 1080p - use 3x3 font for better visibility
+        // 1080p - use 3x3 for better fill
+        FONT_WIDTH = 3;
+        FONT_HEIGHT = 3;
+    }
+    else if (screenW >= 1600) {
         FONT_WIDTH = 3;
         FONT_HEIGHT = 3;
     }
@@ -42,7 +67,6 @@ void GameConfig::CalculateViewportSize()
         FONT_WIDTH = 4;
         FONT_HEIGHT = 4;
     }
-    // ===== END ADJUSTMENT =====
 
     int usableHeight = screenH - 100;
     int maxViewWidth = (screenW - 20) / FONT_WIDTH;
@@ -50,38 +74,26 @@ void GameConfig::CalculateViewportSize()
 
     float widthRatio = static_cast<float>(screenW) / static_cast<float>(BASELINE_SCREEN_WIDTH);
     float heightRatio = static_cast<float>(screenH) / static_cast<float>(BASELINE_SCREEN_HEIGHT);
-
     float scale = (widthRatio < heightRatio) ? widthRatio : heightRatio;
 
     VIEW_WIDTH = static_cast<int>(400 * scale);
     VIEW_HEIGHT = static_cast<int>(300 * scale);
 
-    if (VIEW_WIDTH > maxViewWidth)
-    {
-        VIEW_WIDTH = maxViewWidth;
-    }
-    if (VIEW_HEIGHT > maxViewHeight)
-    {
-        VIEW_HEIGHT = maxViewHeight;
-    }
+    if (VIEW_WIDTH > maxViewWidth) VIEW_WIDTH = maxViewWidth;
+    if (VIEW_HEIGHT > maxViewHeight) VIEW_HEIGHT = maxViewHeight;
 
-    if (VIEW_WIDTH < 160)
-    {
-        VIEW_WIDTH = 160;
-    }
-    if (VIEW_HEIGHT < 120)
-    {
-        VIEW_HEIGHT = 120;
-    }
+    // Safety clamps
+    if (VIEW_WIDTH < 160) VIEW_WIDTH = 160;
+    if (VIEW_HEIGHT < 120) VIEW_HEIGHT = 120;
+    if (VIEW_WIDTH > 600) VIEW_WIDTH = 600;
+    if (VIEW_HEIGHT > 450) VIEW_HEIGHT = 450;
 
-    char debug[256];
     sprintf_s(debug,
-              "Screen: %dx%d | View: %dx%d tiles | Font: %dx%d | Physical: %dx%d px | Scale: %.2f\n",
-              screenW, screenH,
-              VIEW_WIDTH, VIEW_HEIGHT,
-              FONT_WIDTH, FONT_HEIGHT,
-              VIEW_WIDTH * FONT_WIDTH, VIEW_HEIGHT * FONT_HEIGHT,
-              scale);
+        "Final Config: View=%dx%d tiles | Font=%dx%d | Physical=%dx%d px | Scale=%.2f\n",
+        VIEW_WIDTH, VIEW_HEIGHT,
+        FONT_WIDTH, FONT_HEIGHT,
+        VIEW_WIDTH * FONT_WIDTH, VIEW_HEIGHT * FONT_HEIGHT,
+        scale);
     OutputDebugString(debug);
 }
 
