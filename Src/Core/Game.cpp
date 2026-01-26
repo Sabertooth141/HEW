@@ -15,6 +15,76 @@
 #define TEST_MAP_WIDTH 100
 #define TEST_MAP_HEIGHT 50
 
+int GameConfig::VIEW_WIDTH = 400;
+int GameConfig::VIEW_HEIGHT = 300;
+int GameConfig::FONT_WIDTH = 2;
+int GameConfig::FONT_HEIGHT = 2;
+
+void GameConfig::CalculateViewportSize()
+{
+    int screenW = GetSystemMetrics(SM_CXSCREEN);
+    int screenH = GetSystemMetrics(SM_CYSCREEN);
+
+    const int BASELINE_SCREEN_WIDTH = 2880;
+    const int BASELINE_SCREEN_HEIGHT = 1620;
+
+    // ===== ADJUST FONT SIZE FOR SMALLER SCREENS =====
+    if (screenW >= 2880) {
+        FONT_WIDTH = 2;
+        FONT_HEIGHT = 2;
+    }
+    else if (screenW >= 1920) {
+        // 1080p - use 3x3 font for better visibility
+        FONT_WIDTH = 3;
+        FONT_HEIGHT = 3;
+    }
+    else {
+        FONT_WIDTH = 4;
+        FONT_HEIGHT = 4;
+    }
+    // ===== END ADJUSTMENT =====
+
+    int usableHeight = screenH - 100;
+    int maxViewWidth = (screenW - 20) / FONT_WIDTH;
+    int maxViewHeight = usableHeight / FONT_HEIGHT;
+
+    float widthRatio = static_cast<float>(screenW) / static_cast<float>(BASELINE_SCREEN_WIDTH);
+    float heightRatio = static_cast<float>(screenH) / static_cast<float>(BASELINE_SCREEN_HEIGHT);
+
+    float scale = (widthRatio < heightRatio) ? widthRatio : heightRatio;
+
+    VIEW_WIDTH = static_cast<int>(400 * scale);
+    VIEW_HEIGHT = static_cast<int>(300 * scale);
+
+    if (VIEW_WIDTH > maxViewWidth)
+    {
+        VIEW_WIDTH = maxViewWidth;
+    }
+    if (VIEW_HEIGHT > maxViewHeight)
+    {
+        VIEW_HEIGHT = maxViewHeight;
+    }
+
+    if (VIEW_WIDTH < 160)
+    {
+        VIEW_WIDTH = 160;
+    }
+    if (VIEW_HEIGHT < 120)
+    {
+        VIEW_HEIGHT = 120;
+    }
+
+    char debug[256];
+    sprintf_s(debug,
+              "Screen: %dx%d | View: %dx%d tiles | Font: %dx%d | Physical: %dx%d px | Scale: %.2f\n",
+              screenW, screenH,
+              VIEW_WIDTH, VIEW_HEIGHT,
+              FONT_WIDTH, FONT_HEIGHT,
+              VIEW_WIDTH * FONT_WIDTH, VIEW_HEIGHT * FONT_HEIGHT,
+              scale);
+    OutputDebugString(debug);
+}
+
 static unsigned char testMapData[TEST_MAP_WIDTH * TEST_MAP_HEIGHT];
 
 static void GenerateTestLevel()
@@ -66,9 +136,16 @@ Game::Game()
 
 bool Game::Initialize()
 {
-    InitConioEx(VIEW_WIDTH, VIEW_HEIGHT, FONT_WIDTH, FONT_HEIGHT, true);
+    GameConfig::CalculateViewportSize();
+
+    InitConioEx(GameConfig::VIEW_WIDTH, GameConfig::VIEW_HEIGHT, GameConfig::FONT_WIDTH, GameConfig::FONT_HEIGHT, true);
     SetCursorType(NOCURSOR);
-    SetCaption("HEW PROTOTYPE");
+
+    char title[128];
+    sprintf_s(title, "HEW PROTOTYPE - %dx%d (Font: %dx%d)",
+              GameConfig::VIEW_WIDTH, GameConfig::VIEW_HEIGHT,
+              GameConfig::FONT_WIDTH, GameConfig::FONT_HEIGHT);
+    SetCaption(title);
 
     LoadTestLevel();
 
@@ -102,7 +179,7 @@ bool Game::Initialize()
     TimeManager::Instance().Initialize(timeManagerCfg);
 
     // camera
-    cam.Initialize(VIEW_WIDTH / 2, VIEW_HEIGHT / 2, VIEW_WIDTH, VIEW_HEIGHT);
+    cam.Initialize(GameConfig::VIEW_WIDTH / 2, GameConfig::VIEW_HEIGHT / 2, GameConfig::VIEW_WIDTH, GameConfig::VIEW_HEIGHT);
     cam.SetBounds(0, 0, tileMap.GetWidthPixels(), tileMap.GetHeightPixels());
     cam.SetPosition(playerController.GetCenterX(), playerController.GetCenterY());
 
@@ -199,18 +276,6 @@ void Game::Draw()
 
     COLORREF palette[16];
     GetCurrentPalette(palette);
-
-    for (int i = 0; i < 16; i++)
-    {
-        char buffer[256];
-        sprintf(buffer, "Color %2d: R=%3d G=%3d B=%3d (0x%06X)\n",
-           i,
-           palette[i] & 0xFF,           // Red
-           (palette[i] >> 8) & 0xFF,    // Green
-           (palette[i] >> 16) & 0xFF,   // Blue
-           palette[i]);
-        OutputDebugString(buffer);
-    }
 
     for (const auto& e : EnemyManager::Instance().GetActiveEnemies())
     {
