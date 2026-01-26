@@ -14,15 +14,12 @@
 #define TARGET_FPS 60
 #define FRAME_TIME (1.0f / TARGET_FPS)
 
-class GameConfig
+struct GameConfig
 {
-public:
     static int VIEW_WIDTH;
     static int VIEW_HEIGHT;
     static int FONT_WIDTH;
     static int FONT_HEIGHT;
-
-    static void CalculateViewportSize();
 };
 
 #include <memory>

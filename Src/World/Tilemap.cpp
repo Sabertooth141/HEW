@@ -189,8 +189,8 @@ void Tilemap::Draw(const Camera& cam) const
             float worldX = TileToWorldX(tileX);
             float worldY = TileToWorldY(tileY);
 
-            int screenX = static_cast<int>(worldX - camLeft);
-            int screenY = static_cast<int>(worldY - camTop);
+            int screenX = cam.WorldToScreenX(worldX);
+            int screenY = cam.WorldToScreenY(worldY);
 
             COLORS color = tile.GetColor();
 
