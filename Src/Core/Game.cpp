@@ -13,55 +13,10 @@
 #define TEST_MAP_WIDTH 100
 #define TEST_MAP_HEIGHT 50
 
-bool IsLegacyConsoleHost()
-{
-	// Check if we're running in legacy console host vs Windows Terminal
-	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	
-	CONSOLE_SCREEN_BUFFER_INFOEX csbiex;
-	csbiex.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
-	
-	if (!GetConsoleScreenBufferInfoEx(hOut, &csbiex))
-	{
-		return false; // API failed, might be Windows Terminal
-	}
-	
-	// Windows Terminal has different behavior with color tables
-	// Legacy console always has 16 colors properly initialized
-	int validColors = 0;
-	for (unsigned long i : csbiex.ColorTable)
-	{
-		if (i != 0)
-		{
-			validColors++;
-		}
-	}
-	
-	return validColors >= 16;
-}
-
-void CheckConsoleCompatibility()
-{
-	if (!IsLegacyConsoleHost())
-	{
-		MessageBoxA(NULL,
-		            "WARNING: This game requires Windows Console Host.\n\n"
-		            "Windows Terminal detected - rendering may be incorrect.\n\n"
-		            "To fix:\n"
-		            "1. Open Windows Settings\n"
-		            "2. Go to: Privacy & Security → For developers\n"
-		            "3. Change 'Terminal' to 'Windows Console Host'\n"
-		            "4. Restart this game\n\n"
-		            "Press OK to continue anyway (not recommended)",
-		            "Console Compatibility Warning",
-		            MB_OK | MB_ICONWARNING);
-	}
-}
-
 int GameConfig::VIEW_WIDTH = 400;
 int GameConfig::VIEW_HEIGHT = 300;
-int GameConfig::FONT_WIDTH = 1;
-int GameConfig::FONT_HEIGHT = 1;
+int GameConfig::FONT_WIDTH = 2;
+int GameConfig::FONT_HEIGHT = 2;
 
 static unsigned char testMapData[TEST_MAP_WIDTH * TEST_MAP_HEIGHT];
 
@@ -128,7 +83,7 @@ bool Game::Initialize()
 	
 	// TODO: TEMP
 	constexpr float playerStartX = 5 * TILE_SIZE;
-	constexpr float playerStartY = (TEST_MAP_HEIGHT - 6) * TILE_SIZE;
+	constexpr float playerStartY = (TEST_MAP_HEIGHT - 16) * TILE_SIZE;
 	
 	// playerController
 	PlayerConfig playerCfg = config::Player();

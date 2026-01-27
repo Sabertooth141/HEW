@@ -85,5 +85,47 @@ private:
     }
 };
 
+inline bool IsLegacyConsoleHost()
+{
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    CONSOLE_SCREEN_BUFFER_INFOEX csbiex;
+    csbiex.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
+
+    if (!GetConsoleScreenBufferInfoEx(hOut, &csbiex))
+    {
+        return false;
+    }
+
+    int validColors = 0;
+    for (unsigned long i : csbiex.ColorTable)
+    {
+        if (i != 0)
+        {
+            validColors++;
+        }
+    }
+
+    return validColors >= 16;
+}
+
+inline void CheckConsoleCompatibility()
+{
+    if (!IsLegacyConsoleHost())
+    {
+        MessageBoxA(NULL,
+                    "WARNING: This game requires Windows Console Host.\n\n"
+                    "Windows Terminal detected - rendering may be incorrect.\n\n"
+                    "To fix:\n"
+                    "1. Open Windows Settings\n"
+                    "2. Go to: Privacy & Security → For developers\n"
+                    "3. Change 'Terminal' to 'Windows Console Host'\n"
+                    "4. Restart this game\n\n"
+                    "Press OK to continue anyway (not recommended)",
+                    "Console Compatibility Warning",
+                    MB_OK | MB_ICONWARNING);
+    }
+}
+
 
 #endif //HEW_GAME_H
