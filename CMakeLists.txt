@@ -40,4 +40,12 @@ add_executable(HEW
         Src/Util/HitBox.h
         Src/Systems/EnemyManager.h
         Src/World/TileSet.h
-        Src/World/TileSet.h)
+        Src/World/TileSet.h
+        Src/Animation/SpriteFrame.h
+        Src/Animation/SpriteFrame.h
+        Src/Animation/SpriteSheetLoader.cpp
+        Src/Animation/SpriteSheetLoader.h
+        Src/Animation/SpriteSheetLoader.h
+        Src/Animation/Animator.cpp
+        Src/Animation/Animator.h
+        Src/Animation/Animator.h)
