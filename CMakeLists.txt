@@ -48,4 +48,7 @@ add_executable(HEW
         Src/Animation/SpriteSheetLoader.h
         Src/Animation/Animator.cpp
         Src/Animation/Animator.h
-        Src/Animation/Animator.h)
+        Src/Animation/Animator.h
+        Src/Object/Entity/Player/PlayerAttackController.cpp
+        Src/Object/Entity/Player/PlayerAttackController.h
+        Src/Object/Entity/Player/PlayerStates.h)

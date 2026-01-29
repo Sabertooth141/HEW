@@ -5,7 +5,11 @@
 #ifndef HEW_STRUCTS_H
 #define HEW_STRUCTS_H
 
+#include <unordered_map>
+#include <vector>
+
 #include "../Lib/conioex.h"
+#include "../Animation/SpriteFrame.h"
 
 // MISC
 
@@ -13,6 +17,32 @@ struct TargetPosition
 {
     float x;
     float y;
+};
+
+struct Vector2
+{
+    float x, y;
+};
+
+struct Transform
+{
+    Vector2 topLeft, center, size;
+
+    void CalculateCenterPosition()
+    {
+        const float centerX = topLeft.x + size.x / 2;
+        const float centerY = topLeft.y + size.y / 2;
+        center.x = centerX;
+        center.y = centerY;
+    }
+
+    void CalculateTopLeftPosition()
+    {
+        const float topLeftX = center.x - size.x / 2;
+        const float topLeftY = center.y - size.y / 2;
+        topLeft.x = topLeftX;
+        topLeft.y = topLeftY;
+    }
 };
 
 // SYSTEM STRUCTS
@@ -50,15 +80,6 @@ struct EntityConfig : ObjectConfig
     float currHp;
     float maxHp;
     bool isFacingRight;
-
-    float damage;
-    float attackCooldown;
-    float attackOffsetX;
-    float attackOffsetY;
-    float attackWidth;
-    float attackHeight;
-
-    float attackDuration;
 };
 
 struct PlayerConfig : EntityConfig
@@ -67,6 +88,7 @@ struct PlayerConfig : EntityConfig
     float sprintSpeed;
     float jumpForce;
     float timeStopDuration;
+    float airResistance;
 };
 
 struct EnemyConfig : EntityConfig
@@ -120,7 +142,53 @@ struct PlayerSnapshot
     bool isFacingRight;
 };
 
+struct AttkData
+{
+    float damage;
+    float offsetX;
+    float offsetY;
+    float width;
+    float height;
+    float duration;
+    float recovery;
+    float comboWindow;
+};
+
+struct PlayerAttackConfig
+{
+    std::vector<AttkData> data;
+
+    explicit PlayerAttackConfig(const int attackCnt)
+    {
+        data.reserve(attackCnt);
+        for (int i = 0; i < attackCnt; i++)
+        {
+            data.emplace_back();
+        }
+    }
+};
+
 // ENEMY STRUCTS
+
+
+// ANIMATIONS
+enum class PlayerAnimations;
+
+struct PlayerAnimation
+{
+    std::unordered_map<PlayerAnimations, SpriteSheet> animations;
+
+    bool AddAnimation(const PlayerAnimations animationName, const SpriteSheet& spriteSheet)
+    {
+        if (animations.contains(animationName))
+        {
+            return false;
+        }
+
+        animations.emplace(animationName, spriteSheet);
+        return true;
+    }
+};
 
 
 #endif //HEW_STRUCTS_H

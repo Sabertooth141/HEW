@@ -43,7 +43,7 @@ void Enemy::HandleMovement(const float deltaTime, const Tilemap& tilemap)
     // FOR TESTING PURPOSES
     velX = currSpeed;
 
-    const float newX = x + velX * deltaTime;
+    const float newX = transform.topLeft.x + velX * deltaTime;
 
     if (CheckCollisionX(tilemap, newX))
     {

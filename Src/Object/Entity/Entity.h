@@ -14,7 +14,7 @@
 class Entity : public Object
 {
 public:
-    Entity();
+    Entity() = default;
 
     void Initialize(const EntityConfig& config);
     void Start() override;
@@ -35,9 +35,6 @@ protected:
     virtual bool CheckCollisionY(const Tilemap& tilemap, float newY);
     virtual bool CheckGrounded(const Tilemap& tilemap);
 
-    virtual void Attack();
-    virtual Hitbox& GetAttackHitbox() { return attackHitbox; }
-
 protected:
     float velX{};
     float velY{};
@@ -52,20 +49,6 @@ protected:
     bool isFacingRight{};
 
     float currSpeed{};
-
-    // attack var
-    Hitbox attackHitbox{};
-
-    float damage{};
-    float attackCooldown{};
-    float attackCooldownTimer{};
-
-    float attackOffsetX{};
-    float attackOffsetY{};
-    float attackWidth{};
-    float attackHeight{};
-
-    float attackDuration{};
 
 };
 

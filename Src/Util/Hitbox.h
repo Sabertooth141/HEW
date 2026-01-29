@@ -4,12 +4,12 @@
 
 #ifndef HEW_HITBOX_H
 #define HEW_HITBOX_H
+#include "../Config/Structs.h"
 
 struct Hitbox
 {
-    float x, y;
+    Transform transform;
     float offsetX, offsetY;
-    float width, height;
     float lifeTime;
     float timer;
     bool isActive;
@@ -17,16 +17,18 @@ struct Hitbox
     void Activate(const float inX, const float inY, const float inOffsetX, const float inOffsetY,
                   const float inWidth, const float inHeight, const float inLifeTime)
     {
-        x = inX + inOffsetX;
-        y = inY + inOffsetY;
+        transform.center.x =  inX + inOffsetX;
+        transform.center.y = inY + inOffsetY;
         offsetX = inOffsetX;
         offsetY = inOffsetY;
 
-        width = inWidth;
-        height = inHeight;
+        transform.size.x = inWidth;
+        transform.size.y = inHeight;
         lifeTime = inLifeTime;
         timer = 0;
         isActive = true;
+
+        transform.CalculateTopLeftPosition();
     }
 
     void Update(const float deltaTime, const float inX, const float inY)
@@ -36,8 +38,10 @@ struct Hitbox
             return;
         }
 
-        x = inX + offsetX;
-        y = inY + offsetY;
+        transform.center.x = inX + offsetX;
+        transform.center.y = inY + offsetY;
+
+        transform.CalculateTopLeftPosition();
 
         timer += deltaTime;
         if (timer > lifeTime)
@@ -54,10 +58,10 @@ struct Hitbox
             return false;
         }
 
-        return x < otherX + otherW &&
-            x + width > otherX &&
-            y < otherY + otherH &&
-            y + height > otherY;
+        return transform.topLeft.x < otherX + otherW &&
+            transform.topLeft.x + transform.size.x > otherX &&
+            transform.topLeft.y < otherY + otherH &&
+            transform.topLeft.y + transform.size.y > otherY;
     }
 };
 

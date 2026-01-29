@@ -21,22 +21,16 @@ public:
     virtual void Update(float deltaTime, const Tilemap& tileMap);
     virtual void Draw(const Camera& cam);
 
-    virtual float GetX() { return x;}
-    virtual float GetY() { return y;}
-    virtual float GetCenterX() {return x + width / 2; }
-    virtual float GetCenterY() {return y + height / 2; }
+    virtual Vector2 GetPosition() { return transform.topLeft;}
+    virtual Vector2 GetCenterPosition() {return transform.center; }
     virtual void SetPosition(float inX, float inY);
 
-    virtual float GetWidth() { return width; }
-    virtual float GetHeight() { return height; }
+    virtual Vector2 GetSize() { return transform.size; }
+
+public:
+    Transform transform;
 
 protected:
-
-    float x;
-    float y;
-    float width;
-    float height;
-
     // TEMP
     COLORS color;
 

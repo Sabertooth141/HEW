@@ -111,7 +111,7 @@ Bmp* SpriteSheetLoader::ExtractRegion(const Bmp* source, const int x, const int 
 
     const int bytesPerPixel = source->colbit <= 8 ? 1 : source->colbit / 8;
 
-    auto* region = static_cast<Bmp*>(calloc(1, sizeof(Bmp)));
+    Bmp* region = static_cast<Bmp*>(calloc(1, sizeof(Bmp)));
 
     if (region == nullptr)
     {
@@ -178,6 +178,16 @@ int SpriteSheetLoader::ParseInt(const std::string& json, const std::string& key)
     }
 
     pos += searchKey.length();
+
+    while (pos < json.length() && (json[pos] == ' ' || json[pos] == '\t'))
+    {
+        pos++;
+    }
+
+    if (pos < json.length() && json[pos] == ':')
+    {
+        pos++;
+    }
 
     while (pos < json.length() && (json[pos] == ' ' || json[pos] == '\t'))
     {

@@ -6,6 +6,7 @@
 #ifndef HEW_ENTITYCONFIGS_H
 #define HEW_ENTITYCONFIGS_H
 #include "../Object/Entity/Enemy/Enemy.h"
+#include "../Object/Entity/Player/PlayerAttackController.h"
 #include "../Object/Entity/Player/PlayerController.h"
 
 namespace config
@@ -21,21 +22,49 @@ namespace config
         config.jumpForce = 500.0f;
         config.gravity = 1000.0f;
         config.maxFallSpeed = 1000.0f;
+        config.airResistance = 3.0f;
 
         config.maxHp = 100;
 
         config.isFacingRight = true;
         config.timeStopDuration = 3.0f;
 
-        config.damage = 20;
-        config.attackCooldown = 1;
+        return config;
+    }
 
-        config.attackOffsetX = 3;
-        config.attackOffsetY = 0;
-        config.attackHeight = 20;
-        config.attackWidth = 15;
+    inline PlayerAttackConfig PlayerAttack()
+    {
+        PlayerAttackConfig config(3);
 
-        config.attackDuration = .2;
+        // attk 0
+        config.data[0].damage = 10;
+        config.data[0].offsetX = 70;
+        config.data[0].offsetY = 5;
+        config.data[0].width = 30;
+        config.data[0].height = 54;
+        config.data[0].duration = 1;    // to be set by frame data
+        config.data[0].recovery = 0.15f;
+        config.data[0].comboWindow = 0.3f;
+
+        // attk 1
+        config.data[1].damage = 20;
+        config.data[1].offsetX = 70;
+        config.data[1].offsetY = 5;
+        config.data[1].width = 40;
+        config.data[1].height = 54;
+        config.data[1].duration = 1;    // to be set by frame data
+        config.data[1].recovery = 0.15f;
+        config.data[1].comboWindow = 0.3f;
+
+        // attk 2
+        config.data[2].damage = 40;
+        config.data[2].offsetX = 70;
+        config.data[2].offsetY = 5;
+        config.data[2].width = 50;
+        config.data[2].height = 54;
+        config.data[2].duration = 1;    // to be set by frame data
+        config.data[2].recovery = 0.15f;
+        config.data[2].comboWindow = 0.0f;
 
         return config;
     }

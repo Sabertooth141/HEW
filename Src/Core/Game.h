@@ -67,7 +67,7 @@ private:
 
     GlobalInputConfig globalInputConfig;
 
-    COLORREF GetCurrentPalette(COLORREF* outPalette)
+    static COLORREF GetCurrentPalette(COLORREF* outPalette)
     {
         CONSOLE_SCREEN_BUFFER_INFOEX csbi;
         csbi.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
@@ -87,7 +87,7 @@ private:
 
 inline bool IsLegacyConsoleHost()
 {
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    const HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
     CONSOLE_SCREEN_BUFFER_INFOEX csbiex;
     csbiex.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
@@ -113,7 +113,7 @@ inline void CheckConsoleCompatibility()
 {
     if (!IsLegacyConsoleHost())
     {
-        MessageBoxA(NULL,
+        MessageBoxA(nullptr,
                     "WARNING: This game requires Windows Console Host.\n\n"
                     "Windows Terminal detected - rendering may be incorrect.\n\n"
                     "To fix:\n"

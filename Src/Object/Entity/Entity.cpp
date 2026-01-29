@@ -4,12 +4,7 @@
 
 #include "Entity.h"
 
-#include "../../Systems/EnemyManager.h"
-
 class Camera;
-
-Entity::Entity()
-= default;
 
 void Entity::Initialize(const EntityConfig& config)
 {
@@ -27,15 +22,6 @@ void Entity::Initialize(const EntityConfig& config)
     {
         currHp = maxHp;
     }
-
-    damage = config.damage;
-    attackCooldown = config.attackCooldown;
-    attackCooldownTimer = 0;
-    attackOffsetX = config.attackOffsetX;
-    attackOffsetY = config.attackOffsetY;
-    attackWidth = config.attackWidth;
-    attackHeight = config.attackHeight;
-    attackDuration = config.attackDuration;
 }
 
 void Entity::Start()
@@ -51,26 +37,6 @@ void Entity::Update(const float deltaTime, const Tilemap& tileMap)
 
     HandleMovement(deltaTime, tileMap);
 
-    if (attackCooldownTimer > 0)
-    {
-        attackCooldownTimer -= deltaTime;
-    }
-
-    attackHitbox.Update(deltaTime, x, y);
-
-    if (attackHitbox.isActive)
-    {
-        for (const auto enemy : EnemyManager::Instance().GetActiveEnemies())
-        {
-            if (attackHitbox.CheckOverlap(enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight()))
-            {
-                enemy->TakeDamage(damage);
-
-                attackHitbox.isActive = false;
-                break;
-            }
-        }
-    }
 }
 
 void Entity::Draw(const Camera& cam)
@@ -80,34 +46,35 @@ void Entity::Draw(const Camera& cam)
 
 void Entity::HandleMovement(const float deltaTime, const Tilemap& tileMap)
 {
-    float newX = x + velX * deltaTime;
+    float newX = transform.topLeft.x + velX * deltaTime;
 
     if (!CheckCollisionX(tileMap, newX))
     {
-        x = newX;
+        transform.topLeft.x = newX;
     }
     else
     {
         velX = 0;
     }
 
-    float newY = y + velY * deltaTime;
+    float newY = transform.topLeft.y + velY * deltaTime;
 
     if (!CheckCollisionY(tileMap, newY))
     {
-        y = newY;
+        transform.topLeft.y = newY;
     }
     else
     {
         if (velY > 0)
         {
-            const int tileY = tileMap.WorldToTileY(newY + height);
-            y = tileMap.TileToWorldY(tileY) - height;
+            const int tileY = tileMap.WorldToTileY(newY + transform.size.y);
+            transform.topLeft.y = tileMap.TileToWorldY(tileY) - transform.size.y;
             isGrounded = true;
         }
         velY = 0;
     }
 
+    transform.CalculateCenterPosition();
     isGrounded = CheckGrounded(tileMap);
 }
 
@@ -140,25 +107,25 @@ void Entity::ApplyPhysics(const float deltaTime)
 
 bool Entity::CheckCollisionX(const Tilemap& tilemap, const float newX)
 {
-    const float checkX = velX > 0 ? newX + width - 1 : newX;
+    const float checkX = velX > 0 ? newX + transform.size.x - 1 : newX;
 
-    const float topY = y + 1;
-    const float bottomY = y + height - 2;
+    const float topY = transform.topLeft.y + 1;
+    const float bottomY = transform.topLeft.y + transform.size.y - 2;
 
     return tilemap.IsSolidAt(checkX, bottomY) || tilemap.IsSolidAt(checkX, topY);
 }
 
 bool Entity::CheckCollisionY(const Tilemap& tilemap, const float newY)
 {
-    const float checkY = velY > 0 ? newY + height - 1 : newY;
+    const float checkY = velY > 0 ? newY + transform.size.y - 1 : newY;
 
-    const float leftX = x + 1;
-    const float rightX = x + width - 2;
+    const float leftX = transform.center.x + transform.size.x / 2 - 1;
+    const float rightX = transform.center.x - transform.size.x / 2 + 1;
 
     if (velY > 0)
     {
-        const float currBottomY = y + height - 2;
-        const float newBottomY = newY + height - 2;
+        const float currBottomY = transform.topLeft.y + transform.size.y - 2;
+        const float newBottomY = newY + transform.size.y - 2;
 
         const int currTileY = tilemap.WorldToTileY(currBottomY);
         const int newTileY = tilemap.WorldToTileY(newBottomY);
@@ -177,33 +144,11 @@ bool Entity::CheckCollisionY(const Tilemap& tilemap, const float newY)
 
 bool Entity::CheckGrounded(const Tilemap& tilemap)
 {
-    const float checkY = y + height;
+    const float checkY = transform.topLeft.y + transform.size.y;
 
-    const float leftX = x + 1;
-    const float rightX = x + width - 2;
+    const float leftX = transform.center.x + transform.size.x / 2 - 1;
+    const float rightX = transform.topLeft.x - transform.size.x / 2 + 1;
 
     return tilemap.IsSolidAt(leftX, checkY) || tilemap.IsSolidAt(rightX, checkY)
         || tilemap.IsPlatformAt(leftX, checkY) || tilemap.IsPlatformAt(rightX, checkY);
-}
-
-void Entity::Attack()
-{
-    if (attackCooldownTimer > 0)
-    {
-        return;
-    }
-
-    float hitboxOffsetX;
-    if (isFacingRight)
-    {
-        hitboxOffsetX = width + attackOffsetX;
-    }
-    else
-    {
-        hitboxOffsetX = -attackOffsetX - attackWidth;
-    }
-    const float hitboxOffsetY = attackOffsetY;
-
-    attackHitbox.Activate(x, y, hitboxOffsetX, hitboxOffsetY, attackWidth, attackHeight, attackDuration);
-    attackCooldownTimer = attackCooldown;
 }

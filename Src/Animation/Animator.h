@@ -8,6 +8,14 @@
 #include "SpriteFrame.h"
 #include "../World/Camera.h"
 
+enum class PlayerAnimations
+{
+    MOVE,
+    IDLE,
+    ATTK1,
+    ATTK2,
+    ATTK3
+};
 
 class Animator
 {

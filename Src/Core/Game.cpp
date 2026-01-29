@@ -87,10 +87,11 @@ bool Game::Initialize()
 	
 	// playerController
 	PlayerConfig playerCfg = config::Player();
+	PlayerAttackConfig playerAttackConfig = config::PlayerAttack();
 	playerCfg.x = playerStartX;
 	playerCfg.y = playerStartY;
 	
-	playerController.Initialize(playerCfg);
+	playerController.Initialize(playerCfg, playerAttackConfig);
 	
 	// TODO: TEMP
 	constexpr float enemyStartX = playerStartX + 20;
@@ -114,7 +115,7 @@ bool Game::Initialize()
 	cam.Initialize(GameConfig::VIEW_WIDTH / 2, GameConfig::VIEW_HEIGHT / 2, GameConfig::VIEW_WIDTH,
 	               GameConfig::VIEW_HEIGHT);
 	cam.SetBounds(0, 0, tileMap.GetWidthPixels(), tileMap.GetHeightPixels());
-	cam.SetPosition(playerController.GetCenterX(), playerController.GetCenterY());
+	cam.SetPosition(playerController.GetCenterPosition().x, playerController.GetCenterPosition().y);
 	
 	lastFrameTime = timeGetTime();
 	isGameRunning = true;
@@ -135,14 +136,15 @@ void Game::Start()
 		const DWORD currTime = timeGetTime();
 		float deltaTime = static_cast<float>(currTime - lastFrameTime) / 1000.0f;
 		
-		if (deltaTime > 0.1f)
+		if (deltaTime > FRAME_TIME * 2)
 		{
-			deltaTime = 0.1f;
+			deltaTime = FRAME_TIME * 2;
 		}
 		
 		if (deltaTime >= FRAME_TIME)
 		{
 			lastFrameTime = currTime;
+			GetKeyAll();
 			HandleGlobalInput();
 			Update(deltaTime);
 			Draw();
@@ -169,8 +171,8 @@ void Game::Update(const float deltaTime)
 	playerController.Update(deltaTime, tileMap);
 	
 	TargetPosition camTarget{};
-	camTarget.x = playerController.GetCenterX();
-	camTarget.y = playerController.GetCenterY();
+	camTarget.x = playerController.GetCenterPosition().x;
+	camTarget.y = playerController.GetCenterPosition().y;
 	cam.FollowTarget(camTarget, 0.1f);
 }
 
@@ -193,7 +195,7 @@ void Game::Draw()
 	ClearFrameBuffer();
 	tileMap.Draw(cam);
 	
-	// Bmp* testTileset = LoadBmp("../Assets/Tileset/SceneTileset/anim-0.bmp");
+	Bmp* testTileset = LoadBmp("../Assets/Tileset/SceneTileset/anim-0.bmp");
 	// DrawBmp(5, 5, testTileset, true);
 	
 	// LoadTileset("../Assets/Tileset/SceneTileset/TestTileset.bmp");
@@ -222,7 +224,6 @@ void Game::Draw()
 
 void Game::HandleGlobalInput()
 {
-	GetKeyAll();
 	
 	if (globalInputConfig.quitGame.IsEdge())
 	{
