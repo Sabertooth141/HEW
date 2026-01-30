@@ -170,7 +170,7 @@ void Game::Update(const float deltaTime)
 	
 	playerController.Update(deltaTime, tileMap);
 	
-	TargetPosition camTarget{};
+	Vector2 camTarget{};
 	camTarget.x = playerController.GetCenterPosition().x;
 	camTarget.y = playerController.GetCenterPosition().y;
 	cam.FollowTarget(camTarget, 0.1f);
@@ -195,7 +195,7 @@ void Game::Draw()
 	ClearFrameBuffer();
 	tileMap.Draw(cam);
 	
-	Bmp* testTileset = LoadBmp("../Assets/Tileset/SceneTileset/anim-0.bmp");
+	// Bmp* testTileset = LoadBmp("../Assets/Tileset/SceneTileset/anim-0.bmp");
 	// DrawBmp(5, 5, testTileset, true);
 	
 	// LoadTileset("../Assets/Tileset/SceneTileset/TestTileset.bmp");

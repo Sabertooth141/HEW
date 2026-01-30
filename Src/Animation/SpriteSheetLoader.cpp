@@ -8,7 +8,7 @@
 #include <iostream>
 #include <sstream>
 
-SpriteSheet* SpriteSheetLoader::LoadFromFile(const char* bmpPath, const char* jsonPath)
+SpriteSheet* SpriteSheetLoader::LoadFromFile(const char* jsonPath, const char* bmpPath)
 {
     auto* sheet = new SpriteSheet();
 
@@ -142,11 +142,28 @@ Bmp* SpriteSheetLoader::ExtractRegion(const Bmp* source, const int x, const int 
     }
 
     const int srcStride = source->width * bytesPerPixel;
+    const int srcTotalSize = source->width * source->height * bytesPerPixel;
+    const int copySize = width * bytesPerPixel;
 
     for (int row = 0; row < height; row++)
     {
         const int srcIndex = (y + row) * srcStride + x * bytesPerPixel;
-        const int destIndex = row * y * bytesPerPixel;
+        const int destIndex = row * width * bytesPerPixel;
+
+        // Safety check before memcopy
+        if (srcIndex < 0 || srcIndex + copySize > srcTotalSize)
+        {
+            std::cerr << "ExtractRegion: Source read out of bounds at row " << row << std::endl;
+            DeleteBmp(&region);
+            return nullptr;
+        }
+
+        if (destIndex < 0 || destIndex + copySize > region->numpix)
+        {
+            std::cerr << "ExtractRegion: Dest write out of bounds at row " << row << std::endl;
+            DeleteBmp(&region);
+            return nullptr;
+        }
 
         memcpy(&region->pixel[destIndex], &source->pixel[srcIndex], width * bytesPerPixel);
     }

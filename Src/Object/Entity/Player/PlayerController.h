@@ -8,8 +8,7 @@
 #include "PlayerStates.h"
 #include "PlayerAttackController.h"
 #include "../Entity.h"
-#include "../../../World/Camera.h"
-#include "../../../Config/Structs.h"
+#include "../../../Animation/Animator.h"
 
 class Camera;
 
@@ -51,7 +50,8 @@ private:
     PlayerStateMachine<PlayerMoveState> moveStateMachine;
     PlayerAttackController attackController;
 
-    PlayerAnimation animations;
+    // animations
+    PlayerAnimators animators;
 };
 
 

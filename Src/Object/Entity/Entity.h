@@ -7,8 +7,6 @@
 #include "../Object.h"
 #include "../../World/Camera.h"
 #include "../../Config/Structs.h"
-#include "../../Util/Hitbox.h"
-#include "../../World/Camera.h"
 #include "../../World/Tilemap.h"
 
 class Entity : public Object

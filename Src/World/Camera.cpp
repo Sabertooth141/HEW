@@ -3,13 +3,14 @@
 //
 
 #include "Camera.h"
+#include "../Config/Structs.h"
 
 Camera::Camera() : x(0.0f), y(0.0f),
                    viewW(800), viewH(600),
                    hasBounds(false),
                    minX(0.0f), minY(0.0f),
                    maxX(0.0f), maxY(0.0f),
-                   followTarget({})
+                   followTarget()
 {
 }
 
@@ -43,7 +44,7 @@ void Camera::Move(const float dx, const float dy)
     }
 }
 
-void Camera::FollowTarget(const TargetPosition inFollowTarget, const float smoothing)
+void Camera::FollowTarget(const Vector2 inFollowTarget, const float smoothing)
 {
     x += (inFollowTarget.x - x) * smoothing;
     y += (inFollowTarget.y - y) * smoothing;

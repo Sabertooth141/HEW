@@ -23,8 +23,6 @@ struct GameConfig
 };
 
 #include <memory>
-#include <string>
-#include <vector>
 
 #include "../Object/Entity/Enemy/Enemy.h"
 #include "../Object/Entity/Player/PlayerController.h"

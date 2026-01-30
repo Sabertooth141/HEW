@@ -5,7 +5,7 @@
 #ifndef HEW_ENEMY_H
 #define HEW_ENEMY_H
 #include "../Entity.h"
-#include "../../../Config/Structs.h"
+
 
 class Enemy : public Entity
 {
@@ -25,7 +25,7 @@ private:
     void TargetDetection();
 
 private:
-    TargetPosition target;
+    Vector2 target;
 
     float attackCooldown;
     float moveSpeed;

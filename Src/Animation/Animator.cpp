@@ -3,6 +3,7 @@
 //
 
 #include "Animator.h"
+#include "../World/Camera.h"
 
 #include "SpriteSheetLoader.h"
 
@@ -97,7 +98,7 @@ void Animator::Pause()
 
 void Animator::Resume()
 {
-    isPlaying = false;
+    isPaused = false;
 }
 
 void Animator::Update(const float deltaTime)
@@ -107,7 +108,7 @@ void Animator::Update(const float deltaTime)
         return;
     }
 
-    if (!isPlaying || !isPaused)
+    if (!isPlaying || isPaused)
     {
         return;
     }

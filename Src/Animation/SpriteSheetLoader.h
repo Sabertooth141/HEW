@@ -13,7 +13,7 @@ class SpriteSheetLoader
 {
 public:
     // loads sprite sheet from bmp(4 bit) and json file(frame info)
-    static SpriteSheet* LoadFromFile(const char* bmpPath, const char* jsonPath);
+    static SpriteSheet* LoadFromFile(const char* jsonPath, const char* bmpPath);
 
 private:
     static bool ParseJson(const char* jsonPath, SpriteSheet* spriteSheet);

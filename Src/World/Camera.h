@@ -4,8 +4,8 @@
 
 #ifndef HEW_CAMERA_H
 #define HEW_CAMERA_H
-#include "../Config/Structs.h"
 
+struct Vector2;
 
 class Camera
 {
@@ -16,7 +16,7 @@ public:
 
     void SetPosition(float inX, float inY);
     void Move(float dx, float dy);
-    void FollowTarget(TargetPosition inFollowTarget, float smoothing = 0.1f);
+    void FollowTarget(Vector2 inFollowTarget, float smoothing = 0.1f);
 
     void SetBounds(float inMinX, float inMinY, float inMaxX, float inMaxY);
     void ClearBounds();
@@ -47,7 +47,7 @@ private:
     bool hasBounds;
     float minX, minY, maxX, maxY;
 
-    TargetPosition followTarget;
+    Vector2* followTarget;
 };
 
 

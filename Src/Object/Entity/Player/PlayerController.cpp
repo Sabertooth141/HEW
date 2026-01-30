@@ -4,8 +4,9 @@
 
 #include "PlayerController.h"
 
+#include <memory>
+
 #include "../../../Animation/Animator.h"
-#include "../../../Animation/SpriteSheetLoader.h"
 #include "../../../Lib/Shape.h"
 #include "../../../Systems/TimeManager.h"
 
@@ -179,7 +180,26 @@ void PlayerController::HandleTimeRewind()
 
 void PlayerController::InitAnimations()
 {
-    const SpriteSheet* moveSprite = SpriteSheetLoader::LoadFromFile("../Assets/Player/PlayerMove/PlayerMove.bmp",
-                                                              "../Assets/Player/PlayerMove/PlayerMove.json");
-    animations.AddAnimation(PlayerAnimations::MOVE, *moveSprite);
+    // MOVE
+    {
+        std::unique_ptr<Animator> animator = std::make_unique<Animator>();
+        animator->LoadSpriteSheet("../Assets/Player/PlayerMove/PlayerMove.json",
+                                  "../Assets/Player/PlayerMove/PlayerMove.bmp");
+
+        animators.AddAnimator(PlayerAnimations::MOVE, std::move(animator));
+    }
+    // // IDLE
+    // {
+    //     std::unique_ptr<Animator> animator = std::make_unique<Animator>();
+    //     animator->LoadSpriteSheet("../Assets/Player/PlayerIdle/PlayerIdle.json",
+    //                               "../Assets/Player/PlayerIdle/PlayerIdle.bmp");
+    //
+    //     animators.AddAnimator(PlayerAnimations::IDLE, std::move(animator));
+    // }
+    //
+    // Animator* temp = animators.GetAnimator(PlayerAnimations::IDLE);
+    //
+    // temp = animators.GetAnimator(PlayerAnimations::MOVE);
+
+    // ATTK
 }

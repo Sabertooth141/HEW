@@ -6,7 +6,6 @@
 #define HEW_ANIMATOR_H
 
 #include "SpriteFrame.h"
-#include "../World/Camera.h"
 
 enum class PlayerAnimations
 {
@@ -16,6 +15,8 @@ enum class PlayerAnimations
     ATTK2,
     ATTK3
 };
+
+class Camera;
 
 class Animator
 {

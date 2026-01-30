@@ -5,20 +5,15 @@
 #ifndef HEW_STRUCTS_H
 #define HEW_STRUCTS_H
 
+#include <memory>
+#include <ranges>
 #include <unordered_map>
 #include <vector>
 
 #include "../Lib/conioex.h"
-#include "../Animation/SpriteFrame.h"
+#include "../Animation/Animator.h"
 
 // MISC
-
-struct TargetPosition
-{
-    float x;
-    float y;
-};
-
 struct Vector2
 {
     float x, y;
@@ -93,7 +88,7 @@ struct PlayerConfig : EntityConfig
 
 struct EnemyConfig : EntityConfig
 {
-    TargetPosition target;
+    Vector2 target;
 
     float moveSpeed;
     float attackCooldown;
@@ -170,24 +165,41 @@ struct PlayerAttackConfig
 
 // ENEMY STRUCTS
 
-
 // ANIMATIONS
-enum class PlayerAnimations;
+class Animator;
 
-struct PlayerAnimation
+struct PlayerAnimators
 {
-    std::unordered_map<PlayerAnimations, SpriteSheet> animations;
+    std::unordered_map<PlayerAnimations, std::unique_ptr<Animator>> animators;
 
-    bool AddAnimation(const PlayerAnimations animationName, const SpriteSheet& spriteSheet)
+    bool AddAnimator(const PlayerAnimations animationName, std::unique_ptr<Animator> animator)
     {
-        if (animations.contains(animationName))
+        if (animator == nullptr)
         {
             return false;
         }
 
-        animations.emplace(animationName, spriteSheet);
+        if (animators.contains(animationName))
+        {
+            return false;
+        }
+
+        animators[animationName] = std::move(animator);
+
         return true;
     }
+
+    Animator* GetAnimator(const PlayerAnimations animationName)
+    {
+        auto it = animators.find(animationName);
+        if (it != animators.end())
+        {
+            return it->second.get();
+        }
+        return nullptr;
+    }
+
+
 };
 
 

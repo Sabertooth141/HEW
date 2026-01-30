@@ -5,9 +5,7 @@
 #pragma once
 #ifndef HEW_ENTITYCONFIGS_H
 #define HEW_ENTITYCONFIGS_H
-#include "../Object/Entity/Enemy/Enemy.h"
-#include "../Object/Entity/Player/PlayerAttackController.h"
-#include "../Object/Entity/Player/PlayerController.h"
+#include "../Config/Structs.h"
 
 namespace config
 {
