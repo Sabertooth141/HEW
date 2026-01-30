@@ -65,22 +65,22 @@ private:
 
     GlobalInputConfig globalInputConfig;
 
-    static COLORREF GetCurrentPalette(COLORREF* outPalette)
-    {
-        CONSOLE_SCREEN_BUFFER_INFOEX csbi;
-        csbi.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
-
-        HANDLE hConsole = GetCurrentHandle();  // conioex function
-        GetConsoleScreenBufferInfoEx(hConsole, &csbi);
-
-        // Copy the 16 colors
-        for (int i = 0; i < 16; i++)
-        {
-            outPalette[i] = csbi.ColorTable[i];
-        }
-
-        return outPalette[0];  // or return nothing
-    }
+    // static COLORREF GetCurrentPalette(COLORREF* outPalette)
+    // {
+    //     CONSOLE_SCREEN_BUFFER_INFOEX csbi;
+    //     csbi.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
+    //
+    //     HANDLE hConsole = GetCurrentHandle();  // conioex function
+    //     GetConsoleScreenBufferInfoEx(hConsole, &csbi);
+    //
+    //     // Copy the 16 colors
+    //     for (int i = 0; i < 16; i++)
+    //     {
+    //         outPalette[i] = csbi.ColorTable[i];
+    //     }
+    //
+    //     return outPalette[0];  // or return nothing
+    // }
 };
 
 inline bool IsLegacyConsoleHost()

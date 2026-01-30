@@ -5,7 +5,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 300
+    "duration": 600
    },
    "PlayerCharacter_1": {
     "frame": { "x": 64, "y": 0, "w": 64, "h": 64 },
@@ -30,14 +30,6 @@
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
     "duration": 300
-   },
-   "PlayerCharacter_4": {
-    "frame": { "x": 0, "y": 0, "w": 64, "h": 64 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
-    "sourceSize": { "w": 64, "h": 64 },
-    "duration": 500
    }
  },
  "meta": {
@@ -50,7 +42,10 @@
   "frameTags": [
   ],
   "layers": [
-   { "name": "Flattened", "opacity": 255, "blendMode": "normal" }
+   { "name": "legs", "opacity": 255, "blendMode": "normal" },
+   { "name": "body", "opacity": 255, "blendMode": "normal" },
+   { "name": "hand", "opacity": 255, "blendMode": "normal" },
+   { "name": "head", "opacity": 255, "blendMode": "normal" }
   ],
   "slices": [
   ]

@@ -14,6 +14,7 @@ class SpriteSheetLoader
 public:
     // loads sprite sheet from bmp(4 bit) and json file(frame info)
     static SpriteSheet* LoadFromFile(const char* jsonPath, const char* bmpPath);
+    static COLORREF* GetGamePalColor();
 
 private:
     static bool ParseJson(const char* jsonPath, SpriteSheet* spriteSheet);
@@ -23,6 +24,9 @@ private:
     // json helpers
     static std::string ReadFile(const char* path);
     static int ParseInt(const std::string& json, const std::string& key);
+
+private:
+    static COLORREF gamePal[16];
 };
 
 

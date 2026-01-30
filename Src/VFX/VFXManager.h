@@ -17,6 +17,7 @@ public:
 
     void ApplyGrayscale() const;
     void ApplyNormalPal() const;
+    void SetNormalPal(const COLORREF inPalette[16]);
 
 private:
     COLORREF grayscalePal[16]{};

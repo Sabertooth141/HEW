@@ -4,6 +4,7 @@
 
 #ifndef HEW_PLAYERSTATES_H
 #define HEW_PLAYERSTATES_H
+#include <type_traits>
 
 enum class PlayerMoveState
 {
@@ -25,6 +26,9 @@ enum class PlayerCombatState
 };
 
 template <typename T>
+concept IsAllowedType = std::is_same_v<T, PlayerMoveState> || std::is_same_v<T, PlayerCombatState>;
+
+template <IsAllowedType T>
 struct PlayerStateMachine
 {
     T prevState;

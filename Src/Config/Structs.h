@@ -119,11 +119,13 @@ struct GlobalInputConfig
 
 struct InputConfig
 {
+    // common
     KeyBinding moveLeft = {PK_LEFT, PK_A};
     KeyBinding moveRight = {PK_RIGHT, PK_D};
     KeyBinding jump = {PK_SP, PK_W};
     KeyBinding attack = {PK_J};
 
+    // time skills
     KeyBinding timeStop = {PK_K};
     KeyBinding timeRewind = {PK_L};
 };
@@ -164,43 +166,5 @@ struct PlayerAttackConfig
 };
 
 // ENEMY STRUCTS
-
-// ANIMATIONS
-class Animator;
-
-struct PlayerAnimators
-{
-    std::unordered_map<PlayerAnimations, std::unique_ptr<Animator>> animators;
-
-    bool AddAnimator(const PlayerAnimations animationName, std::unique_ptr<Animator> animator)
-    {
-        if (animator == nullptr)
-        {
-            return false;
-        }
-
-        if (animators.contains(animationName))
-        {
-            return false;
-        }
-
-        animators[animationName] = std::move(animator);
-
-        return true;
-    }
-
-    Animator* GetAnimator(const PlayerAnimations animationName)
-    {
-        auto it = animators.find(animationName);
-        if (it != animators.end())
-        {
-            return it->second.get();
-        }
-        return nullptr;
-    }
-
-
-};
-
 
 #endif //HEW_STRUCTS_H

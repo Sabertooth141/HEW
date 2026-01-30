@@ -10,6 +10,7 @@
 Animator::Animator() : spriteSheet(nullptr),
                        currFrame(0),
                        startFrame(0),
+                       loopStartFrame(0),
                        endFrame(0),
                        frameTimer(0),
                        isPlaying(false),
@@ -46,7 +47,7 @@ void Animator::Play(const bool loop)
         return;
     }
 
-    PlayFromFrame(0, loop);
+    PlayFromFrame(0, static_cast<int>(spriteSheet->frames.size()) - 1, loop);
 
     if (isDirectionForward)
     {
@@ -126,6 +127,11 @@ void Animator::Update(const float deltaTime)
 
 void Animator::Draw(const Camera& cam, const float worldX, const float worldY, const bool flipHorizontal) const
 {
+    if (!isPlaying)
+    {
+        return;
+    }
+
     const SpriteFrame* frame = GetCurrentFrame();
 
     if (frame == nullptr || frame->image == nullptr)
@@ -148,9 +154,18 @@ void Animator::Draw(const Camera& cam, const float worldX, const float worldY, c
     }
     else
     {
-        DrawBmp(screenX, screenY, frame->image, false);
+        DrawBmp(screenX, screenY, frame->image, true);
+    }
+}
+
+void Animator::SetLoopStartFrame(const int frameNo)
+{
+    if (frameNo < 0 || frameNo >= spriteSheet->frames.size())
+    {
+        return;
     }
 
+    loopStartFrame = frameNo;
 }
 
 SpriteFrame* Animator::GetCurrentFrame() const
@@ -189,7 +204,7 @@ void Animator::AdvanceFrame()
         {
             if (isLoop)
             {
-                currFrame = startFrame;
+                currFrame = loopStartFrame;
             }
             else
             {

@@ -34,6 +34,7 @@ private:
     void HandleInput(float deltaTime);
     void HandleTimeRewind();
     void InitAnimations();
+    void HandleAnimationUpdate(float deltaTime);
 
     // vars
 private:
@@ -43,7 +44,6 @@ private:
     float timeStopDuration;
     float airResistance;
 
-
     InputConfig input;
     PlayerSnapshot snapshot;
 
@@ -51,7 +51,9 @@ private:
     PlayerAttackController attackController;
 
     // animations
-    PlayerAnimators animators;
+    PlayerAnimators moveAnimators;
+    PlayerAnimators combatAnimators;
+    Animator* animatorPlaying;
 };
 
 

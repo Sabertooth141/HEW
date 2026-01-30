@@ -6,6 +6,8 @@
 
 #include <format>
 
+#include "../Animation/SpriteSheetLoader.h"
+#include "../Lib/Shape.h"
 #include "../Config/EntityConfigs.h"
 #include "../Config/SystemConfigs.h"
 #include "../Systems/EnemyManager.h"
@@ -130,7 +132,8 @@ void Game::Start()
 		e->Start();
 	}
 	playerController.Start();
-	
+
+	vfxManager.SetNormalPal(SpriteSheetLoader::GetGamePalColor());
 	while (isGameRunning)
 	{
 		const DWORD currTime = timeGetTime();
@@ -182,6 +185,20 @@ void Game::ShutDown()
 	EndConioEx();
 }
 
+void PaletteBox16(int _x, int _y, int _w, int _h, int _stride)
+{
+	// パレットの色数分ループ
+	for (int i = 0; i < 16; i++) {
+		// 四角形を描く
+		int x1 = _x + (i % _stride) * _w;
+		int y1 = _y + (i / _stride) * _h;
+		int x2 = x1 + _w - 1;
+		int y2 = y1 + _h - 1;
+		DrawRect(x1, y1, x2, y2, i, true);
+	}
+}
+
+
 void Game::Draw()
 {
 	if (TimeManager::Instance().IsTimeStopped())
@@ -195,26 +212,10 @@ void Game::Draw()
 	ClearFrameBuffer();
 	tileMap.Draw(cam);
 	
-	// Bmp* testTileset = LoadBmp("../Assets/Tileset/SceneTileset/anim-0.bmp");
-	// DrawBmp(5, 5, testTileset, true);
-	
-	// LoadTileset("../Assets/Tileset/SceneTileset/TestTileset.bmp");
-	
-	// Check before drawing
-	// Bmp* testTile = tileset.GetTile(5);
-	// if (testTile != nullptr)
-	// {
-	//     DrawBmp(5 + 10, 1, testTile, true);
-	// }
-	
-	COLORREF palette[16];
-	GetCurrentPalette(palette);
-	
 	for (const auto &e: EnemyManager::Instance().GetActiveEnemies())
 	{
 		e->Draw(cam);
 	}
-	// vfxManager.ApplyNormalPal();
 	
 	playerController.Draw(cam);
 	
@@ -233,7 +234,7 @@ void Game::HandleGlobalInput()
 
 void Game::LoadTileset(const char *filePath)
 {
-	Bmp *tilesetImage = LoadBmp(filePath, true);
+	Bmp *tilesetImage = LoadBmp(filePath);
 	
 	// Check 1: Did the file load?
 	if (tilesetImage == nullptr)
@@ -272,3 +273,4 @@ int main()
 	
 	return 0;
 }
+

@@ -8,11 +8,15 @@
 #include <iostream>
 #include <sstream>
 
+COLORREF SpriteSheetLoader::gamePal[16] = {};
+
 SpriteSheet* SpriteSheetLoader::LoadFromFile(const char* jsonPath, const char* bmpPath)
 {
     auto* sheet = new SpriteSheet();
 
-    sheet->source = LoadBmp(bmpPath, true);
+    sheet->source = LoadBmp(bmpPath);
+
+    memcpy(gamePal, sheet->source->pal, sizeof(gamePal));
     if (sheet->source == nullptr)
     {
         delete sheet;
@@ -28,6 +32,11 @@ SpriteSheet* SpriteSheetLoader::LoadFromFile(const char* jsonPath, const char* b
     ExtractFrames(sheet);
 
     return sheet;
+}
+
+COLORREF* SpriteSheetLoader::GetGamePalColor()
+{
+    return gamePal;
 }
 
 bool SpriteSheetLoader::ParseJson(const char* jsonPath, SpriteSheet* spriteSheet)
@@ -83,7 +92,7 @@ bool SpriteSheetLoader::ParseJson(const char* jsonPath, SpriteSheet* spriteSheet
         }
 
         spriteSheet->frames.push_back(frame);
-        pos = nextFramePos;
+        pos = frameInfoEnd;
     }
 
     return !spriteSheet->frames.empty();

@@ -12,7 +12,7 @@ namespace config
     inline PlayerConfig Player()
     {
         PlayerConfig config{};
-        config.width = 48;
+        config.width = 64;
         config.height = 64;
         config.color = LIGHTCYAN;
         config.walkSpeed = 300.0f;
@@ -72,7 +72,7 @@ namespace config
         EnemyConfig config{};
         config.width = 48;
         config.height = 64;
-        config.color = RED;
+        config.color = GREEN;
         config.gravity = 800.0f;
         config.maxFallSpeed = 1000.0f;
 

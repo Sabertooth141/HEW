@@ -15,7 +15,8 @@ PlayerController::PlayerController() : walkSpeed(0), sprintSpeed(0),
                                        timeStopDuration(0),
                                        airResistance(0),
                                        snapshot(),
-                                       moveStateMachine(PlayerMoveState::DEFAULT)
+                                       moveStateMachine(PlayerMoveState::DEFAULT),
+                                       animatorPlaying(nullptr)
 {
 }
 
@@ -39,6 +40,8 @@ void PlayerController::Start()
 
     currSpeed = walkSpeed;
     moveStateMachine.ChangeState(PlayerMoveState::IDLE);
+    animatorPlaying = moveAnimators.GetAnimator(moveStateMachine.GetCurrState());
+    animatorPlaying->Play();
 }
 
 void PlayerController::Update(const float deltaTime, const Tilemap& tileMap)
@@ -55,11 +58,12 @@ void PlayerController::Update(const float deltaTime, const Tilemap& tileMap)
     snapshot.isFacingRight = isFacingRight;
 
     TimeManager::Instance().RecordPlayerSnapshot(snapshot);
+    HandleAnimationUpdate(deltaTime);
 }
 
 void PlayerController::Draw(const Camera& cam)
 {
-    Entity::Draw(cam);
+    // Entity::Draw(cam);
 
     const PlayerSnapshot holoSnapshot = TimeManager::Instance().GetPlayerSnapshot();
     int screenX = cam.WorldToScreenX(holoSnapshot.x);
@@ -74,6 +78,11 @@ void PlayerController::Draw(const Camera& cam)
 
         DrawRect(screenX, screenY, screenX + hitbox.transform.size.x, screenY + hitbox.transform.size.y, LIGHTRED,
                  false);
+    }
+
+    if (animatorPlaying != nullptr)
+    {
+        animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, false);
     }
 }
 
@@ -183,23 +192,46 @@ void PlayerController::InitAnimations()
     // MOVE
     {
         std::unique_ptr<Animator> animator = std::make_unique<Animator>();
-        animator->LoadSpriteSheet("../Assets/Player/PlayerMove/PlayerMove.json",
-                                  "../Assets/Player/PlayerMove/PlayerMove.bmp");
+        animator->LoadSpriteSheet("../Assets/Player/PlayerMove/PlayerCharacterMove.json",
+                                  "../Assets/Player/PlayerMove/PlayerCharacterMove.bmp");
+        animator->SetLoopStartFrame(1);
 
-        animators.AddAnimator(PlayerAnimations::MOVE, std::move(animator));
+        moveAnimators.AddAnimator(PlayerMoveState::MOVE, std::move(animator));
     }
-    // // IDLE
-    // {
-    //     std::unique_ptr<Animator> animator = std::make_unique<Animator>();
-    //     animator->LoadSpriteSheet("../Assets/Player/PlayerIdle/PlayerIdle.json",
-    //                               "../Assets/Player/PlayerIdle/PlayerIdle.bmp");
-    //
-    //     animators.AddAnimator(PlayerAnimations::IDLE, std::move(animator));
-    // }
-    //
-    // Animator* temp = animators.GetAnimator(PlayerAnimations::IDLE);
-    //
-    // temp = animators.GetAnimator(PlayerAnimations::MOVE);
+    // IDLE
+    {
+        std::unique_ptr<Animator> animator = std::make_unique<Animator>();
+        animator->LoadSpriteSheet("../Assets/Player/PlayerIdle/PlayerCharacterIdle.json",
+                                  "../Assets/Player/PlayerIdle/PlayerCharacterIdle.bmp");
+
+        moveAnimators.AddAnimator(PlayerMoveState::IDLE, std::move(animator));
+    }
 
     // ATTK
+}
+
+void PlayerController::HandleAnimationUpdate(const float deltaTime)
+{
+    if (!attackController.IsAttacking())
+    {
+        // if state not changed
+        if (animatorPlaying != nullptr && animatorPlaying == moveAnimators.GetAnimator(moveStateMachine.GetCurrState()))
+        {
+            animatorPlaying->Update(deltaTime);
+            return;
+        }
+
+        if (animatorPlaying != nullptr)
+        {
+            animatorPlaying->Stop();
+        }
+
+        animatorPlaying = moveAnimators.GetAnimator(moveStateMachine.GetCurrState());
+        if (animatorPlaying == nullptr)
+        {
+            animatorPlaying = moveAnimators.GetAnimator(PlayerMoveState::IDLE);
+        }
+        animatorPlaying->Play();
+        animatorPlaying->Update(deltaTime);
+    }
 }

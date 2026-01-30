@@ -19,3 +19,8 @@ void VFXManager::ApplyNormalPal() const
 {
     SetPalette16(normalPal);
 }
+
+void VFXManager::SetNormalPal(const COLORREF inPalette[16])
+{
+    memcpy(normalPal, inPalette, sizeof(normalPal));
+}
