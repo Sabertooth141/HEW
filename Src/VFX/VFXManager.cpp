@@ -12,12 +12,12 @@ void VFXManager::Initialize(const VFXConfig& config)
 
 void VFXManager::ApplyGrayscale() const
 {
-    SetPalette16(grayscalePal);
+    SetPalette(grayscalePal, 0, 15);
 }
 
 void VFXManager::ApplyNormalPal() const
 {
-    SetPalette16(normalPal);
+    SetPalette(normalPal, 0, 15);
 }
 
 void VFXManager::SetNormalPal(const COLORREF inPalette[16])

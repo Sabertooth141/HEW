@@ -75,6 +75,7 @@ namespace config
         config.color = GREEN;
         config.gravity = 800.0f;
         config.maxFallSpeed = 1000.0f;
+        config.checkGroundOffset = 2;
 
         config.maxHp = 100;
         config.isFacingRight = true;

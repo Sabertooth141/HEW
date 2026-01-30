@@ -4,8 +4,6 @@
 
 #include "Object.h"
 
-#include "../Lib/Shape.h"
-
 
 Object::Object() : transform(), color()
 {

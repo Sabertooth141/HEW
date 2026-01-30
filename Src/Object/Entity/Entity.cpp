@@ -14,6 +14,7 @@ void Entity::Initialize(const EntityConfig& config)
     velY = config.velY;
     gravity = config.gravity;
     maxFallSpeed = config.maxFallSpeed;
+    checkGroundOffset = config.checkGroundOffset;
     currHp = config.currHp;
     maxHp = config.maxHp;
     isFacingRight = config.isFacingRight;
@@ -119,8 +120,8 @@ bool Entity::CheckCollisionY(const Tilemap& tilemap, const float newY)
 {
     const float checkY = velY > 0 ? newY + transform.size.y - 1 : newY;
 
-    const float leftX = transform.center.x + transform.size.x / 2 - 1;
-    const float rightX = transform.center.x - transform.size.x / 2 + 1;
+    const float leftX = transform.center.x + checkGroundOffset;
+    const float rightX = transform.center.x - checkGroundOffset;
 
     if (velY > 0)
     {

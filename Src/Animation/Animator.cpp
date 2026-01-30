@@ -150,11 +150,11 @@ void Animator::Draw(const Camera& cam, const float worldX, const float worldY, c
     if (flipHorizontal)
     {
         // TODO: implement flipped draw BMP
-        DrawBmp(screenX, screenY, frame->image, true);
+        DrawBmp(screenX, screenY, frame->image, BMP_HINV);
     }
     else
     {
-        DrawBmp(screenX, screenY, frame->image, true);
+        DrawBmp(screenX, screenY, frame->image);
     }
 }
 

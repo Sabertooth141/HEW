@@ -72,6 +72,7 @@ struct EntityConfig : ObjectConfig
     float velY;
     float gravity;
     float maxFallSpeed;
+    float checkGroundOffset;
     float currHp;
     float maxHp;
     bool isFacingRight;

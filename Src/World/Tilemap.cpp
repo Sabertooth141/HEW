@@ -5,7 +5,6 @@
 #include "Tilemap.h"
 
 #include "Camera.h"
-#include "../Lib/Shape.h"
 
 Tilemap::Tilemap() : tiles(nullptr), widthTiles(0), heightTiles(0), tileSize(16)
 {

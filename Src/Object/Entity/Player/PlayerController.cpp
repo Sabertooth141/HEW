@@ -48,6 +48,7 @@ void PlayerController::Update(const float deltaTime, const Tilemap& tileMap)
 {
     HandleInput(deltaTime);
     attackController.Update(deltaTime, transform, isFacingRight);
+    HandleAnimationUpdate(deltaTime);
 
     Entity::Update(deltaTime, tileMap);
 
@@ -58,12 +59,19 @@ void PlayerController::Update(const float deltaTime, const Tilemap& tileMap)
     snapshot.isFacingRight = isFacingRight;
 
     TimeManager::Instance().RecordPlayerSnapshot(snapshot);
-    HandleAnimationUpdate(deltaTime);
 }
 
 void PlayerController::Draw(const Camera& cam)
 {
-    // Entity::Draw(cam);
+    if (animatorPlaying != nullptr)
+    {
+        animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, !isFacingRight);
+    }
+
+    if (!cam.IsVisible(transform.topLeft.x, transform.topLeft.y, transform.size.x, transform.size.y))
+    {
+        return;
+    }
 
     const PlayerSnapshot holoSnapshot = TimeManager::Instance().GetPlayerSnapshot();
     int screenX = cam.WorldToScreenX(holoSnapshot.x);
@@ -78,11 +86,6 @@ void PlayerController::Draw(const Camera& cam)
 
         DrawRect(screenX, screenY, screenX + hitbox.transform.size.x, screenY + hitbox.transform.size.y, LIGHTRED,
                  false);
-    }
-
-    if (animatorPlaying != nullptr)
-    {
-        animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, false);
     }
 }
 
@@ -198,6 +201,7 @@ void PlayerController::InitAnimations()
 
         moveAnimators.AddAnimator(PlayerMoveState::MOVE, std::move(animator));
     }
+
     // IDLE
     {
         std::unique_ptr<Animator> animator = std::make_unique<Animator>();

@@ -1,29 +1,8 @@
-/**
-* @file	conioex.h
-* @brief	Win32 ƒRƒ“ƒ\[ƒ‹ I/O Šg’£ for Visual C++/Borland C++
-*
-* @date	2019/10/15 2019”N“x‰”Å
-* @version	1.0
-*		2022/10/01
-*			ƒOƒ[ƒoƒ‹•Ï”‚Ì–¼‘O‚Ìæ“ª‚É‚Í'g_'‚ğ•t‰Á‚·‚é‚æ‚¤‚É•ÏX‚µ‚½B
-*			uŠg’£•¶š—ñˆ—(ƒ}ƒ‹ƒ`ƒoƒCƒg/Unicode‘Î‰)v’Ç‰Á
-*				”¼ŠpË‘SŠp•ÏŠ·ŠÖ”iHanToZenj’Ç‰ÁB
-*				‘®w’è‚Å‘SŠp•¶šo—Í‚·‚éŠÖ”(PrintStringF)‚Ì’Ç‰ÁB
-* @version	1.2
-*		2023/12/1
-*           ClearFrameBuffer()
-*           PrintFrameBuffer()
-*       
-* @note
-*  ƒRƒ“ƒ\[ƒ‹ƒEƒBƒ“ƒhƒE‚ÌƒvƒƒpƒeƒB‚Ìİ’è‚ğˆÈ‰º‚É•ÏX‚·‚é‚±‚Æ
-*  Eu]—ˆ‚ÌƒRƒ“ƒ\[ƒ‹‚ğg‚¤v‚Ìƒ`ƒFƒbƒN‚ğŠO‚·
-*  EuŠÈˆÕ•ÒWƒ‚[ƒhv‚Ìƒ`ƒFƒbƒN‚ğŠO‚·
-*
-* ƒRƒ“ƒ\[ƒ‹ŠÖ”‚É‚Â‚¢‚Ä
-* https://learn.microsoft.com/ja-jp/windows/console/console-functions
+/*
+ @version	New
 */
-
 #include "conioex.h"
+#include <vector>
 
 #define CONSOLE_INPUT_MODE	(ENABLE_EXTENDED_FLAGS | ENABLE_MOUSE_INPUT | ENABLE_WINDOW_INPUT | ENABLE_PROCESSED_INPUT)
 //ƒRƒ“ƒ\[ƒ‹o—Í‚ÅANSI-256-color‚âƒtƒ‹ƒJƒ‰[‚ğˆµ‚¤‚½‚ß‚É'ENABLE_VIRTUAL_TERMINAL_PROCESSING'’Ç‰Á
@@ -47,12 +26,17 @@ static HANDLE	g_OrgOutputHandle = NULL;	//InitConio’¼‘O‚Ìƒnƒ“ƒhƒ‹
 static DWORD	g_OrgOutputHandleMode = 0;
 static HANDLE	g_OrgInputHandle;
 static DWORD	g_OrgInputHandleMode = 0;
-static LONG		g_OrgWindowStyle = 0;
 static CONSOLE_CURSOR_INFO	g_OrgCursorInfo = { 0 };	//ƒIƒŠƒWƒiƒ‹‚ÌƒJ[ƒ\ƒ‹î•ñ
-
+#ifdef USED2D
+static LONG_PTR	g_OrgWindowStylePtr = 0;
+static HANDLE	g_DisplayHandleD2D = NULL;	//ƒfƒBƒXƒvƒŒƒCƒnƒ“ƒhƒ‹iƒ_ƒuƒ‹ƒoƒbƒtƒ@j
+static HANDLE	g_InputHandleD2D = NULL;	//“ü—Í—pƒnƒ“ƒhƒ‹
+#else
+static LONG		g_OrgWindowStyle = 0;
 static HANDLE	g_DisplayHandle[2] = { NULL,NULL };	//ƒfƒBƒXƒvƒŒƒCƒnƒ“ƒhƒ‹iƒ_ƒuƒ‹ƒoƒbƒtƒ@j
 static HANDLE	g_InputHandle = NULL;	//“ü—Í—pƒnƒ“ƒhƒ‹
 static int		g_SwapFlg = 0;	//ƒ_ƒuƒ‹ƒoƒbƒtƒ@—LŒø‚ÌƒfƒBƒXƒvƒŒƒCƒnƒ“ƒhƒ‹“ü‘Ö—pƒtƒ‰ƒO
+#endif // USED2D
 
 static DWORD	g_ConioKeyMap[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 static COORD	g_ConioMousePosition = { 0, 0 };
@@ -74,6 +58,7 @@ static int g_KeyPress[NUM_KEYS] = {};	//ƒvƒŒƒX
 static int g_KeyEdge[NUM_KEYS] = {};	//ƒGƒbƒW
 static int g_KeyLast[NUM_KEYS] = {};		//TEMP
 
+#ifndef USED2D
 //ƒpƒŒƒbƒgƒe[ƒuƒ‹
 static COLORREF	g_ConsoleColorTable[NUM_PALETTE] = { 0 };	//ƒRƒ“ƒ\[ƒ‹‚ÌƒpƒŒƒbƒg
 static COLORREF	g_OrgColorTable[NUM_PALETTE] = { 0 };	//Conioex‚ª‹N“®‚µ‚½‚Æ‚«‚ÌƒpƒŒƒbƒg
@@ -83,9 +68,10 @@ static COLORREF	g_OrgColorTable[NUM_PALETTE] = { 0 };	//Conioex‚ª‹N“®‚µ‚½‚Æ‚«‚Ìƒ
 static WORD* g_ScreenBuffer4bit = NULL;	//ƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@
 //ƒtƒŒ[ƒ€ƒoƒbƒtƒ@
 char* g_FrameBuffer4bit = NULL;	//‚P‚UF‰æ‘œ—pƒtƒŒ[ƒ€ƒoƒbƒtƒ@
+#endif // !USED2D
 //ƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@(16F)‚Ì¶¬
 static HANDLE create_screen_buffer(CONSOLE_SCREEN_BUFFER_INFOEX* pCsbix, CONSOLE_FONT_INFOEX* pCfix);
-
+#ifndef USED2D
 //RGB’li”š‚R•¶šj"‚O‚O‚O"?"‚Q‚T‚T"‚Ìƒe[ƒuƒ‹(‚Q‚SbitƒJƒ‰[‰æ‘œ—p)
 static char CharRGBconvTBL[3][256] = {
 	{'0','0','0'},
@@ -105,9 +91,542 @@ static BYTE* g_FrameBuffer256 = NULL;	//‚Wƒrƒbƒg/ƒsƒNƒZƒ‹‚Ìƒoƒbƒtƒ@
 static BYTE* g_ScreenBuffer256 = NULL;	//‚Q‚T‚UƒpƒŒƒbƒg”Ô†w’èƒGƒXƒP[ƒvƒV[ƒPƒ“ƒX‚ª•À‚ñ‚¾ƒoƒbƒtƒ@
 static void init_256color_image(void);	//‚Q‚T‚UFƒpƒŒƒbƒg‰æ‘œ—p‚Ì‰Šú‰»
 static void set_palette256(HANDLE _hCon, const COLORREF* _p256, int _num_pal);	//‚Q‚T‚UFƒpƒŒƒbƒgİ’è
+#endif // !USED2D
+
 
 static RECT g_ConWinSize = {};	//ƒRƒ“ƒ\[ƒ‹‚ÌƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚ÌƒTƒCƒY‚ÆAƒtƒHƒ“ƒgƒTƒCƒYB{left=w,top=h,right=fw,bottom=fh}
 
+#ifdef USED2D
+//================================================================
+//	Direct2D/DirectWrite
+//================================================================
+ID2D1HwndRenderTarget* g_pRenderTarget = NULL;	//ƒEƒBƒ“ƒhƒE‚É•`‰æ‚·‚éˆ×‚ÌƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg
+ID2D1Factory* g_pD2DFactory = NULL;		//D2Dƒtƒ@ƒNƒgƒŠ[
+IDWriteFactory* g_pDWFactory = NULL;	//ƒeƒLƒXƒgo—Í—pDirectWriteƒtƒ@ƒNƒgƒŠ[
+
+std::vector<ID2D1Bitmap*>	g_pBmpList;		//‰æ‘œ—p
+std::vector<ID2D1Bitmap*>	g_pTextBmpList;	//ƒeƒLƒXƒg—p
+
+//char* g_FrameBuffer4bitD2D = NULL;		//‚P‚UF(4bit)‰æ‘œ—pƒtƒŒ[ƒ€ƒoƒbƒtƒ@
+RGBQUAD* g_FrameBuffer32bitD2D = NULL;	//ƒtƒ‹ƒJƒ‰[—pƒtƒŒ[ƒ€ƒoƒbƒtƒ@
+//RGBQUAD* g_pMask = NULL;
+COORD	g_CursorPosD2D = { 0,0 };		//•¶š•\¦ŠJnˆÊ’uiƒJ[ƒ\ƒ‹ˆÊ’uj
+
+//ƒpƒŒƒbƒgƒe[ƒuƒ‹
+//static COLORREF	g_ConsoleColorTableD2D[NUM_D2D_PAL] = { 0 };	//ƒRƒ“ƒ\[ƒ‹‚ÌƒpƒŒƒbƒg
+static COLORREF	g_OrgColorTableD2D[NUM_D2D_PAL] = { 0 };	//Conioex‚ª‹N“®‚µ‚½‚Æ‚«‚ÌƒpƒŒƒbƒg
+RGBQUAD	g_PaletteD2D[NUM_ANSI_PAL] = {};	//256FƒpƒŒƒbƒgFCOLORREF:0x00BBGGRR->{R8,G8,B8,X}/RGBQUAD:{B8,G8,R8,A8}->0xAARRGGBB
+
+bool g_PrintStringCompatibleMode = false;	//true=ConsoleAPI‚Ì‚Ì‚PF‚Q‚Ì•¶šƒTƒCƒY
+
+//prototype
+bool InitD2D(int _w, int _h);
+void EndD2D(void);
+//================================================================
+//	D2D‰Šú‰»
+//================================================================
+bool InitD2D(int _window_width, int _window_height)
+{
+	HRESULT hr;	//
+	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &g_pD2DFactory);
+	_ASSERT(hr == S_OK);
+#if false
+	RECT cr;
+	GetClientRect(g_hConWnd, &cr);	//ƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚Ì{0,0,•,‚‚³}æ“¾
+	_window_width = cr.right;
+	_window_height = cr.bottom;
+	hr = g_pD2DFactory->CreateHwndRenderTarget(D2D1::RenderTargetProperties(),
+		D2D1::HwndRenderTargetProperties(g_hConWnd, D2D1_SIZE_U{ (UINT32)_window_width, (UINT32)_window_height }), &g_pRenderTarget);
+	_ASSERT(hr == S_OK);
+#else
+	/*
+	* ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚Ìí—Ş
+	* ID2D1BitmapRenderTarget ------> CreateCompatibleRenderTarget ƒƒ\ƒbƒh‚É‚æ‚Á‚Äì¬‚³‚ê‚½’†ŠÔƒeƒNƒXƒ`ƒƒ‚ÉƒŒƒ“ƒ_ƒŠƒ“ƒO‚µ‚Ü‚·B
+	* ID2D1DCRenderTarget ----------> GDI ƒfƒoƒCƒX ƒRƒ“ƒeƒLƒXƒg‚É‘Î‚µ‚Ä•`‰æƒRƒ}ƒ“ƒh‚ğ”­s‚µ‚Ü‚·B
+	* ID2D1GdiInteropRenderTarget --> GDI •`‰æƒRƒ}ƒ“ƒh‚ğó‚¯“ü‚ê‚é‚±‚Æ‚ª‚Å‚«‚éƒfƒoƒCƒXƒRƒ“ƒeƒLƒXƒg‚Ö‚ÌƒAƒNƒZƒX‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+	* ID2D1HwndRenderTarget --------> •`‰æ–½—ß‚ğƒEƒBƒ“ƒhƒE‚ÉƒŒƒ“ƒ_ƒŠƒ“ƒO‚µ‚Ü‚·B
+	*/
+	//ƒEƒBƒ“ƒhƒE‚Ö‚Ì•`‰æ‚È‚Ì‚Å ID2D1HwndRenderTarget ‚ğg—p‚·‚éB
+	//ƒTƒCƒY‚ÍƒEƒBƒ“ƒhƒE‚Æ“¯‚¶ƒTƒCƒY‚É‚·‚é‚±‚ÆBƒTƒCƒY‚ªˆá‚¤‚ÆAƒEƒBƒ“ƒhƒE‚É‡‚í‚¹‚ÄŠg‘åEk¬‚ª‚©‚©‚éB
+	/////D2D1_SIZE_U renderTargetSize = { (UINT32)g_WindowSize.Right, (UINT32)g_WindowSize.Bottom };
+	D2D1_SIZE_U renderTargetSize;
+	renderTargetSize.width = _window_width;
+	renderTargetSize.height = _window_height;
+
+	D2D1_RENDER_TARGET_PROPERTIES renderTargetProperties;
+	D2D1_HWND_RENDER_TARGET_PROPERTIES hwndRenderTargetProperties;
+	D2D1_PIXEL_FORMAT pixelFormat;
+	pixelFormat.format = DXGI_FORMAT_UNKNOWN;	//Šù’è‚ÌŒ`®
+	pixelFormat.alphaMode = D2D1_ALPHA_MODE_UNKNOWN;
+	//pixelFormat.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	//pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
+
+	renderTargetProperties.type = D2D1_RENDER_TARGET_TYPE_DEFAULT;	//ƒn[ƒhƒEƒFƒA‚É‚æ‚é•`‰æ‚Æƒ\ƒtƒgƒEƒFƒA‚É‚æ‚é•`‰æ‚Ì‚Ç‚¿‚ç‚ğ—˜—p‚·‚é‚©
+	renderTargetProperties.pixelFormat = pixelFormat;				//ƒsƒNƒZƒ‹Œ`®‚ÆƒAƒ‹ƒtƒ@ƒ‚[ƒh
+	renderTargetProperties.dpiX = 0;								//‚»‚ê‚¼‚ê…•½•ûŒü‚Æ‚’¼•ûŒü‚Ì DPI iDonts per InchAƒsƒNƒZƒ‹–§“xj‚ğw’è‚µ‚Ü‚·B
+	renderTargetProperties.dpiY = 0;								//Šù’è‚Ì DPI ‚ğg—p‚·‚é‚É‚Í 0 ‚ğw’è‚µ‚Ü‚·B
+	renderTargetProperties.usage = D2D1_RENDER_TARGET_USAGE_NONE;	//ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚ÌƒŠƒ‚[ƒgˆ—‚Æ GDI ‚Æ‚ÌŒİŠ·«
+	renderTargetProperties.minLevel = D2D1_FEATURE_LEVEL_DEFAULT;	//ƒn[ƒhƒEƒFƒA‚É‚æ‚é•`‰æ‚É•K—v‚È Direct3D ‚ÌÅ¬ŒÀ‚Ì‹@”\ƒŒƒxƒ‹
+
+	RECT cr;
+	GetClientRect(g_hConWnd, &cr);	//ƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚Ì{0,0,•,‚‚³}æ“¾
+	renderTargetSize.width = cr.right;
+	renderTargetSize.height = cr.bottom;
+	hwndRenderTargetProperties.hwnd = g_hConWnd;	//ƒ^[ƒQƒbƒg‚Æ‚È‚éƒEƒBƒ“ƒhƒE‚Ìƒnƒ“ƒhƒ‹
+	hwndRenderTargetProperties.pixelSize = renderTargetSize;	//ƒEƒBƒ“ƒhƒE‚ÌƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚ÌƒTƒCƒY
+	hwndRenderTargetProperties.presentOptions = D2D1_PRESENT_OPTIONS_IMMEDIATELY;	//”ñ“¯ŠúiƒtƒŒ[ƒ€ŠÔ‚Ü‚Å‘Ò‚½‚È‚¢j
+	//hwndRenderTargetProperties.presentOptions = D2D1_PRESENT_OPTIONS_NONE;	//ƒtƒŒ[ƒ€“¯Šú
+	//ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒgæ“¾
+	hr = g_pD2DFactory->CreateHwndRenderTarget(renderTargetProperties, hwndRenderTargetProperties, &g_pRenderTarget);
+#endif // false
+
+	hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&g_pDWFactory));
+	_ASSERT(hr == S_OK);
+	//g_FrameBuffer4bitD2D = (char*)calloc(g_ScreenBufferSize.X * g_ScreenBufferSize.Y, sizeof(char));
+	g_FrameBuffer32bitD2D = (RGBQUAD*)calloc(g_ScreenBufferSize.X * g_ScreenBufferSize.Y, sizeof(RGBQUAD));
+	//g_pMask = (RGBQUAD*)calloc(g_ScreenBufferSize.X * g_ScreenBufferSize.Y, sizeof(RGBQUAD));
+	//ƒfƒtƒHƒ‹ƒg‚Q‚T‚UƒpƒŒƒbƒg‚ğANSI256F‚Å‰Šú‰»
+	//memcpy_s(g_PaletteD2D, sizeof(g_PaletteD2D), ANSI_PAL256_RGB, sizeof(ANSI_PAL256_RGB));
+	//Å‰‚Ì‚P‚UF‚Í‹N“®‚ÌƒpƒŒƒbƒg‚ğæ‚è‚ñ‚Å‚¢‚é‚Ì‚ÅA‚P‚VFˆÈ~‚ÌF‚ğæ‚è‚ŞB
+	for (int n = 16; n < NUM_ANSI_PAL; n++) {
+		g_PaletteD2D[n] = ANSI_PAL256_RGB[n];
+	}
+	return true;
+}	//InitD2D
+//==================================================================
+// D2DI—¹
+//==================================================================
+void EndD2D(void)
+{
+	//free(g_pMask);
+	if (g_FrameBuffer32bitD2D != NULL) {
+		free(g_FrameBuffer32bitD2D);
+		g_FrameBuffer32bitD2D = NULL;
+	}
+
+	//if (g_FrameBuffer4bitD2D != NULL) {
+	//	free(g_FrameBuffer4bitD2D);
+	//	g_FrameBuffer4bitD2D = NULL;
+	//}
+
+	for (ID2D1Bitmap* pbmp : g_pBmpList) {
+		pbmp->Release();
+	}
+	g_pBmpList.clear();
+
+	for (ID2D1Bitmap* pbmp : g_pTextBmpList) {
+		pbmp->Release();
+	}
+	g_pTextBmpList.clear();
+
+	// IDWriteFactory‚Ì”jŠü
+	if (NULL != g_pDWFactory) {
+		g_pDWFactory->Release();
+		g_pDWFactory = NULL;
+	}
+
+	// ID2D1HwndRenderTarget‚Ì”jŠü
+	if (NULL != g_pRenderTarget) {
+		g_pRenderTarget->Release();
+		g_pRenderTarget = NULL;
+	}
+
+	// ID2D1Factory‚Ì”jŠü
+	if (NULL != g_pD2DFactory) {
+		g_pD2DFactory->Release();
+		g_pD2DFactory = NULL;
+	}
+}	//EndD2D
+
+//================================================================
+/*
+* Œ»İ‚Ì32ƒrƒbƒgƒtƒŒ[ƒ€ƒoƒbƒtƒ@(g_FrameBuffer32bitD2D)‚ğƒrƒbƒgƒ}ƒbƒv(ID2D1Bitmap)‚É“]‘—‚µ‚ÄAƒrƒbƒgƒ}ƒbƒvƒŠƒXƒg‚É g_BmpList ’Ç‰Á‚·‚éB
+* DXGI_FORMAT_B8G8R8A8_UNORM
+* DXGI_FORMAT_R8G8B8A8_UNORM
+* DXGI_FORMAT_A8_UNORM
+*/
+static void push_screen_buffer(void)
+{
+	HRESULT hr = ~S_OK;
+	D2D1_SIZE_U siz;
+	siz.width = g_ScreenBufferSize.X;
+	siz.height = g_ScreenBufferSize.Y;
+	ID2D1Bitmap* pD2D1_Bmp;
+	hr = g_pRenderTarget->CreateBitmap(
+		siz,
+		//D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_R8G8B8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED)),	//•s“§–¾
+		//D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED)),	//•s“§–¾
+		//D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_R8G8B8A8_UNORM, D2D1_ALPHA_MODE_STRAIGHT)),	//•s“§–¾
+		//D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_STRAIGHT)),	//•s“§–¾
+		D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE)),	//•s“§–¾
+		//D2D1::BitmapProperties(D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_IGNORE)),	//NG
+		&pD2D1_Bmp
+	);
+	_ASSERT(hr == S_OK);
+	if (pD2D1_Bmp == NULL) {
+		return;	//ƒrƒbƒgƒ}ƒbƒvì¬¸”s
+	}
+	D2D1_RECT_U	ru = { 0,0,siz.width,siz.height };
+	hr = pD2D1_Bmp->CopyFromMemory(&ru, reinterpret_cast<const void*>(g_FrameBuffer32bitD2D), g_ScreenBufferSize.X * 4);
+	_ASSERT(hr == S_OK);
+	//¡¡¡¡ •`‰æ‚µ‚½ƒrƒbƒgƒ}ƒbƒv‚ğƒŠƒXƒg‚É’Ç‰Á ¡¡¡
+	g_pBmpList.push_back(pD2D1_Bmp);
+	//šššš pD2D1_Bmp ‚Ì Release •s—vIšššš@„@•`‰æ‚É Release ‚µ‚Ä‚¢‚é šššš
+	return;
+}	//push_screen_buffer
+
+//================================================================
+//	ƒCƒ“ƒfƒbƒNƒXƒJƒ‰[‰æ‘œ‚ğŒ»İİ’è‚³‚ê‚Ä‚¢‚é‚Q‚T‚UFƒpƒŒƒbƒg‚Å32ƒrƒbƒgƒoƒbƒtƒ@‚É•`‰æ‚·‚é
+/*
+* ššš
+*	•`‰æ‚É‚PƒsƒNƒZƒ‹’PˆÊ‚Å‘S‚Ä‚R‚Qƒrƒbƒgƒoƒbƒtƒ@‚É•`‚«‚±‚ñ‚Å‚¢‚é‚Ì‚Å‚±‚Ìˆ—‚Í•s—vB
+*	‚Æ‚¢‚¤‚©A¡‚Ì‚Æ‚±‚ëƒsƒNƒZƒ‹’PˆÊ‚Åˆ—‚µ‚Ä‚àd‚­‚Í–³‚¢‚Ì‚ÅA
+* 	‚Sƒrƒbƒgƒoƒbƒtƒ@‚ª•s—v‚©‚à’m‚ê‚È‚¢EEE
+*	‚»‚ê‚ÉAPrintImag()‚Æ•¹—p‚·‚é‚ÆA32ƒrƒbƒgƒoƒbƒtƒ@‚ğã‘‚«‚µ‚Ä‚µ‚Ü‚¤‚Ì‚Å‚à‚â‚â‚±‚µ‚­‚È‚é‚µEEE
+*	‚Ü‚ A4ƒrƒbƒg‰æ‘œ‚©‚ç‚Ì•ÏŠ·—p‚Éê—p‚Ì32ƒrƒbƒgƒoƒbƒtƒ@‚ğ‚Â‚Æ‚¢‚¢‚¯‚ÇA‚»‚ê‚Å‚ÍƒpƒŒƒbƒg‚©‚ç‰ğ•ú‚³‚ê‚È‚¢‚Ì‚ÅA‚»‚ê‚à‚â‚â‚±‚µ‚¢EEE
+*	‚µ‚©‚µAƒpƒŒƒbƒgƒCƒ“ƒfƒbƒNƒX‰æ‘œ‚Ìd‘g‚İ‚ğ•×‹­‚·‚éˆ×‚É‚Í—Ç‚¢‚Ì‚©‚à‚µ‚ê‚È‚¢‚Ì‚ÅŒŸ“¢‚Ì—]’n‚Í‘å‚«‚¢‚©EEE
+* ššš
+*	int src_pix_s = (g_ScreenBufferSize.X * g_ScreenBufferSize.Y * sizeof(char));
+*	RGBQUAD* tmp = g_FrameBuffer32bitD2D;
+*	for (int n = 0; n < src_pix_s; n++) {
+*		//8ƒrƒbƒg‚ÌƒpƒŒƒbƒgƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@‚ÅƒpƒŒƒbƒgƒoƒbƒtƒ@QÆ‚µ‚Ä32ƒrƒbƒgRGBQUADƒoƒbƒtƒ@‚Ö‘‚«‚İ
+*		tmp[n] = g_PaletteD2D[_buf_8bit[n] % NUM_ANSI_PAL];
+*	}
+* ššš
+*/
+/*
+* ƒtƒŒ[ƒ€ƒoƒbƒtƒ@‚ğƒŒƒ“ƒ_[—pƒŠƒXƒg‚É’Ç‰Á‚·‚é
+*/
+void PrintFrameBuffer(void)
+{
+	if (g_pRenderTarget == NULL) {
+		return;
+	}
+	push_screen_buffer();
+}	//PrintFrameBuffer
+
+//================================================================
+//	•¶š—ñ‚ğID2D1Bitmap‚É•`‰æ‚·‚é
+void WriteTextA(int _xp, int _yp, const char* _text, double _scale, D2D1::ColorF _fgc, D2D1::ColorF _bgc, bool _new_line)
+{
+	//---- ƒ}ƒ‹ƒ`ƒoƒCƒg•¶š—ñ‚ğUnicode•¶š—ñ‚É•ÏŠ·‚·‚é
+	int wc_count = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, _text, -1, NULL, 0);	//'\0'‚ğŠÜ‚Ş•¶š”‚ª•Ô‚é
+	size_t wc_src_bytes = (wc_count * sizeof(wchar_t));
+	wchar_t* src_txt = (wchar_t*)_malloca(wc_src_bytes);	//ƒXƒ^ƒbƒNã‚ÉŠm•Ûifree•s—vj
+	memset(src_txt, 0, wc_src_bytes);
+	int disp_siz = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, _text, -1, src_txt, wc_count);
+	WriteTextW(_xp, _yp, src_txt, _scale, _fgc, _bgc, _new_line);
+}
+void WriteTextW(int _xp, int _yp, const wchar_t* _text, double _scale, D2D1::ColorF _fgc, D2D1::ColorF _bgc, bool _new_line)
+{
+	if (_scale < 1.0) {
+		_scale = 1.0;
+	}
+	//WindowsŠÖ”‚Ì–ß‚è’l
+	HRESULT hr;
+	double f_w = (double)(g_FontSizeEx.dwFontSize.X);	//ƒtƒHƒ“ƒgi‚Pƒhƒbƒgj‚Ì•
+	double f_h = (double)(g_FontSizeEx.dwFontSize.Y);	//ƒtƒHƒ“ƒgi‚Pƒhƒbƒgj‚Ì‚‚³
+
+	//ƒeƒLƒXƒgƒtƒH[ƒ}ƒbƒg‚Ì¶¬
+	//CreateTextFormat( L"ƒtƒHƒ“ƒg–¼", ƒRƒŒƒNƒVƒ‡ƒ“, ‘¾‚³, ƒXƒ^ƒCƒ‹, Šgk, ƒTƒCƒY, ƒ[ƒJƒ‹ƒl[ƒ€H, ó‚¯æ‚éƒ|ƒCƒ“ƒ^ );
+	IDWriteTextFormat* pTextFormat = NULL;
+	g_pDWFactory->CreateTextFormat(L"‚l‚r –¾’©", NULL,
+		DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, f_h * _scale, L"", &pTextFormat);
+
+	// ƒuƒ‰ƒV‚Ìì¬
+	ID2D1SolidColorBrush* pBrushFG = NULL;
+	g_pRenderTarget->CreateSolidColorBrush(_fgc, &pBrushFG);	//ƒtƒHƒ“ƒg‚ÌF
+	ID2D1SolidColorBrush* pBrushBG = NULL;
+	g_pRenderTarget->CreateSolidColorBrush(_bgc, &pBrushBG);	//”wŒi‚ÌF
+
+	D2D1_RECT_F trf;
+	{
+		//ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚ÌƒTƒCƒYæ“¾
+		D2D1_SIZE_F szf = g_pRenderTarget->GetSize();
+		//ƒeƒLƒXƒg‚ÌƒŒƒCƒAƒEƒgiˆÊ’uA•A‚‚³j‚Ì¶¬
+		IDWriteTextLayout* pTextLayout = NULL;
+		// IDWriteTextLayout æ“¾
+		hr = g_pDWFactory->CreateTextLayout(
+			_text					// •¶š—ñ
+			, (UINT32)wcslen(_text)	// •¶š—ñ‚Ì’·‚³
+			, pTextFormat           // DWriteTextFormat
+			, szf.width     // ˜g‚Ì•
+			, szf.height    // ˜g‚Ì‚‚³
+			, &pTextLayout
+		);
+		_ASSERT(hr == S_OK);
+		DWRITE_TEXT_METRICS mtx;	//ƒeƒLƒXƒg‚ğˆÍ‚Ş‹éŒ`‚ÌŒv‘ª’l
+		/*
+		* DWRITE_TEXT_METRICS
+		* FLOAT left;			ƒŒƒCƒAƒEƒg ƒ{ƒbƒNƒX‚ğŠî€‚Æ‚µ‚½‘®İ’è‚³‚ê‚½ƒeƒLƒXƒg‚Ì¶’[‚Ìƒ|ƒCƒ“ƒg (ƒOƒŠƒt‚ÌƒI[ƒo[ƒnƒ“ƒO‚ğœ‚­)B
+		* FLOAT top;			ƒŒƒCƒAƒEƒg ƒ{ƒbƒNƒX‚É‘Î‚·‚é‘®İ’è‚³‚ê‚½ƒeƒLƒXƒg‚ÌÅã“_ (ƒOƒŠƒt‚ÌƒI[ƒo[ƒnƒ“ƒO‚ğœ‚­)B
+		* FLOAT width;			Šes––‚Ì––”ö‚Ì‹ó”’‚ğ–³‹‚µ‚½A‘®İ’è‚³‚ê‚½ƒeƒLƒXƒg‚Ì•B
+		* "FLOAT widthIncludeTrailingWhitespace;"	Šes––‚Ì––”ö‚Ì‹ó”’‚ğl—¶‚µ‚½A‘®İ’è‚³‚ê‚½ƒeƒLƒXƒg‚Ì•B
+		* FLOAT height;			‘®İ’è‚³‚ê‚½ƒeƒLƒXƒg‚Ì‚‚³B	‹ó‚Ì•¶š—ñ‚Ì‚‚³‚ÍAŠù’è‚ÌƒtƒHƒ“ƒg‚Ìs‚Ì‚‚³‚ÌƒTƒCƒY‚É‚æ‚Á‚ÄŒˆ‚Ü‚è‚Ü‚·B
+		* FLOAT layoutWidth;	ƒŒƒCƒAƒEƒg‚É—^‚¦‚ç‚ê‚é‰Šú•B	ƒeƒLƒXƒg‚ªÜ‚è•Ô‚³‚ê‚½‚©‚Ç‚¤‚©‚É‰‚¶‚ÄAƒeƒLƒXƒg ƒRƒ“ƒeƒ“ƒc‚Ì•‚æ‚è‚à‘å‚«‚­‚È‚Á‚½‚è¬‚³‚­‚È‚Á‚½‚è‚µ‚Ü‚·B
+		* FLOAT layoutHeight;	ƒŒƒCƒAƒEƒg‚É—^‚¦‚ç‚ê‚é‰Šú‚Ì‚‚³B•¶š‚Ì’·‚³‚É‚æ‚Á‚Ä‚ÍA•¶šƒRƒ“ƒeƒ“ƒc‚Ì‚‚³‚æ‚è‚à‘å‚«‚­‚È‚Á‚½‚è¬‚³‚­‚È‚Á‚½‚è‚µ‚Ü‚·B
+		* UINT32 maxBidiReorderingDepth;	•K—v‚Èƒqƒbƒg ƒeƒXƒg ƒ{ƒbƒNƒX‚ÌÅ‘å”‚ğŒvZ‚·‚é‚½‚ß‚Ég—p‚³‚ê‚éA”CˆÓ‚ÌƒeƒLƒXƒgs‚ÌÅ‘å•À‚×‘Ö‚¦”BƒŒƒCƒAƒEƒg‚É‘o•ûŒüƒeƒLƒXƒg‚ª‚È‚¢ê‡A‚Ü‚½‚ÍƒeƒLƒXƒg‚ª‚Ü‚Á‚½‚­‚È‚¢ê‡AÅ¬ƒŒƒxƒ‹‚Í 1 ‚Å‚·B
+		* UINT32 lineCount;		s‚Ì‘”B
+		*/
+		// Œv‘ª
+		hr = pTextLayout->GetMetrics(&mtx);
+		_ASSERT(hr == S_OK);
+		//_RPTN(_CRT_WARN, "%f,%f,%f,%f,\n%f,%f,\n%f,\n%d,\n%d\n",mtx.left, mtx.top, mtx.width, mtx.height,mtx.layoutWidth, mtx.layoutHeight,mtx.widthIncludingTrailingWhitespace,mtx.maxBidiReorderingDepth,mtx.lineCount);
+		float left = (mtx.left + _xp) * f_w;
+		float top = (mtx.top + _yp) * f_h;
+		float right = left + mtx.width;
+		float bottom = top + mtx.height;
+		if (!_new_line) {
+			//‰æ–Ê’[‚Å‰üs‚³‚¹‚È‚¢ê‡
+			//right = left + (mtx.width * mtx.lineCount);	//s”•ªƒˆƒR‚ÉŠg’£
+			//bottom = top + (mtx.height / mtx.lineCount);	//‚Ps•ª‚Ék¬
+			//ÄŒvZ
+			hr = g_pDWFactory->CreateTextLayout(
+				_text					// •¶š—ñ
+				, (UINT32)wcslen(_text)	// •¶š—ñ‚Ì’·‚³
+				, pTextFormat           // DWriteTextFormat
+				, (mtx.width * mtx.lineCount)     // ˜g‚Ì•
+				, (mtx.height / mtx.lineCount)    // ˜g‚Ì‚‚³
+				, &pTextLayout
+			);
+			_ASSERT(hr == S_OK);
+			hr = pTextLayout->GetMetrics(&mtx);
+			_ASSERT(hr == S_OK);
+			left = (mtx.left + _xp) * f_w;
+			top = (mtx.top + _yp) * f_h;
+			right = left + mtx.width;
+			bottom = top + mtx.height;
+		}
+		//•¶š—ñ‚ğˆÍ‚Ş‹éŒ`‚ğì¬
+		if( g_PrintStringCompatibleMode ){
+			trf = D2D1::RectF(left / ((f_w*2)/f_h), top, right, bottom);	//ŒİŠ·ƒ‚[ƒhF•¶š‚ÌƒsƒNƒZƒ‹‚Ì”ä—¦‚Í‚PF‚Q
+		}
+		else{
+			trf = D2D1::RectF(left, top, right, bottom);
+		}
+		// IDWriteTextLayout‚Ì”jŠü
+		pTextLayout->Release();
+	}
+
+#if true
+
+	//ŒİŠ·ƒrƒbƒgƒ}ƒbƒv‚ÌƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚ğì¬
+	ID2D1BitmapRenderTarget* p_bitmap_render_target = NULL;
+	hr = g_pRenderTarget->CreateCompatibleRenderTarget(&p_bitmap_render_target);
+	_ASSERT(hr == S_OK);
+	//¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥
+	//ƒeƒLƒXƒgƒŒƒCƒ„[•`‰æ
+	p_bitmap_render_target->BeginDraw();
+	// lŠpŒ`‚Ì•`‰æ
+	p_bitmap_render_target->FillRectangle(&trf, pBrushBG);
+	//p_bitmap_render_target->Clear();
+	p_bitmap_render_target->DrawText(
+		_text   // •¶š—ñ
+		, (UINT32)wcslen(_text)    // •¶š”
+		, pTextFormat
+		, &trf//&D2D1::RectF(0, 0, oTargetSize.width, oTargetSize.height)
+		, pBrushFG
+		, D2D1_DRAW_TEXT_OPTIONS_NONE
+		//, D2D1_DRAW_TEXT_OPTIONS_CLIP
+	);
+	//p_bitmap_render_target->DrawRectangle(&trf, pBrushFG, 1.0f);	// ƒfƒoƒbƒO—p˜g(lŠpŒ`)‚Ì•`‰æ
+	//
+	hr = p_bitmap_render_target->EndDraw();
+	//££££££££££££££££
+	_ASSERT(hr == S_OK);
+	//¡¡¡¡ •`‰æ‚µ‚½ƒrƒbƒgƒ}ƒbƒv‚ğƒŠƒXƒg‚É’Ç‰Á ¡¡¡
+	ID2D1Bitmap* pD2D1_Bmp;
+	p_bitmap_render_target->GetBitmap(&pD2D1_Bmp);	//•`‰æ‚µ‚½ƒrƒbƒgƒ}ƒbƒv‚ğæ“¾
+	g_pTextBmpList.push_back(pD2D1_Bmp);	//ƒrƒbƒgƒ}ƒbƒv‚ğƒeƒLƒXƒgƒŒƒCƒ„[‚É’Ç‰Á
+	p_bitmap_render_target->Release();
+
+#endif // false
+
+	// ƒeƒLƒXƒgƒtƒH[ƒ}ƒbƒg‚Ì”jŠü
+	if (pTextFormat != NULL) {
+		pTextFormat->Release();
+	}
+	// ƒuƒ‰ƒV‚Ì”jŠü
+	if (pBrushBG != NULL) {
+		pBrushBG->Release();
+	}
+	if (pBrushFG != NULL) {
+		pBrushFG->Release();
+	}
+
+	return;
+}	//WriteTextW
+
+//================================================================
+// ƒ_ƒuƒ‹ƒoƒbƒtƒ@ŠÖ˜A
+//================================================================
+
+/**
+ * @brief	ƒ_ƒuƒ‹ƒoƒbƒtƒ@‰Šú‰»
+ *
+ * @return	ƒoƒbƒtƒ@ƒnƒ“ƒhƒ‹æ“¾¸”s
+ */
+int InitDoubleBuffer(void)
+{
+	return 0;
+}
+
+/**
+ * @brief	ƒ_ƒuƒ‹ƒoƒbƒtƒ@‚Ì•`‰æ–ÊØ‘Ö
+ */
+void FlipScreen(void)
+{
+	//WindowsŠÖ”‚Ì–ß‚è’l
+	HRESULT hr;
+	/*
+	* ƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚Ö‚Ì•`‰æ
+	* ƒrƒbƒgƒ}ƒbƒv‚Ì€”õ‚ªo—ˆ‚½‚çƒŒƒ“ƒ_[ƒ^[ƒQƒbƒg‚É“n‚µ‚Ä•`‰æ‚ğs‚¤B
+	* ƒfƒtƒHƒ‹ƒg‚Ì•âŠÔƒ‚[ƒh‚Í D2D1_BITMAP_INTERPOLATION_MODE_LINEAR ‚É‚È‚Á‚Ä‚¢‚é‚Ì‚ÅA
+	* ‰½‚àw’è‚µ‚È‚¢‚ÆŠg‘åk¬‚É‚Ú‚â‚¯‚Ä‚µ‚Ü‚¤B
+	*/
+	//left,top,right,bottom --- x,y,x,y
+	const FLOAT	scale_x = g_FontSizeEx.dwFontSize.X;	//•`‰æ”{—¦
+	const FLOAT	scale_y = g_FontSizeEx.dwFontSize.Y;	//•`‰æ”{—¦
+	const FLOAT	opacity = 1.0f;	//“§–¾“xF•s“§–¾(1.0f)?(0.0f)“§–¾
+	//•`‰æ‚·‚é‹éŒ`‚ğì¬
+	//D2D1_RECT_F rf = { 0,0,((FLOAT)g_ScreenBufferSize.X - 1) * scale_x,((FLOAT)g_ScreenBufferSize.Y - 1) * scale_y };
+	D2D1_RECT_F rf = { 0,0,(FLOAT)g_ScreenBufferSize.X * scale_x,(FLOAT)g_ScreenBufferSize.Y * scale_y };
+	//D2D1_RECT_F drf = { 0,0,(FLOAT)g_ScreenBufferSize.X - 1,(FLOAT)g_ScreenBufferSize.Y - 1 };
+	//D2D1_RECT_F srf = { 0,0,(FLOAT)g_ScreenBufferSize.X - 1,(FLOAT)g_ScreenBufferSize.Y - 1 };
+	//¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥¥
+	g_pRenderTarget->BeginDraw();	//•`‰æŠJn
+
+	g_pRenderTarget->Clear();		//‰æ–ÊÁ‹
+	//DrawBitmap(bitmap,•`‰æ‚³‚ê‚é—Ìˆæ‚ÌƒTƒCƒY‚ÆˆÊ’u,•s“§–¾“x,•âŠÔƒ‚[ƒh)
+	for (ID2D1Bitmap* pbmp : g_pBmpList) {
+		//ƒŠƒXƒg‚É—­‚Ü‚Á‚Ä‚¢‚éƒrƒbƒgƒ}ƒbƒvƒIƒuƒWƒFƒNƒg‚ğ‘S‚Ä•\¦‚·‚éB
+		//ƒhƒbƒgŠg‘å‚µ‚Ä‚à‚Ú‚â‚¯‚È‚¢—l‚É"_NEAREST_NEIGHBOR"‚ğw’è‚µ‚Ä‚¢‚éB
+		g_pRenderTarget->DrawBitmap(pbmp, &rf, opacity, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);	//•âŠ®–³‚µ
+		pbmp->Release();
+	}
+	g_pBmpList.clear();	//ƒŠƒXƒg‚ğÁ‹
+
+#if false
+	ID2D1BitmapRenderTarget* p_bitmap_render_target = NULL;
+	hr = g_pRenderTarget->CreateCompatibleRenderTarget(&p_bitmap_render_target);
+	_ASSERT(hr == S_OK);
+	ID2D1Bitmap* pD2D1_Bmp;
+	p_bitmap_render_target->GetBitmap(&pD2D1_Bmp);	//•`‰æ‚µ‚½ƒrƒbƒgƒ}ƒbƒv‚ğæ“¾
+	g_pRenderTarget->DrawBitmap(pD2D1_Bmp, &rf, opacity, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);	//•âŠ®–³‚µ
+	pD2D1_Bmp->Release();
+#else
+	if (g_PrintStringCompatibleMode) {
+		FLOAT bairitu = (scale_x*2) / scale_y;	//ŒİŠ·ƒ‚[ƒhF•¶š‚ÌƒsƒNƒZƒ‹‚Í‚P‚˜‚Q„‚P‚˜‚P‚Ìƒhƒbƒg‚É‚·‚é‚ÆƒˆƒR‚ÉŠg‘å‚³‚ê‚é
+		rf = { 0,0,(FLOAT)g_ScreenBufferSize.X * scale_x * bairitu,(FLOAT)g_ScreenBufferSize.Y * scale_y};
+	}
+	//else{
+	//	FLOAT bairitu = (scale_x*1) / scale_y;	//ƒm[ƒ}ƒ‹ƒ‚[ƒhF•¶š‚ÌƒsƒNƒZƒ‹‚Í‚P‚˜‚P„‚P‚˜‚Q‚Ìƒhƒbƒg‚É‚·‚é‚ÆƒˆƒR‚ª”¼•ª‚É‚È‚é
+	//	rf = { 0,0,(FLOAT)g_ScreenBufferSize.X * scale_x * bairitu,(FLOAT)g_ScreenBufferSize.Y * scale_y };
+	//}
+	for (ID2D1Bitmap* pbmp : g_pTextBmpList) {
+		//ƒŠƒXƒg‚É—­‚Ü‚Á‚Ä‚¢‚éƒeƒLƒXƒg—pƒrƒbƒgƒ}ƒbƒvƒIƒuƒWƒFƒNƒg‚ğ‘S‚Ä•\¦‚·‚éB
+		//ƒhƒbƒgŠg‘å‚µ‚Ä‚à‚Ú‚â‚¯‚È‚¢—l‚É"_NEAREST_NEIGHBOR"‚ğw’è‚µ‚Ä‚¢‚éB
+		g_pRenderTarget->DrawBitmap(pbmp, &rf, opacity, D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR);	//•âŠ®–³‚µ
+		pbmp->Release();
+	}
+	g_pTextBmpList.clear();	//ƒŠƒXƒg‚ğÁ‹
+#endif // false
+
+	hr = g_pRenderTarget->EndDraw();	//•`‰æI—¹
+	//££££££££££££££££
+	_ASSERT(hr == S_OK);
+	g_PrintStringCompatibleMode = false;
+	return;
+}	//FlipScreen
+
+/**
+ * @brief	ƒtƒHƒ“ƒgƒTƒCƒY•ÏX
+ *
+ * @param	width [“ü—Í] ƒtƒHƒ“ƒg‚Ì‰¡ƒTƒCƒY(1?)
+ * @param	height [“ü—Í] ƒtƒHƒ“ƒg‚ÌcƒTƒCƒY(1?)
+ */
+void SetScreenFontSize(int _width, int _height)
+{
+	//g_FontSizeEx.dwFontSize.X = _width;
+	//g_FontSizeEx.dwFontSize.Y = _height;
+	//g_FontSizeEx.cbSize = sizeof(CONSOLE_FONT_INFOEX);
+	////g_FontSizeEx.FaceName = L"";
+	////g_FontSizeEx.FontFamily =
+	//g_FontSizeEx.FontWeight;
+	//g_FontSizeEx.nFont;
+
+	// ƒtƒHƒ“ƒgƒTƒCƒY•ÏX
+	g_FontSizeEx.cbSize = sizeof(CONSOLE_FONT_INFOEX);
+	g_FontSizeEx.dwFontSize.X = _width;
+	g_FontSizeEx.dwFontSize.Y = _height;
+	if (g_DisplayHandleD2D != NULL) {
+		SetCurrentConsoleFontEx(g_DisplayHandleD2D, FALSE, &g_FontSizeEx);
+	}
+
+}	//SetScreenFontSize
+
+//================================================================
+// ƒtƒŒ[ƒ€ƒoƒbƒtƒ@‰æ‘œ•`‰æ
+//================================================================
+/**
+ * @brief	‰æ–ÊiƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@jÁ‹
+ */
+void ClearScreen(int _cc)
+{
+	//‰æ‘œ—pƒoƒbƒtƒ@Á‹
+	//memset(g_FrameBuffer32bitD2D, *((DWORD*)(&g_PaletteD2D[_cc % NUM_D2D_PAL])), sizeof(RGBQUAD) * g_ScreenBufferSize.X * g_ScreenBufferSize.Y);
+	for (int i = 0; i < NUM_D2D_PAL; i++) {
+		g_FrameBuffer32bitD2D[i] = g_PaletteD2D[_cc % NUM_D2D_PAL];
+	}
+}	//ClearScreen
+void ClearScreen(int _red, int _green, int _blue)
+{
+	RGBQUAD rgb;
+	rgb.rgbBlue = _blue;
+	rgb.rgbGreen = _green;
+	rgb.rgbRed = _red;
+	rgb.rgbReserved = 0;
+
+	//‰æ‘œ—pƒoƒbƒtƒ@Á‹
+	//memset(g_FrameBuffer32bitD2D, ((DWORD*)&_rgb)[0], sizeof(RGBQUAD) * g_ScreenBufferSize.X * g_ScreenBufferSize.Y);
+	for (int i = 0; i < (g_ScreenBufferSize.X * g_ScreenBufferSize.Y); i++) {
+		g_FrameBuffer32bitD2D[i] = rgb;
+	}
+}	//ClearScreen
+void ClearScreen(void)
+{
+	//‰æ‘œ—pƒoƒbƒtƒ@Á‹
+	ZeroMemory(g_FrameBuffer32bitD2D, sizeof(RGBQUAD) * g_ScreenBufferSize.X * g_ScreenBufferSize.Y);
+}	//ClearScreen
+
+/**
+* @brief	“_‚ğ‘Å‚Â
+*
+* @param	int _x,_yFÀ•W
+* @param	RGBQUAD _rgbFFiRGBQUAD:0x00RRGGBBj
+*/
+void DrawPixel(int _x, int _y, RGBQUAD _rgb)
+{
+	if ((_x >= 0) && (_x < g_ScreenBufferSize.X) && (_y >= 0) && (_y < g_ScreenBufferSize.Y)) {
+		g_FrameBuffer32bitD2D[_y * g_ScreenBufferSize.X + _x] = _rgb;
+	}
+}	//DrawPixel
+/**
+* @brief	“_‚ğ‘Å‚Â
+*
+* @param	int _x,_yFÀ•W
+* @param	int _cFFiƒpƒŒƒbƒg”Ô†‚O?‚P‚Tj
+*/
+void DrawPixel(int _x, int _y, unsigned char _c)
+{
+	DrawPixel(_x, _y, g_PaletteD2D[_c & 0xFF]);
+}
+
+#endif	//USED2D
+
+//################################################################################################################################
+//################################################################################################################################
+//################################################################################################################################
 //================================================================
 // ‰Šú‰»
 //================================================================
@@ -133,7 +652,6 @@ void InitConio(int _width, int _height) {
  *
  * @return	–³‚µ
  */
-
 void InitConioEx(int _width, int _height, int _font_w, int _font_h)
 {
 	InitConioEx(_width, _height, _font_w, _font_h, NULL, NULL, false);
@@ -154,11 +672,7 @@ void InitConioEx(int _width, int _height, int _font_w, int _font_h, const wchar_
 	//----------------------------------------------------------------
 	//ƒRƒ“ƒ\[ƒ‹ƒEƒBƒ“ƒhƒE‚ÌƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹(HWND)æ“¾••Û‘¶
 	g_hConWnd = GetConsoleWindow();
-
-	//----------------------------------------------------------------
-	//ƒEƒBƒ“ƒhƒEƒTƒCƒY•ÏX‚Ì‚n‚e‚e
-	g_OrgWindowStyle = FixWin();	//Œ³‚ÌƒXƒ^ƒCƒ‹‚ğ•Û‘¶
-
+#ifdef USED2D
 	//----------------------------------------------------------------
 	// ƒRƒ}ƒ“ƒh—š—ğ‚ğ•Û‘¶‚µ‚È‚¢
 	CONSOLE_HISTORY_INFO history_info;
@@ -170,14 +684,207 @@ void InitConioEx(int _width, int _height, int _font_w, int _font_h, const wchar_
 
 	//----------------------------------------------------------------
 	// ’¼‘O‚ÌƒfƒBƒXƒvƒŒƒCî•ñæ“¾
-	g_OrgOutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-	GetConsoleMode(g_OrgOutputHandle, &g_OrgOutputHandleMode);
+	g_OrgOutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);	//o—Íƒnƒ“ƒhƒ‹
+	GetConsoleMode(g_OrgOutputHandle, &g_OrgOutputHandleMode);	//o—ÍƒRƒ“ƒ\[ƒ‹î•ñ
+	g_OrgInputHandle = GetStdHandle(STD_INPUT_HANDLE);	//“ü—Íƒnƒ“ƒhƒ‹
+	GetConsoleMode(g_OrgInputHandle, &g_OrgInputHandleMode);	//“ü—ÍƒRƒ“ƒ\[ƒ‹î•ñ
+	g_InputHandleD2D = g_OrgInputHandle;	//“ü—Í‚Í‹N“®‚Æ“¯‚¶ƒnƒ“ƒhƒ‹
+	//----------------------------------------------------------------
+	//‰æ–Êî•ñ‚ğ•Û‘¶‚µ‚Ä‚¨‚­i16FƒpƒŒƒbƒgŠÜ‚Şj
+	g_OrgScreenBufferInfoEx.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
+	GetConsoleScreenBufferInfoEx(g_OrgOutputHandle, &g_OrgScreenBufferInfoEx);
+	// Œ»İ‚ÌƒJƒ‰[ƒpƒŒƒbƒg‚ğ•Û‘¶
+	for (int n = 0; n < NUM_PALETTE; n++) {
+		g_OrgColorTableD2D[n] = g_OrgScreenBufferInfoEx.ColorTable[n];
+		//ƒfƒtƒHƒ‹ƒgƒpƒŒƒbƒg‚ÌÅ‰‚Ì‚P‚UF‚ÌˆÊ’u‚Éæ‚è‚Ş
+		g_PaletteD2D[n].rgbBlue = (g_OrgColorTableD2D[n] & 0x00FF0000) >> 16;
+		g_PaletteD2D[n].rgbGreen = (g_OrgColorTableD2D[n] & 0x0000FF00) >> 8;
+		g_PaletteD2D[n].rgbRed = (g_OrgColorTableD2D[n] & 0x000000FF);
+		g_PaletteD2D[n].rgbReserved = (g_OrgColorTableD2D[n] & 0x0FF00000) >> 24;
+	}
+	//----------------------------------------------------------------
+	//ƒtƒHƒ“ƒgƒTƒCƒY•Û‘¶FƒIƒŠƒWƒiƒ‹•Û‘¶
+	g_OrgFontSizeEx.cbSize = sizeof(CONSOLE_FONT_INFOEX);
+	GetCurrentConsoleFontEx(g_OrgOutputHandle, FALSE, &g_OrgFontSizeEx);	//‘æ2ƒpƒ‰ƒ[ƒ^‚ªTRUE‚¾‚Æ‰æ–Êƒoƒbƒtƒ@‚Æ“¯‚¶ƒTƒCƒY‚ª•Ô‚é‚İ‚½‚¢‚¾EEE
+	//----------------------------------------------------------------
+	//Œ»İ‚ÌƒJ[ƒ\ƒ‹ó‘Ô•Û‘¶
+	GetConsoleCursorInfo(g_OrgOutputHandle, &g_OrgCursorInfo);
+	//ƒJ[ƒ\ƒ‹•\¦OFF
+	CONSOLE_CURSOR_INFO cci = { sizeof(CONSOLE_CURSOR_INFO) };
+	cci.bVisible = FALSE;
+	SetConsoleCursorInfo(g_OrgOutputHandle, &cci);
+	//----------------------------------------------------------------
+	//ƒEƒBƒ“ƒhƒE‚Ìó‘Ô•Û‘¶
+	g_OrgWindowStylePtr = GetWindowLongPtr(g_hConWnd, GWL_STYLE);
 
+	//----------------------------------------------------------------
+	// GetSystemMetrics
+	// https://learn.microsoft.com/ja-JP/windows/win32/api/winuser/nf-winuser-getsystemmetrics
+	//int cx_border = GetSystemMetrics(SM_CXBORDER);
+	//int cy_border = GetSystemMetrics(SM_CYBORDER);	//ƒEƒBƒ“ƒhƒE‚Ì‹«ŠEü‚Ì‚‚³ (ƒsƒNƒZƒ‹’PˆÊ)B
+	//int cx_size = GetSystemMetrics(SM_CXSIZE);				//ƒEƒBƒ“ƒhƒE ƒLƒƒƒvƒVƒ‡ƒ“‚Ü‚½‚Íƒ^ƒCƒgƒ‹ ƒo[‚Ìƒ{ƒ^ƒ“‚Ì•(ƒsƒNƒZƒ‹’PˆÊ)B
+	//int cy_size = GetSystemMetrics(SM_CYSIZE);				//ƒEƒBƒ“ƒhƒE ƒLƒƒƒvƒVƒ‡ƒ“‚Ü‚½‚Íƒ^ƒCƒgƒ‹ ƒo[‚Ìƒ{ƒ^ƒ“‚Ì‚‚³(ƒsƒNƒZƒ‹’PˆÊ)B
+	//int cx_size_frame = GetSystemMetrics(SM_CXSIZEFRAME);	//ƒTƒCƒY‚ğ•ÏX‚Å‚«‚éƒEƒBƒ“ƒhƒE‚ÌüˆÍ‚ÌƒTƒCƒY•ÏX‹«ŠEü‚Ì‘¾‚³ (ƒsƒNƒZƒ‹’PˆÊ)B
+	//int cy_size_frame = GetSystemMetrics(SM_CYSIZEFRAME);	//ƒTƒCƒY‚ğ•ÏX‚Å‚«‚éƒEƒBƒ“ƒhƒE‚ÌüˆÍ‚ÌƒTƒCƒY•ÏX‹«ŠEü‚Ì‘¾‚³ (ƒsƒNƒZƒ‹’PˆÊ)B
+	//				//SM_CXSIZEFRAME‚Í…•½‹«ŠEü‚Ì•ASM_CYSIZEFRAME‚Í‚’¼‹«ŠEü‚Ì‚‚³‚Å‚·B
+	//int cx_v_scroll = GetSystemMetrics(SM_CXVSCROLL);	//‚’¼ƒXƒNƒ[ƒ‹ ƒo[‚Ì•(ƒsƒNƒZƒ‹’PˆÊ)B
+	//int cy_h_scroll = GetSystemMetrics(SM_CYHSCROLL);	//…•½ƒXƒNƒ[ƒ‹ ƒo[‚Ì‚‚³(ƒsƒNƒZƒ‹’PˆÊ)B
+	////int cx_caption = GetSystemMetrics(SM_CXCAPTION);	//ƒLƒƒƒvƒVƒ‡ƒ“—Ìˆæ‚Ì‚‚³(ƒsƒNƒZƒ‹’PˆÊ)B
+	//int cy_caption = GetSystemMetrics(SM_CYCAPTION);	//ƒLƒƒƒvƒVƒ‡ƒ“—Ìˆæ‚Ì‚‚³(ƒsƒNƒZƒ‹’PˆÊ)B
+	//int cx_min = GetSystemMetrics(SM_CXMIN);	//ƒEƒBƒ“ƒhƒE‚ÌÅ¬•(ƒsƒNƒZƒ‹’PˆÊ)B
+	//int cy_min = GetSystemMetrics(SM_CYMIN);	//ƒEƒBƒ“ƒhƒE‚ÌÅ¬‚‚³(ƒsƒNƒZƒ‹’PˆÊ)B
+
+	int cx_size_frame = GetSystemMetrics(SM_CXSIZEFRAME); // ‹«ŠEü•X•ûŒü
+	int cy_size_frame = GetSystemMetrics(SM_CYSIZEFRAME); // ‹«ŠEü•Y•ûŒü
+	int cy_caption = GetSystemMetrics(SM_CYCAPTION);     // ƒ^ƒCƒgƒ‹ƒo[‚Ì‚‚³
+	RECT rct_1;
+	{
+		//ƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚ªw’è‚³‚ê‚½‘å‚«‚³‚É‚È‚é‚æ‚¤‚ÉŒvZ‚µ‚Ä
+		GetClientRect(g_hConWnd, &rct_1);	//Œ»İ‚ÌƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ
+		int w1 = rct_1.right - rct_1.left + 0;//1;
+		int h1 = rct_1.bottom - rct_1.top + 0;//1;
+		RECT rct_2;
+		GetWindowRect(g_hConWnd, &rct_2);	//Œ»İ‚ÌƒEƒBƒ“ƒhƒE—Ìˆæ
+		int w2 = rct_2.right - rct_2.left + 0;//1;
+		int h2 = rct_2.bottom - rct_2.top + 0;//1;
+		//ƒEƒBƒ“ƒhƒE—Ìˆæ‚ÆƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚Ì·•ª‚ğŒvZ‚·‚é
+		int w3 = w2 - w1;
+		int h3 = h2 - h1;
+		//int w = _width * _font_w + w3;
+		//int h = _height * _font_h + h3;
+		int w = (_width * _font_w) + (cx_size_frame * 2);
+		int h = (_height * _font_h) + (cy_size_frame * 2) + cy_caption;
+		//w’è‚³‚ê‚½ƒTƒCƒY‚ğ‚ÂƒEƒBƒ“ƒhƒE—Ìˆæ‚É‚È‚é‚æ‚¤‚ÉƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğİ’è‚·‚é
+		//SetWindowPos(g_hConWnd, HWND_TOP, rct_2.left, rct_2.top, w, h, SWP_SHOWWINDOW /*| SWP_NOMOVE*/ );
+		//SetWindowPos(g_hConWnd, HWND_TOP, rct_2.left, rct_2.top, _width * 2, _height * 2, SWP_SHOWWINDOW /*| SWP_NOMOVE*/);
+		SetWindowPos(g_hConWnd, HWND_TOP, rct_2.left, rct_2.top, w, h, SWP_SHOWWINDOW /*| SWP_NOMOVE*/);
+	}
+	//WINDOWINFO	winfo;
+	//winfo.cbSize = sizeof(WINDOWINFO);
+	//GetWindowInfo(g_hConWnd, &winfo);
+
+
+
+	//----------------------------------------------------------------
+	//ƒoƒbƒtƒ@ƒTƒCƒYiƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@bƒtƒŒ[ƒ€ƒoƒbƒtƒ@j
+	g_ScreenBufferSize.X = _width;
+	g_ScreenBufferSize.Y = _height;
+	//ƒtƒHƒ“ƒgƒTƒCƒY
+	g_FontSizeEx.dwFontSize.X = _font_w;
+	g_FontSizeEx.dwFontSize.Y = _font_h;
+	//----------------------------------------------------------------
+	// ƒtƒHƒ“ƒgî•ñ‚Ìİ’èiw’è‚ª‚ ‚ê‚Î‘‘Ì‚àİ’è‚·‚éj
+	g_FontSizeEx.cbSize = sizeof(CONSOLE_FONT_INFOEX);
+	g_FontSizeEx.FontFamily = (FF_DONTCARE | 0x00);	//‘‘Ì•s–¾•ƒ‚ƒmƒXƒy[ƒX	//‰Šú’lH54i0x36:0b0011_0110j
+	g_FontSizeEx.FontWeight = 100;	//×š	//‰Šú’lH400;
+	//ƒtƒHƒ“ƒg–¼w’è‚ª‚ ‚ê‚Î‚»‚Ì–¼‘O‚ğƒZƒbƒg‚·‚éB
+	//ƒtƒHƒ“ƒg–¼w’è‚ª–³‚¯‚ê‚ÎŒ»İ‚Ì’l‚ªg‚í‚ê‚éB
+	//ƒtƒHƒ“ƒg–¼‚ÍUnicodew’èiFaceName‚ªWCHAR‚È‚Ì‚Åj
+	if (_font_face_name != nullptr) {
+		//PCONSOLE_FONT_INFOEX inf;
+		memset(g_FontSizeEx.FaceName, 0, sizeof(g_FontSizeEx.FaceName));
+		CopyMemory(g_FontSizeEx.FaceName, _font_face_name, LF_FACESIZE);
+	}
+	//----------------------------------------------------------------
+	// ƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@‚Ìî•ñ‚ğİ’èiƒpƒŒƒbƒgŠÜ‚Şj
+	g_ScreenBufferInfoEx.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
+	if (_pal16 != NULL) {
+		//ƒpƒŒƒbƒgw’è‚ª‚ ‚ê‚Î“]‘—‚·‚éB
+		for (int n = 0; n < NUM_PALETTE; n++) {
+			g_ScreenBufferInfoEx.ColorTable[n] = _pal16[n];
+		}
+	}
+	else {
+		//ƒpƒŒƒbƒgw’è‚ª–³‚¯‚ê‚Î‚±‚Ì’¼‘O‚ÌƒfƒBƒXƒvƒŒƒCî•ñ‚ÌƒpƒŒƒbƒg‚ğİ’è‚·‚éB
+		for (int n = 0; n < NUM_PALETTE; n++) {
+			g_ScreenBufferInfoEx.ColorTable[n] = g_OrgColorTableD2D[n];
+		}
+	}
+	// ƒoƒbƒtƒ@ƒTƒCƒY•ÏX
+	g_ScreenBufferSize.X = _width;
+	g_ScreenBufferSize.Y = _height;
+	// ƒEƒBƒ“ƒhƒEƒTƒCƒY•ÏX
+	g_WindowSize.Left = 0;
+	g_WindowSize.Top = 0;
+	g_WindowSize.Right = _width;// - 1;
+	g_WindowSize.Bottom = _height;// - 1;
+	//ƒRƒ“ƒ\[ƒ‹ƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@î•ñ‚Ìİ’è
+	g_ScreenBufferInfoEx.dwSize = g_ScreenBufferSize;	//•¶š‚Ì—ñ‚Æs‚ÌƒRƒ“ƒ\[ƒ‹‰æ–Êƒoƒbƒtƒ@[‚ÌƒTƒCƒY
+	g_ScreenBufferInfoEx.dwCursorPosition = { 0,0 };	//COORD{x,y}:ƒRƒ“ƒ\[ƒ‹‰æ–Êƒoƒbƒtƒ@[“à‚ÌƒJ[ƒ\ƒ‹‚Ì—ñÀ•W‚ÆsÀ•W
+	g_ScreenBufferInfoEx.wAttributes = (FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);	//‰æ–Êƒoƒbƒtƒ@[‚Ì•¶š‘®«:•¶š=ƒpƒŒƒbƒg#15^”wŒi=ƒpƒŒƒbƒg#0
+	g_ScreenBufferInfoEx.srWindow = g_WindowSize;		//•\¦ƒEƒBƒ“ƒhƒE‚Ì¶ã‹÷‚Æ‰E‰º‹÷‚ÌƒRƒ“ƒ\[ƒ‹‰æ–Ê‚Ìƒoƒbƒtƒ@[À•W
+	g_ScreenBufferInfoEx.dwMaximumWindowSize = g_ScreenBufferInfoEx.dwSize;	//ƒRƒ“ƒ\[ƒ‹ƒEƒBƒ“ƒhƒE‚ÌÅ‘åƒTƒCƒY
+	g_ScreenBufferInfoEx.bFullscreenSupported = FALSE;			//‘S‰æ–Ê•\¦ƒ‚[ƒh‚ÌƒTƒ|[ƒg
+	g_ScreenBufferInfoEx.ColorTable;	//ƒRƒ“ƒ\[ƒ‹‚ÌFİ’è:COLORREF[16]{0x00bbggrr,,,}
+	//----------------------------------------------------------------
+	//ƒRƒ“ƒ\[ƒ‹—pƒoƒbƒtƒ@ì¬
+	//y’z‚±‚±‚Ü‚Å‚É"g_ScreenBufferInfoEx"‚Æ"g_FontSizeEx"‚ªİ’èÏ‚İ‚Å‚ ‚é–B
+	//o—Í—p¶¬B
+	g_DisplayHandleD2D = create_screen_buffer(&g_ScreenBufferInfoEx, &g_FontSizeEx);
+	//“ü—Í—p‚Í‹N“®‚Ì‚Æ“¯‚¶‚à‚Ì‚ğg‚¤B
+	SetConsoleMode(g_InputHandleD2D, CONSOLE_INPUT_MODE);	//“ü—Íƒnƒ“ƒhƒ‹‚ğ“ü—Íƒ‚[ƒh‚Éİ’è
+	//Œ»İ‚Ìİ’è’l‚ÅƒtƒHƒ“ƒg•ÏX
+	//y’zƒRƒ“ƒ\[ƒ‹ƒoƒbƒtƒ@g_DisplayHandle[]‚Ì‚Ç‚ê‚©ˆê‚Â‚ªo—ˆ‚Ä‚©‚çSetScreenFontSize()‚ğŒÄ‚Ño‚·–B
+	SetScreenFontSize(_font_w, _font_h);
+
+	//ƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚ªw’è‚³‚ê‚½‘å‚«‚³‚É‚È‚é‚æ‚¤‚ÉŒvZ‚µ‚Äİ’è
+	{
+		GetClientRect(g_hConWnd, &rct_1);	//Œ»İ‚ÌƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ
+		int w1 = rct_1.right - rct_1.left + 1;
+		int h1 = rct_1.bottom - rct_1.top + 1;
+		RECT rct_2;
+		GetWindowRect(g_hConWnd, &rct_2);	//Œ»İ‚ÌƒEƒBƒ“ƒhƒE—Ìˆæ
+		int w2 = rct_2.right - rct_2.left + 1;
+		int h2 = rct_2.bottom - rct_2.top + 1;
+		//ƒEƒBƒ“ƒhƒE—Ìˆæ‚ÆƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚Ì·•ª‚ğŒvZ‚·‚é
+		int w3 = w2 - w1;
+		int h3 = h2 - h1;
+		int w = _width * _font_w + w3;
+		int h = _height * _font_h + h3;
+		//w’è‚³‚ê‚½ƒTƒCƒY‚ğ‚ÂƒEƒBƒ“ƒhƒE—Ìˆæ‚É‚È‚é‚æ‚¤‚ÉƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğİ’è‚·‚é
+		SetWindowPos(g_hConWnd, HWND_TOP, rct_2.left, rct_2.top, w, h, SWP_SHOWWINDOW /*| SWP_NOMOVE*/);
+	}
+
+	//----------------------------------------------------------------
+	//ššš@Direct2D ‰Šú‰» ššš
+	InitD2D(_width, _height);
+
+	//ƒEƒBƒ“ƒhƒEƒTƒCƒY‚ÌŒÅ’è
+	FixWin();
+
+	GetClientRect(g_hConWnd, &rct_1);
+	//‚±‚±‚Ü‚Å‚Éİ’èÏ‚İ‚Ì‰æ–Ê‚ÆƒtƒHƒ“ƒg‚ÌƒTƒCƒY‚ğæ“¾
+	GetConWinSize(g_ConWinSize);
+
+	//‰Šú‰»‚Ìˆ×‚ÉƒL[“ü—ÍŒÄ‚Ño‚µ
+	GetKeyAll();
+	//ƒtƒŒ[ƒ€“¯Šú‚Ì‰Šú‰»
+	InitFrameSync(60.0);
+	return;
+
+#else
+	//----------------------------------------------------------------
+	//ƒEƒBƒ“ƒhƒEƒTƒCƒY•ÏX‚Ì‚n‚e‚e
+	g_OrgWindowStyle = FixWin();	//Œ³‚ÌƒXƒ^ƒCƒ‹‚ğ•Û‘¶
+	//----------------------------------------------------------------
+	// ƒRƒ}ƒ“ƒh—š—ğ‚ğ•Û‘¶‚µ‚È‚¢
+	CONSOLE_HISTORY_INFO history_info;
+	history_info.cbSize = sizeof(CONSOLE_HISTORY_INFO);
+	history_info.HistoryBufferSize = 0;
+	history_info.NumberOfHistoryBuffers = 0;
+	history_info.dwFlags = 0;
+	SetConsoleHistoryInfo(&history_info);
+
+	//----------------------------------------------------------------
+	// ’¼‘O‚ÌƒfƒBƒXƒvƒŒƒCî•ñæ“¾
+	g_OrgOutputHandle = GetStdHandle(STD_OUTPUT_HANDLE);	//o—Íƒnƒ“ƒhƒ‹
+	GetConsoleMode(g_OrgOutputHandle, &g_OrgOutputHandleMode);	//o—ÍƒRƒ“ƒ\[ƒ‹î•ñ
 	//----------------------------------------------------------------
 	//ƒAƒNƒeƒBƒu‚È‰æ–Êƒoƒbƒtƒ@‚ğİ’è‚·‚éB
 	SetConsoleActiveScreenBuffer(g_OrgOutputHandle);
 
 	g_OrgInputHandle = GetStdHandle(STD_INPUT_HANDLE);
+
 	GetConsoleMode(g_OrgInputHandle, &g_OrgInputHandleMode);
 	//‰æ–Êî•ñ‚ğ•Û‘¶‚µ‚Ä‚¨‚­i16FƒpƒŒƒbƒgŠÜ‚Şj
 	g_OrgScreenBufferInfoEx.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
@@ -286,13 +993,20 @@ void InitConioEx(int _width, int _height, int _font_w, int _font_h, const wchar_
 	if (_init_wbuf) {
 		InitDoubleBuffer();
 	}
+
 	//ƒEƒBƒ“ƒhƒEƒTƒCƒY‚ÌŒÅ’è
 	FixWin();
 	//‰Šú‰»‚Ìˆ×‚ÉƒL[“ü—ÍŒÄ‚Ño‚µ
 	GetKeyAll();
+	//ƒtƒŒ[ƒ€“¯Šú‚Ì‰Šú‰»
+	InitFrameSync(60.0);
 	return;
+#endif	USED2D
 }	//InitConioEx
 
+//################################################################################################################################
+//################################################################################################################################
+//################################################################################################################################
 /**
 * @brief	conioex‚ÌI—¹ˆ—
 * @param	‚È‚µ
@@ -300,6 +1014,10 @@ void InitConioEx(int _width, int _height, int _font_w, int _font_h, const wchar_
 */
 void EndConioEx(void)
 {
+
+#ifdef USED2D
+	EndD2D();
+#else
 	//ƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@(24bitƒtƒ‹ƒJƒ‰[)—p‚Ì”z—ñ‰ğ•ú
 	if (g_ScreenBufferFull != NULL) {
 		free(g_ScreenBufferFull);
@@ -320,6 +1038,7 @@ void EndConioEx(void)
 		free(g_FrameBuffer4bit);
 		g_FrameBuffer4bit = NULL;
 	}
+#endif // USED2D
 
 	SetConsoleActiveScreenBuffer(g_OrgOutputHandle);	//ƒAƒNƒeƒBƒu‚ÈƒRƒ“ƒ\[ƒ‹‰æ–Êƒoƒbƒtƒ@‚ğØ‘Ö‚¦
 	SetConsoleMode(g_OrgOutputHandle, g_OrgOutputHandleMode);	//ƒRƒ“ƒ\[ƒ‹ƒ‚[ƒh•œ‹A
@@ -335,6 +1054,14 @@ void EndConioEx(void)
 	CONSOLE_SCREEN_BUFFER_INFOEX	csbiex{ sizeof(CONSOLE_SCREEN_BUFFER_INFOEX) };
 	GetConsoleScreenBufferInfoEx(g_OrgOutputHandle, &csbiex);
 #endif // _DEBUG
+
+#ifdef USED2D
+	//ƒ_ƒuƒ‹ƒoƒbƒtƒ@íœ
+	if (g_DisplayHandleD2D != NULL) {
+		CloseHandle(g_DisplayHandleD2D);
+		g_DisplayHandleD2D = NULL;
+	}
+#else
 	//ƒ_ƒuƒ‹ƒoƒbƒtƒ@íœ
 	if (g_DisplayHandle[0] != NULL) {
 		CloseHandle(g_DisplayHandle[0]);
@@ -344,9 +1071,19 @@ void EndConioEx(void)
 		CloseHandle(g_DisplayHandle[1]);
 		g_DisplayHandle[1] = NULL;
 	}
+#endif // USED2D
+
 	//window style recover.
+#ifdef USED2D
+	SetWindowLongPtr(g_hConWnd, GWL_STYLE, g_OrgWindowStylePtr);
+#else
 	SetWindowLong(g_hConWnd, GWL_STYLE, g_OrgWindowStyle);
-}
+#endif // USED2D
+}	//EndConioEx
+
+//################################################################################################################################
+//################################################################################################################################
+//################################################################################################################################
 
 /**
 * @brief	ƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@‚Ì¶¬
@@ -358,10 +1095,17 @@ void EndConioEx(void)
 static HANDLE create_screen_buffer(CONSOLE_SCREEN_BUFFER_INFOEX* pCsbix, CONSOLE_FONT_INFOEX* pCfix)
 {
 	HANDLE new_handle = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+#ifdef USED2D
+	if (g_DisplayHandleD2D == INVALID_HANDLE_VALUE) {
+		//printf("ƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@‚Ìƒnƒ“ƒhƒ‹æ“¾‚É¸”s‚µ‚Ü‚µ‚½\n");
+		return INVALID_HANDLE_VALUE;
+	}
+#else
 	if (g_DisplayHandle[0] == INVALID_HANDLE_VALUE) {
 		//printf("ƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@‚Ìƒnƒ“ƒhƒ‹æ“¾‚É¸”s‚µ‚Ü‚µ‚½\n");
 		return INVALID_HANDLE_VALUE;
 	}
+#endif // USED2D
 	// ƒtƒHƒ“ƒgƒTƒCƒY‚Ì•ÏX
 	pCfix->cbSize = sizeof(CONSOLE_FONT_INFOEX);	//ƒTƒCƒY‚Í–ˆ‰ñİ’è‚µ‚½•û‚ªˆÀ‘SB
 	SetCurrentConsoleFontEx(new_handle, FALSE, pCfix);
@@ -377,11 +1121,16 @@ static HANDLE create_screen_buffer(CONSOLE_SCREEN_BUFFER_INFOEX* pCsbix, CONSOLE
 #ifdef _DEBUG
 	//TEST:İ’è’l‚ªŠi”[‚³‚ê‚Ä‚¢‚é‚©Šm”F
 	CONSOLE_SCREEN_BUFFER_INFOEX	csbiex{ sizeof(CONSOLE_SCREEN_BUFFER_INFOEX) };
+#ifdef USED2D
+	GetConsoleScreenBufferInfoEx(g_DisplayHandleD2D, &csbiex);
+#else
 	GetConsoleScreenBufferInfoEx(g_DisplayHandle[0], &csbiex);
+#endif // USED2D
 #endif // _DEBUG
 	return new_handle;
 }	//create_screen_buffer
 
+#ifndef USED2D
 /**
  * @brief	ƒ_ƒuƒ‹ƒoƒbƒtƒ@‰Šú‰»
  *
@@ -405,7 +1154,7 @@ int InitDoubleBuffer(void)
 		}
 	}
 	return 0;
-}
+}	//InitDoubleBuffer
 
 /**
  * @brief	ƒ_ƒuƒ‹ƒoƒbƒtƒ@‚Ì•`‰æ–ÊØ‘Ö
@@ -414,7 +1163,7 @@ void FlipScreen(void)
 {
 	SetConsoleActiveScreenBuffer(g_DisplayHandle[g_SwapFlg]);	// ƒoƒbƒtƒ@‚ğ“ü‚ê‘Ö‚¦•\¦
 	g_SwapFlg = (g_SwapFlg) ? 0 : 1;
-}
+}	//FlipScreen
 
 /**
  * @brief	ƒtƒHƒ“ƒgƒTƒCƒY•ÏX
@@ -434,7 +1183,8 @@ void SetScreenFontSize(int width, int height)
 	if (g_DisplayHandle[1] != NULL) {
 		SetCurrentConsoleFontEx(g_DisplayHandle[1], FALSE, &g_FontSizeEx);
 	}
-}
+}	//SetScreenFontSize
+#endif // !USED2D
 
 /*
 * @brief	ƒRƒ“ƒ\[ƒ‹‚ÌƒNƒ‰ƒCƒAƒ“ƒg—Ìˆæ‚ÌƒTƒCƒY‚ÆƒtƒHƒ“ƒgƒTƒCƒY‚Ìæ“¾
@@ -447,7 +1197,11 @@ RECT& GetConWinSize(RECT& _r)
 {
 	CONSOLE_FONT_INFOEX fsx;
 	fsx.cbSize = sizeof(CONSOLE_FONT_INFOEX);
+#ifdef USED2D
+	GetCurrentConsoleFontEx(g_DisplayHandleD2D, FALSE, &fsx);
+#else
 	GetCurrentConsoleFontEx(g_DisplayHandle[g_SwapFlg], FALSE, &fsx);
+#endif // USED2D
 	GetClientRect(g_hConWnd, &_r);
 	_r.left = _r.right - _r.left;
 	_r.top = _r.bottom - _r.top;
@@ -457,6 +1211,7 @@ RECT& GetConWinSize(RECT& _r)
 	return _r;
 }
 
+#ifndef USED2D
 /**
  * @brief	‰æ–ÊiƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@jÁ‹
  */
@@ -483,10 +1238,43 @@ void ClearScreen(void)
 	ClearFrameBuffer();		//ƒtƒŒ[ƒ€ƒoƒbƒtƒ@(16F)Á‹
 	ClearFrameBufferFull();	//ƒtƒŒ[ƒ€ƒoƒbƒtƒ@(24bitƒtƒ‹ƒJƒ‰[)Á‹
 }
+#endif // !USED2D
 
 //================================================================
 // ƒEƒBƒ“ƒhƒE
 //================================================================
+#ifdef USED2D
+LONG_PTR FixWin(void)
+{
+	//ƒEƒBƒ“ƒhƒEƒTƒCƒY•ÏX‹Ö~
+	//HWND hCon = GetConsoleWindow();
+	LONG_PTR lastStylePtr = GetWindowLongPtr(g_hConWnd, GWL_STYLE);
+	LONG_PTR lStylePtr = lastStylePtr;
+	lStylePtr &= ~(WS_THICKFRAME | WS_HSCROLL | WS_VSCROLL);	//'~'ƒrƒbƒg‚²‚Æ‚Ì”½“](‚P‚Ì•â”)
+	lStylePtr = SetWindowLongPtr(g_hConWnd, GWL_STYLE, lStylePtr);
+	//SetWindowPos(hCon, NULL, 0, 0, frmb.width + 20, frmb.height, SWP_NOSIZE | SWP_NOZORDER);
+	return lastStylePtr;
+}	//FixWin
+/**
+* @brief	ƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğŒÅ’è‚·‚é
+*
+* @param	int _x,int _y	•\¦ˆÊ’u‚Ìw’è
+*
+* @return	LONG	•ÏX‘O‚Ìó‘Ô‚ğ•Ô‚·
+*/
+LONG_PTR FixWin(int _x, int _y)
+{
+	//ƒEƒBƒ“ƒhƒEƒTƒCƒY•ÏX‹Ö~
+	//HWND hCon = GetConsoleWindow();
+	LONG_PTR lastStylePtr = GetWindowLong(g_hConWnd, GWL_STYLE);
+	LONG_PTR lStyle = lastStylePtr;
+	lStyle &= ~(WS_THICKFRAME | WS_HSCROLL | WS_VSCROLL);	//'~'ƒrƒbƒg‚²‚Æ‚Ì”½“](‚P‚Ì•â”)
+	lStyle = SetWindowLongPtr(g_hConWnd, GWL_STYLE, lStyle);
+	//SWP_NOSIZE‚ğw’è‚µ‚Ä‚¢‚é‚Ì‚ÅAÀ•W(_x,_y)‚Ì‚İ‚ª‚É•ÏX‚³‚ê‚éB
+	SetWindowPos(g_hConWnd, NULL, _x, _y, -1, -1, SWP_NOSIZE | SWP_NOZORDER);
+	return lastStylePtr;
+}	//FixWin
+#else
 /**
 * @brief	ƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğŒÅ’è‚·‚é
 *
@@ -503,6 +1291,26 @@ LONG FixWin(void)
 	//SetWindowPos(hCon, NULL, 0, 0, frmb.width + 20, frmb.height, SWP_NOSIZE | SWP_NOZORDER);
 	return lastStyle;
 }	//FixWin
+/**
+* @brief	ƒEƒBƒ“ƒhƒEƒTƒCƒY‚ğŒÅ’è‚·‚é
+*
+* @param	int _x,int _y	•\¦ˆÊ’u‚Ìw’è
+*
+* @return	LONG	•ÏX‘O‚Ìó‘Ô‚ğ•Ô‚·
+*/
+LONG FixWin(int _x, int _y)
+{
+	//ƒEƒBƒ“ƒhƒEƒTƒCƒY•ÏX‹Ö~
+	//HWND hCon = GetConsoleWindow();
+	LONG lastStyle = GetWindowLong(g_hConWnd, GWL_STYLE);
+	LONG lStyle = lastStyle;
+	lStyle &= ~(WS_THICKFRAME | WS_HSCROLL | WS_VSCROLL);	//'~'ƒrƒbƒg‚²‚Æ‚Ì”½“](‚P‚Ì•â”)
+	lStyle = SetWindowLong(g_hConWnd, GWL_STYLE, lStyle);
+	//SWP_NOSIZE‚ğw’è‚µ‚Ä‚¢‚é‚Ì‚ÅAÀ•W(_x,_y)‚Ì‚İ‚ª‚É•ÏX‚³‚ê‚éB
+	SetWindowPos(g_hConWnd, NULL, _x, _y, -1, -1, SWP_NOSIZE | SWP_NOZORDER);
+	return lastStyle;
+}	//FixWin
+#endif	//USED2D
 
 /**
 * @brief	Œ»İ‚ÌƒfƒBƒXƒvƒŒƒCƒnƒ“ƒhƒ‹‚ğæ“¾‚·‚éB
@@ -510,7 +1318,11 @@ LONG FixWin(void)
 * @return	HANDLE	Œ»İ‚ÌƒfƒBƒXƒvƒŒƒCƒnƒ“ƒhƒ‹
 */
 HANDLE GetCurrentHandle(void) {
+#ifdef USED2D
+	return g_DisplayHandleD2D;
+#else
 	return g_DisplayHandle[g_SwapFlg];
+#endif // USED2D
 }
 
 /**
@@ -553,6 +1365,58 @@ int GetCaption(char* title, int len)
 {
 	return GetConsoleTitleA(title, len);
 }	//GetCaption
+
+#ifdef USED2D
+
+//================================================================
+//ƒJ[ƒ\ƒ‹
+//================================================================
+/**
+ * @brief	…•½•ûŒü‚ÌƒJ[ƒ\ƒ‹ˆÊ’u‚ğæ“¾
+ *
+ * @return	Œ»İ‚ÌƒJ[ƒ\ƒ‹ˆÊ’u‚ÌXÀ•W(1?)
+ */
+int GetCursorX(void)
+{
+	//return g_ScreenBufferInfoEx.dwCursorPosition.X - g_ScreenBufferInfoEx.srWindow.Left + 1;
+	return	g_CursorPosD2D.X + 1;
+}	//GetCursorX
+
+/**
+ * @brief	‚’¼•ûŒü‚ÌƒJ[ƒ\ƒ‹ˆÊ’u‚ğæ“¾
+ *
+ * @return	Œ»İ‚ÌƒJ[ƒ\ƒ‹ˆÊ’u‚ÌYÀ•W(1?)
+ */
+int GetCursorY(void)
+{
+	//return g_ScreenBufferInfoEx.dwCursorPosition.Y - g_ScreenBufferInfoEx.srWindow.Top + 1;
+	return	g_CursorPosD2D.Y + 1;
+}	//GetCursorY
+
+/**
+ * @brief	ƒJ[ƒ\ƒ‹ˆÊ’u‚ÌˆÚ“®
+ *
+ * @param	x [“ü—Í] XÀ•W(1?)
+ * @param	y [“ü—Í] YÀ•W(1?)
+ */
+void SetCursorPosition(int _csr_x, int _csr_y)
+{
+	g_CursorPosD2D.X = _csr_x - 1;
+	g_CursorPosD2D.Y = _csr_y - 1;
+}	//SetCursorPosition
+
+/**
+ * @brief	ƒJ[ƒ\ƒ‹ƒ^ƒCƒvİ’è
+ *
+ * @param	type [“ü—Í]\n
+ *						NOCURSOR ƒJ[ƒ\ƒ‹•\¦‚È‚µ\n
+ *						SOLIDCURSOR (”ñ‘Î‰)\n
+ *						NORMALCURSOR ƒJ[ƒ\ƒ‹‚Ì’Êí•\¦\n
+ */
+void SetCursorType(int type)
+{
+}	//SetCursorType
+#else
 
 //================================================================
 //ƒJ[ƒ\ƒ‹
@@ -618,6 +1482,7 @@ void SetCursorType(int type)
 	cursor_info.bVisible = (type != NOCURSOR);
 	SetConsoleCursorInfo(g_DisplayHandle[g_SwapFlg], &cursor_info);
 }	//SetCursorType
+#endif // USED2D
 
 /**
 * @brief	ƒ}ƒEƒXÀ•W‚Ìæ“¾
@@ -643,6 +1508,102 @@ POINT GetCursorMousePos(POINT* _mp)
 	mpos.y /= g_FontSizeEx.dwFontSize.Y;
 	return mpos;	//•¶š’PˆÊ‚ÌÀ•W‚Æ‚µ‚Ä•Ô‚·
 }	//GetCursorMousePos
+
+#ifdef USED2D
+//================================================================
+//•¶š—ñ•`‰æ
+//================================================================
+/**
+ * @brief	•¶š—ñ‚Ìo—Íiƒ}ƒ‹ƒ`ƒoƒCƒg•¶š—pj
+ *
+ * @param	_srcbuf [“ü—Í] o—Í•¶š—ñ”z—ñ‚Ìƒ|ƒCƒ“ƒ^
+ * @param	_size [“ü—Í] o—Í•¶š”
+ */
+void PrintStringA(const char* _srcbuf, int _size)
+{
+	//•\¦•¶š”‚ªw’è•¶š—ñ‚ÌƒTƒCƒY‚ğƒI[ƒo[‚µ‚Ä‚¢‚½‚ç•â³‚·‚é
+	int src_len = (int)strlen(_srcbuf);
+	if (_size < 0) {
+		_size = src_len;
+	}
+	else if (_size > src_len) {
+		_size = (int)strlen(_srcbuf);
+	}
+	g_PrintStringCompatibleMode = true;
+	//void WriteTextA(int _xp, int _yp, const char* _text, double _scale, D2D1::ColorF _fgc, D2D1::ColorF _bgc, bool _new_line)
+	WriteTextA(g_CursorPosD2D.X, g_CursorPosD2D.Y, _srcbuf, 1.0f, D2D1::ColorF(1, 1, 1, 1), D2D1::ColorF(0, 0, 0, 0), false);
+}	//PrintStringA
+
+/**
+ * @brief	•¶š—ñ‚Ìo—ÍiUnicode•¶š—pj
+ *
+ * @param	_srcbuf [“ü—Í] o—Í•¶š—ñ”z—ñ‚Ìƒ|ƒCƒ“ƒ^
+ * @param	_size [“ü—Í] o—Í•¶š”
+ */
+void PrintStringW(const wchar_t* _srcbuf, int _size)
+{
+	//•\¦•¶š”‚ªw’è•¶š—ñ‚ÌƒTƒCƒY‚ğƒI[ƒo[‚µ‚Ä‚¢‚½‚ç•â³‚·‚é
+	int src_len = (int)wcslen(_srcbuf);
+	if (_size < 0) {
+		_size = src_len;
+	}
+	else if (_size > src_len) {
+		_size = (int)wcslen(_srcbuf);
+	}
+	g_PrintStringCompatibleMode = true;
+	WriteTextW(g_CursorPosD2D.X, g_CursorPosD2D.Y, _srcbuf, 1.0f, D2D1::ColorF(1, 1, 1, 1), D2D1::ColorF(0, 0, 0, 0), false);
+}	//PrintStringW
+
+#ifdef UNICODE
+	/**
+	 * @brief	•¶š—ñ‚Ìo—Í(ƒ}ƒ‹ƒ`ƒoƒCƒgËUnicode•ÏŠ·”Å)
+	 *
+	 * @param	_src [“ü—Í] o—Í•¶š—ñ”z—ñ‚Ìƒ|ƒCƒ“ƒ^
+	 * @param	_size [“ü—Í] o—Í•¶š”
+	 */
+void PrintString(const char* _src, int _size)
+{
+	//w’è‚³‚ê‚½ƒ}ƒ‹ƒ`ƒoƒCƒg•¶š‘S‚Ä‚ğƒƒCƒh•¶š(Unicode•¶š)•ÏŠ·‚µ‚½ê‡‚Ì
+	//•K—v‚Èƒoƒbƒtƒ@[ƒTƒCƒY (I’[‚Ì null •¶š‚ğŠÜ‚Ş) ‚ğ•¶š’PˆÊ‚ÅZo‚µA
+	//‚»‚Ì•¶š”•ª‚Ìƒoƒbƒtƒ@[‚ğŠm•Û‚·‚éB
+	int wc_src_siz = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, _src, -1, NULL, 0);
+	size_t wc_src_bytes = (wc_src_siz * sizeof(wchar_t));	//Unicode•¶šŠ·Z‚ÌƒoƒCƒg”B
+	wchar_t* wc_src = (wchar_t*)_malloca(wc_src_bytes);	//ƒXƒ^ƒbƒNã‚ÉŠm•ÛFfree•s—v
+	memset(wc_src, 0, wc_src_bytes);	//‚OƒNƒŠƒAF‘‚«‚İ‚ª“r’†‚Ü‚Å‚Å‚à'\0'I’[•¶š—ñ‚É‚È‚éB
+	//w’èƒTƒCƒY‚ªŒ³‚Ì•¶š”‚ğƒI[ƒo[‚µ‚Ä‚¢‚éê‡‚Ì•â³
+	if ((int)strlen(_src) < _size) {
+		_size = (-1);	//(-1)w’è‚Å'\0'‚Ü‚Å•ÏŠ·B
+	}
+	//w’èƒTƒCƒY•ª•ÏŠ·‚·‚éi_size == (-1))‚È‚ç'\0'‚Ü‚Å‘S‚Ä•ÏŠ·‚·‚éj
+	//–ß‚è’l‚Í•ÏŠ·‚µ‚½(ƒoƒbƒtƒ@‚É‘‚«‚Ü‚ê‚½)•¶š”‚ª•Ô‚éB
+	//y’z(-1)w’è‚Å•ÏŠ·‚µ‚½ê‡A–ß‚è’l‚Í'\0'‚ğŠÜ‚Ş•¶š”‚É‚È‚éB
+	int disp_siz = MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, _src, _size, wc_src, wc_src_siz);
+	//disp_siz‚Í'\0'‚ğŠÜ‚Ş•¶š”‚©‚à‚µ‚ê‚È‚¢‚Ì‚ÅA•ÏŠ·‚µ‚½•¶š”‚É‚È‚é—l‚ÉÄŒvZ‚·‚éB
+	disp_siz = (int)wcslen(wc_src);
+	//DWORD num;	//ÀÛ‚É‘‚«‚Ü‚ê‚½•¶š”‚ğó‚¯æ‚é•Ï”
+	//WriteConsoleW(g_DisplayHandle[g_SwapFlg], wc_src, disp_siz, &num, NULL);
+	g_PrintStringCompatibleMode = true;
+	WriteTextW(g_CursorPosD2D.X, g_CursorPosD2D.Y, wc_src, 1.0f, D2D1::ColorF(1, 1, 1, 1), D2D1::ColorF(0, 0, 0, 0), false);
+}	//PrintString
+#endif	//UNICODE
+
+//----------------
+//•¶š‘S‘Ì
+//----------------
+void SetHighVideoColor(void) {}
+void SetLowVideoColor(void) {}
+void SetNormalVideoColor(void) {}
+void SetTextBackColor(int color) {}
+void SetConsoleTextColor(int color) {}
+void SetTextAttribute(int attribute) {}
+//----------------
+//s‘€ì
+//----------------
+void ClearLine(void) {}
+void InsertLine(void) {}
+void DeleteLine(void) {}
+
+#else
 
 //================================================================
 //•¶š—ñ•`‰æ
@@ -721,7 +1682,7 @@ void PrintString(const char* _src, int _size)
 	DWORD num;
 	WCHAR wide_char[256];
 	memset(wide_char, 0, sizeof(wide_char));
-	//MB_COMPOSITEË‘÷“_E”¼‘÷“_•¶š‚ª‚Q•¶š‚É•ÏŠ·‚³‚ê‚éF—ájƒpËƒnKA‚ÎË‚ÍJ
+	//MB_COMPOSITEË‘÷“_E”¼‘÷“_•¶š‚ª‚Q•¶š‚É•ÏŠ·‚³‚ê‚éF—ájƒpËƒpA‚ÎË‚Î
 	int ret_val = MultiByteToWideChar(CP_ACP, MB_COMPOSITE, _src, _size, wide_char, _size);
 	WriteConsoleW(g_DisplayHandle[g_SwapFlg], wide_char, ret_val, &num, NULL);
 #endif // true
@@ -814,7 +1775,6 @@ void SetTextAttribute(int attribute)
 {
 	SetConsoleTextAttribute(g_DisplayHandle[g_SwapFlg], attribute);
 }	//SetTextAttribute
-
 //----------------
 //s‘€ì
 //----------------
@@ -894,6 +1854,8 @@ void DeleteLine(void)
 	FillConsoleOutputAttribute(g_DisplayHandle[g_SwapFlg], g_ScreenBufferAttribute, line_len, calc_coord, &fill_num);
 	FillConsoleOutputCharacter(g_DisplayHandle[g_SwapFlg], TEXT(' '), line_len, calc_coord, &fill_num);
 }	//DeleteLine
+#endif // !USED2D
+
 
 //================================================================
 // Šg’£•¶š—ñˆ—
@@ -1135,7 +2097,12 @@ void PosPrintStringFW(int _xp, int _yp, bool _zenkaku, const wchar_t* _format, .
 */
 void DrawStringFA(int _x, int _y, bool _zenkaku, const char* _format, ...)
 {
+#ifdef USED2D
+	g_CursorPosD2D.X = _x;
+	g_CursorPosD2D.Y = _y;
+#else
 	SetConsoleCursorPosition(g_DisplayHandle[g_SwapFlg], COORD{ (SHORT)_x,(SHORT)(g_ScreenBufferInfoEx.srWindow.Top + _y) });
+#endif // USED2D
 	va_list ap;
 	va_start(ap, _format);
 	VPrintStringFA(_zenkaku, _format, ap);
@@ -1153,7 +2120,12 @@ void DrawStringFA(int _x, int _y, bool _zenkaku, const char* _format, ...)
 */
 void DrawStringFW(int _x, int _y, bool _zenkaku, const wchar_t* _format, ...)
 {
+#ifdef USED2D
+	g_CursorPosD2D.X = _x;
+	g_CursorPosD2D.Y = _y;
+#else
 	SetConsoleCursorPosition(g_DisplayHandle[g_SwapFlg], COORD{ (SHORT)_x,(SHORT)(g_ScreenBufferInfoEx.srWindow.Top + _y) });
+#endif // USED2D
 	va_list ap;
 	va_start(ap, _format);
 	VPrintStringFW(_zenkaku, _format, ap);
@@ -1164,7 +2136,7 @@ void DrawStringFW(int _x, int _y, bool _zenkaku, const wchar_t* _format, ...)
 // ƒpƒŒƒbƒgŠÖŒW
 //================================================================
 /**
-* @brief	RGBQUAD:{B,G,B,0}Œ^‚ğCOLORREF:0x00BBGGRRŒ^‚É•ÏŠ·
+* @brief	RGBQUAD:{R,G,B,0}Œ^‚ğCOLORREF:0x00BBGGRRŒ^‚É•ÏŠ·
 *
 * @param	RGBQUAD rgb	RGBQUADF
 */
@@ -1174,7 +2146,7 @@ COLORREF RGBQtoCREF(RGBQUAD rgb)
 }	//RGBQtoCREF
 
 /**
-* @brief	COLORREF:0x00BBGGRRŒ^‚ğRGBQUAD:{B,G,B,0}Œ^‚É•ÏŠ·
+* @brief	COLORREF:0x00BBGGRRŒ^‚ğRGBQUAD:{R,G,B,0}Œ^‚É•ÏŠ·
 *
 * @param	COLORREF ref	COLORREFF
 */
@@ -1221,38 +2193,62 @@ RGBQUAD* ConvCREFtoRGBQ(const COLORREF* _cref, RGBQUAD* _rgb)
 */
 void SetPalette(const COLORREF* _pal16, int _p1, int _p2)
 {
+	if (_pal16 == NULL) {
+		//ƒpƒŒƒbƒg–³‚µ
+		return;
+	}
+#ifdef USED2D
+	//’l‚Ì•â³
 	if (_p1 < 0) { _p1 = 0; }
 	if (_p2 < 0) { _p2 = 0; }
-	if (_p1 > 15) { _p1 = 15; }
-	if (_p2 > 15) { _p2 = 15; }
+	if (_p1 >= NUM_D2D_PAL) { _p1 = NUM_D2D_PAL - 1; }
+	if (_p2 >= NUM_D2D_PAL) { _p2 = NUM_D2D_PAL - 1; }
+	//_p1 <= _p2‚É‚·‚é
 	if (_p1 > _p2) {
 		int t = _p1;
 		_p1 = _p2;
 		_p2 = t;
 	}
+	for (int n = _p1; n <= _p2; n++) {
+		g_PaletteD2D[n].rgbBlue = (_pal16[n] & 0x00FF0000) >> 16;	//00BBGGRR
+		g_PaletteD2D[n].rgbGreen = (_pal16[n] & 0x0000FF00) >> 8;	//00BBGGRR
+		g_PaletteD2D[n].rgbRed = (_pal16[n] & 0x000000FF);	//00BBGGRR
+		g_PaletteD2D[n].rgbReserved = 0;	//00BBGGRR
+	}
+#else
+	//’l‚Ì•â³
+	if (_p1 < 0) { _p1 = 0; }
+	if (_p2 < 0) { _p2 = 0; }
+	if (_p1 >= NUM_PALETTE) { _p1 = NUM_PALETTE - 1; }
+	if (_p2 >= NUM_PALETTE) { _p2 = NUM_PALETTE - 1; }
+	//_p1 <= _p2‚É‚·‚é
+	if (_p1 > _p2) {
+		int t = _p1;
+		_p1 = _p2;
+		_p2 = t;
+	}
+	//\‘¢‘Ì‚Ìİ’è
 	g_ScreenBufferInfoEx.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
+	//ƒRƒ“ƒ\[ƒ‹‚ÌƒpƒŒƒbƒg“Ç‚İ‚Ş
 	GetConsoleScreenBufferInfoEx(g_DisplayHandle[0], &g_ScreenBufferInfoEx);
 	//windowƒTƒCƒY‚ğƒŠƒZƒbƒg‚µ‚È‚¢‚ÆA­‚µ‚Ã‚Â•Ï‰»‚·‚éH
 	//g_ScreenBufferInfoEx.srWindow.Right = g_ScreenBufferInfoEx.dwSize.X;
 	//g_ScreenBufferInfoEx.srWindow.Bottom = g_ScreenBufferInfoEx.dwSize.Y;
 	g_ScreenBufferInfoEx.srWindow.Right = g_ScreenBufferInfoEx.dwMaximumWindowSize.X;
 	g_ScreenBufferInfoEx.srWindow.Bottom = g_ScreenBufferInfoEx.dwMaximumWindowSize.Y;
+	//ƒpƒŒƒbƒg(COLORREF[])‚ğ“]‘—‚·‚é
 	for (int n = _p1; n <= _p2; n++) {
 		g_ScreenBufferInfoEx.ColorTable[n] = _pal16[n];
 	}
-	SetConsoleScreenBufferInfoEx(g_DisplayHandle[0], &g_ScreenBufferInfoEx);
-	SetConsoleScreenBufferInfoEx(g_DisplayHandle[1], &g_ScreenBufferInfoEx);
+	//ƒRƒ“ƒ\[ƒ‹‚ÉƒpƒŒƒbƒg‚ğ”½‰f‚·‚é
+	if (g_DisplayHandle[0] != NULL) {
+		SetConsoleScreenBufferInfoEx(g_DisplayHandle[0], &g_ScreenBufferInfoEx);
+	}
+	if (g_DisplayHandle[1] != NULL) {
+		SetConsoleScreenBufferInfoEx(g_DisplayHandle[1], &g_ScreenBufferInfoEx);
+	}
+#endif // USED2D
 }	//SetPalette
-
-/**
-* @brief	ƒpƒŒƒbƒg‚P‚UF‚Ìİ’è
-*
-* @param	COLORREF* _pal16FƒpƒŒƒbƒgƒf[ƒ^‚Ö‚Ìƒ|ƒCƒ“ƒ^
-*/
-void SetPalette16(const COLORREF* _pal16)
-{
-	SetPalette(_pal16, 0, 15);
-}
 
 /**
 * @brief	Bmp‚©‚çƒpƒŒƒbƒg‚P‚UF‚Ìİ’è
@@ -1273,6 +2269,7 @@ void SetPalette(const Bmp* _pBmp)
 //================================================================
 // ƒtƒŒ[ƒ€ƒoƒbƒtƒ@‰æ‘œ•`‰æ
 //================================================================
+#ifndef USED2D
 /**
 * @brief	ƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@‚Ì‰Šú‰»
 *
@@ -1326,7 +2323,7 @@ void ClearFrameBufferFull(char* buf)
 * @param	buf [“ü—Í] ƒXƒNƒŠ[ƒ“ƒoƒbƒtƒ@‚Ìƒ|ƒCƒ“ƒ^
 * y’zInitConio‚Åw’è‚µ‚½ƒXƒNƒŠ[ƒ“ƒTƒCƒY‚Ì–ÊÏ(ƒ^ƒe~ƒˆƒR)‚Æ“¯‚¶ƒTƒCƒY‚Ì‚PŸŒ³”z—ñ‚Å‚È‚¢‚Æ‚¢‚¯‚È‚¢B
 */
-void PrintFrameBuffer(const char* buf)
+void PrintFrameBuffer(const char* _buf_8bit)
 {
 	DWORD size = g_ScreenBufferSize.X * g_ScreenBufferSize.Y;
 	DWORD num;
@@ -1334,9 +2331,9 @@ void PrintFrameBuffer(const char* buf)
 
 	// ‰æ‘œ•`‰æ(‰æ–ÊŠO‚Ö‚Ì‚Í‚İo‚µˆ—‚È‚µ)
 	for (int i = 0; i < size; i++) {
-		*dp = ((*buf) << 4) | ((*buf) & 0x0F);
+		*dp = ((*_buf_8bit) << 4) | ((*_buf_8bit) & 0x0F);
 		dp++;
-		buf++;
+		_buf_8bit++;
 	}
 	//‘®«‚Ì‚İ‘‚«Š·‚¦‚é
 	WriteConsoleOutputAttribute(g_DisplayHandle[g_SwapFlg], g_ScreenBuffer4bit, size, { 0,0 }, &num);
@@ -1360,6 +2357,7 @@ void DrawPixel(int _x, int _y, int _c)
 		g_FrameBuffer4bit[_y * g_ScreenBufferSize.X + _x] = _c;
 	}
 }	//DrawPixel
+#endif // USED2D
 
 //----------------------------------------------------------------
 // BMP‰æ‘œ‚Ì•`‰æ(LoadBmp/CreateBmpChar/CreateBmpString‚Å¶¬‚µ‚½Bmp‰æ‘œ)
@@ -1370,27 +2368,149 @@ void DrawPixel(int _x, int _y, int _c)
 * @param	int _xp	[“ü—Í] •\¦À•Wi‚O?j
 * @param	int _yp [“ü—Í] •\¦À•Wi‚O?j
 * @param	Bmp _bmp [“ü—Í] Bmp\‘¢‘Ì‚Ö‚Ìƒ|ƒCƒ“ƒ^
+* @param	int _invF”½“]ƒtƒ‰ƒOF0=”½“]–³‚µ/BMP_HINV=…•½”½“]/BMP_VINV=‚’¼”½“]/BMP_HVINV=…•½‚’¼”½“](‚P‚W‚O‹‰ñ“])
 * @param	bool _trF“§–¾ƒtƒ‰ƒOFtrue=“§–¾/false=•s“§–¾@--- '‚O'‚Ì•”•ª‚ğ•`‚«‚±‚Ü‚È‚¢‚±‚Æ‚Å“§–¾ˆ—‚ğ‚·‚éB
 *
 */
-static void draw_bmp_bpp04(int _xp, int _yp, const Bmp* _bmp, bool _tr)
-{
-	//ƒtƒŒ[ƒ€ƒoƒbƒtƒ@‚Ìw’èÀ•W‚Ö“]‘—
-	char* buf = _bmp->pixel;
-	for (int y = 0; y < _bmp->height; y++) {
-		for (int x = 0; x < _bmp->width; x++) {
-			int xx = x + _xp;
-			int yy = y + _yp;
-			if ((xx >= 0) && (yy >= 0) && (yy < g_ScreenBufferSize.Y) && (xx < g_ScreenBufferSize.X)) {
-				//‰æ–Ê“à‚Å‚ ‚é
-				if ((!_tr) || (*buf != 0)) {
-					//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
-					g_FrameBuffer4bit[yy * g_ScreenBufferSize.X + xx] = *buf;
-				}
+#ifdef USED2D
+//static COLORREF* pal_ptr = NULL;	//[256] = {};
+//static RGBQUAD* pal_rgb_ptr = NULL;	//[256] = {};
+static const Bmp* bmp_ptr = NULL;
+inline void pixel_copy04(const BYTE* buf, int xx, int yy, bool _tr) {
+	if (bmp_ptr->pal != NULL) {
+		if ((xx >= 0) && (yy >= 0) && (yy < g_ScreenBufferSize.Y) && (xx < g_ScreenBufferSize.X)) {
+			//‰æ–Ê“à‚Å‚ ‚é
+			if ((!_tr) || (*buf != 0)) {
+				//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
+				const char* src = (char*)&bmp_ptr->pal[*buf % bmp_ptr->numpal];
+				char* dest = (char*)&g_FrameBuffer32bitD2D[yy * g_ScreenBufferSize.X + xx];
+				//RGBQUAD <= COLORREF
+				dest[0] = src[2];
+				dest[1] = src[1];
+				dest[2] = src[0];
+				dest[3] = src[3];
 			}
-			buf++;
 		}
 	}
+	else if (bmp_ptr->pal_rgb != NULL) {
+		if ((xx >= 0) && (yy >= 0) && (yy < g_ScreenBufferSize.Y) && (xx < g_ScreenBufferSize.X)) {
+			//‰æ–Ê“à‚Å‚ ‚é
+			if ((!_tr) || (*buf != 0)) {
+				//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
+				//RGBQUAD <= RGBQUAD
+				g_FrameBuffer32bitD2D[yy * g_ScreenBufferSize.X + xx] = bmp_ptr->pal_rgb[*buf % bmp_ptr->numpal];
+			}
+		}
+	}
+	else {
+		if ((xx >= 0) && (yy >= 0) && (yy < g_ScreenBufferSize.Y) && (xx < g_ScreenBufferSize.X)) {
+			//‰æ–Ê“à‚Å‚ ‚é
+			if ((!_tr) || (*buf != 0)) {
+				//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
+				//RGBQUAD <= COLORREF
+				g_FrameBuffer32bitD2D[yy * g_ScreenBufferSize.X + xx] = g_PaletteD2D[*buf % bmp_ptr->numpal];
+			}
+		}
+	}
+}
+#else
+inline void pixel_copy04(const unsigned char* buf, int xx, int yy, bool _tr) {
+	if ((xx >= 0) && (yy >= 0) && (yy < g_ScreenBufferSize.Y) && (xx < g_ScreenBufferSize.X)) {
+		//‰æ–Ê“à‚Å‚ ‚é
+		if ((!_tr) || (*buf != 0)) {
+			//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
+			g_FrameBuffer4bit[yy * g_ScreenBufferSize.X + xx] = *buf;
+		}
+	}
+}
+#endif // USED2D
+static void draw_bmp_bpp04(int _xp, int _yp, const Bmp* _bmp, int _inv, bool _tr)
+{
+#ifdef USED2D
+	bmp_ptr = _bmp;
+#endif // USED2D
+
+	//ƒtƒŒ[ƒ€ƒoƒbƒtƒ@‚Ìw’èÀ•W‚Ö“]‘—
+	unsigned char* buf = (unsigned char*)_bmp->pixel;
+	if (_inv == 0) {
+		//”½“]‰ñ“]–³‚µi“ª‚ªãE•@‚ª¶j
+		for (int y = 0; y < _bmp->height; y++) {
+			for (int x = 0; x < _bmp->width; x++) {
+				pixel_copy04(buf, x + _xp, y + _yp, _tr);
+				buf++;
+			}
+		}
+	}
+	else if (_inv == BMP_HINV) {
+		//…•½”½“]‚Ì‚İi“ª‚ªãE•@‚ª‰Ej
+		for (int y = 0; y < _bmp->height; y++) {
+			for (int x = _bmp->width - 1; x >= 0; x--) {
+				pixel_copy04(buf, x + _xp, y + _yp, _tr);
+				buf++;
+			}
+		}
+	}
+	else if (_inv == BMP_VINV) {
+		//‚’¼”½“]‚Ì‚İi“ª‚ª‰ºE•@‚ª‰Ej
+		for (int y = _bmp->height - 1; y >= 0; y--) {
+			for (int x = 0; x < _bmp->width; x++) {
+				pixel_copy04(buf, x + _xp, y + _yp, _tr);
+				buf++;
+			}
+		}
+	}
+	else if (_inv == BMP_HVINV) {
+		//…•½{‚’¼”½“]i“ª‚ª‰ºE•@‚ª¶ji‚P‚W‚O“x‰ñ“]j
+		for (int y = _bmp->height - 1; y >= 0; y--) {
+			for (int x = _bmp->width - 1; x >= 0; x--) {
+				pixel_copy04(buf, x + _xp, y + _yp, _tr);
+				buf++;
+			}
+		}
+	}
+	else if (_inv & BMP_ROT90) {
+		//‰¡“|‚µ‚É‚È‚Á‚Ä‚¢‚éê‡
+		_inv &= (~BMP_ROT90);	//‰¡“|‚µƒtƒ‰ƒO‚ÍÁ‚·
+		if (_inv == 0) {
+			//‰¡“|‚µ‚Ì‚İi“ª‚ª‰EE•@‚ª‰ºj¡¥
+			for (int x = _bmp->height - 1; x >= 0; x--) {
+				for (int y = 0; y < _bmp->width; y++) {
+					pixel_copy04(buf, x + _xp, y + _yp, _tr);
+					buf++;
+				}
+			}
+		}
+		else if (_inv == BMP_HINV) {
+			//‰¡“|‚µ{…•½”½“]i“ª‚ª¶E•@‚ª‰ºj¥¡
+			for (int x = 0; x < _bmp->height; x++) {
+				for (int y = 0; y < _bmp->width; y++) {
+					pixel_copy04(buf, x + _xp, y + _yp, _tr);
+					buf++;
+				}
+			}
+		}
+		else if (_inv == BMP_VINV) {
+			//‰¡“|‚µ{‚’¼”½“]i“ª‚ª‰EE•@‚ªãj¡£
+			for (int x = _bmp->height - 1; x >= 0; x--) {
+				for (int y = _bmp->width - 1; y >= 0; y--) {
+					pixel_copy04(buf, x + _xp, y + _yp, _tr);
+					buf++;
+				}
+			}
+		}
+		else if (_inv == BMP_HVINV) {
+			//‰¡“|‚µ{…•½{‚’¼”½“]i“ª‚ª¶E•@‚ªãj£¡
+			for (int x = 0; x < _bmp->height; x++) {
+				for (int y = _bmp->width - 1; y >= 0; y--) {
+					pixel_copy04(buf, x + _xp, y + _yp, _tr);
+					buf++;
+				}
+			}
+		}
+	}
+#ifdef USED2D
+	bmp_ptr = NULL;
+#endif // USED2D
 }	//draw_bmp_bpp04
 
 /**
@@ -1399,72 +2519,154 @@ static void draw_bmp_bpp04(int _xp, int _yp, const Bmp* _bmp, bool _tr)
 * @param	int _xp	[“ü—Í] •\¦À•Wi‚O?j
 * @param	int _yp [“ü—Í] •\¦À•Wi‚O?j
 * @param	Bmp _bmp [“ü—Í] Bmp\‘¢‘Ì‚Ö‚Ìƒ|ƒCƒ“ƒ^
+* @param	int _invF”½“]ƒtƒ‰ƒOF0=”½“]–³‚µ/BMP_HINV=…•½”½“]/BMP_VINV=‚’¼”½“]/BMP_HVINV=…•½‚’¼”½“](‚P‚W‚O‹‰ñ“])
 * @param	bool _trF“§–¾ƒtƒ‰ƒOFtrue=“§–¾/false=•s“§–¾@--- '‚O'‚Ì•”•ª‚ğ•`‚«‚±‚Ü‚È‚¢‚±‚Æ‚Å“§–¾ˆ—‚ğ‚·‚éB
 *
 */
-static void draw_bmp_bpp24(int _xp, int _yp, const Bmp* _bmp, bool _tr)
+#ifdef USED2D
+inline void pixel_copy24(const unsigned char* in_buf, int xx, int yy, int, bool _tr) {
+	if ((xx >= 0) && (yy >= 0) && (yy < g_ScreenBufferSize.Y) && (xx < g_ScreenBufferSize.X)) {
+		DWORD rgb = *((DWORD*)in_buf);
+		//‰æ–Ê“à‚Å‚ ‚é
+		if ((!_tr) || ((rgb & 0x00FFFFFF) != 0)) {
+			//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
+			DWORD* dest = (DWORD*)&g_FrameBuffer32bitD2D[yy * g_ScreenBufferSize.X + xx];
+			*dest = rgb;
+		}
+	}
+	//in_buf += 3;
+}
+#else
+inline void pixel_copy24(const unsigned char* in_buf, int xx, int yy, int x_stride, bool _tr) {
+	if ((xx >= 0) && (yy >= 0) && (yy < g_ScreenBufferSize.Y) && (xx < g_ScreenBufferSize.X)) {
+		//‰æ–Ê“à‚Å‚ ‚é
+		if ((!_tr) || ((*((DWORD*)in_buf) & 0x00FFFFFF) != 0)) {
+			//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
+			char* dest = &g_FrameBufferFull[yy * x_stride + (xx * 3)];
+			dest[2] = in_buf[0];
+			dest[1] = in_buf[1];
+			dest[0] = in_buf[2];
+		}
+	}
+	//in_buf += 3;
+}
+#endif // USED2D
+static void draw_bmp_bpp24(int _xp, int _yp, const Bmp* _bmp, int _inv, bool _tr)
 {
-#if true
 	const unsigned char* in_buf = (const unsigned char*)_bmp->pixel;	//CharRGBconvTBL[][]‚Ìindex‚Æ‚µ‚Äˆµ‚¤‚Ì‚ÅA•„†–³‚µ‚É‚µ‚Ä‚¢‚éB
+#ifdef USED2D
+	if ((in_buf == NULL) || (g_FrameBuffer32bitD2D == NULL)) {
+		return;
+	}
+#else
 	if ((in_buf == NULL) || (g_FrameBufferFull == NULL)) {
 		return;
 	}
+#endif // USED2D
 	int x_stride = (g_ScreenBufferSize.X * 3);
-	for (int y = 0; y < _bmp->height; y++) {
-		for (int x = 0; x < _bmp->width; x++) {
-			int xx = x + _xp;
-			int yy = y + _yp;
-			if ((xx >= 0) && (yy >= 0) && (yy < g_ScreenBufferSize.Y) && (xx < g_ScreenBufferSize.X)) {
-				//‰æ–Ê“à‚Å‚ ‚é
-				if ((!_tr) || ((*((DWORD*)in_buf) & 0x00FFFFFF) != 0)) {
-					//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
-					char* dest = &g_FrameBufferFull[yy * x_stride + (xx * 3)];
-					dest[2] = in_buf[0];
-					dest[1] = in_buf[1];
-					dest[0] = in_buf[2];
-				}
-			}
-			in_buf += 3;
-		}
-	}
-#else
-	const unsigned char* in_buf = (const unsigned char*)_bmp->pixel;	//CharRGBconvTBL[][]‚Ìindex‚Æ‚µ‚Äˆµ‚¤‚Ì‚ÅA•„†–³‚µ‚É‚µ‚Ä‚¢‚éB
-	if ((in_buf == NULL) || (g_ScreenBufferFull == NULL)) {
-		return;
-	}
-	int width = _bmp->width;
-	int height = _bmp->height;
-	int line_stride = (g_ScreenBufferSize.X * PIXEL24ESCSIZE + 1);	//y’zÅŒã‚Ì{‚P‚Í'\n'‚Ì‚P•¶š
-	for (int y = 0; y < height; y++) {
-		for (int x = 0; x < width; x++) {
-			int xx = x + _xp;
-			int yy = y + _yp;
-			if ((0 <= xx) && (xx < g_ScreenBufferSize.X) && (0 <= yy) && (yy < g_ScreenBufferSize.Y)) {
-				//'\x1b[48;2;000;000;000m '
-				char* p = &g_ScreenBufferFull[(yy * line_stride) + (xx * PIXEL24ESCSIZE) + 7];
-				p[0] = CharRGBconvTBL[0][*in_buf];
-				p[1] = CharRGBconvTBL[1][*in_buf];
-				p[2] = CharRGBconvTBL[2][*in_buf];
-				in_buf++;
-				p[4] = CharRGBconvTBL[0][*in_buf];
-				p[5] = CharRGBconvTBL[1][*in_buf];
-				p[6] = CharRGBconvTBL[2][*in_buf];
-				in_buf++;
-				p[8] = CharRGBconvTBL[0][*in_buf];
-				p[9] = CharRGBconvTBL[1][*in_buf];
-				p[10] = CharRGBconvTBL[2][*in_buf];
-				in_buf++;
-			}
-			else {
+	if (_inv == 0) {
+		//”½“]‰ñ“]–³‚µi“ª‚ªãE•@‚ª¶j
+		for (int y = 0; y < _bmp->height; y++) {
+			for (int x = 0; x < _bmp->width; x++) {
+				pixel_copy24(in_buf, x + _xp, y + _yp, x_stride, _tr);
 				in_buf += 3;
 			}
 		}
 	}
-	DWORD write_num;
-	WriteConsoleA(g_DisplayHandle[g_SwapFlg], g_ScreenBufferFull, (g_ScreenBufferSize.X * PIXEL24ESCSIZE) * g_ScreenBufferSize.Y + (g_ScreenBufferSize.Y - 1), &write_num, NULL);
-#endif
+	else if (_inv == BMP_HINV) {
+		//…•½”½“]‚Ì‚İi“ª‚ªãE•@‚ª‰Ej
+		for (int y = 0; y < _bmp->height; y++) {
+			for (int x = _bmp->width - 1; x >= 0; x--) {
+				pixel_copy24(in_buf, x + _xp, y + _yp, x_stride, _tr);
+				in_buf += 3;
+			}
+		}
+	}
+	else if (_inv == BMP_VINV) {
+		//‚’¼”½“]‚Ì‚İi“ª‚ª‰ºE•@‚ª‰Ej
+		for (int y = _bmp->height - 1; y >= 0; y--) {
+			for (int x = 0; x < _bmp->width; x++) {
+				pixel_copy24(in_buf, x + _xp, y + _yp, x_stride, _tr);
+				in_buf += 3;
+			}
+		}
+	}
+	else if (_inv == BMP_HVINV) {
+		//…•½{‚’¼”½“]i“ª‚ª‰ºE•@‚ª¶ji‚P‚W‚O“x‰ñ“]j
+		for (int y = _bmp->height - 1; y >= 0; y--) {
+			for (int x = _bmp->width - 1; x >= 0; x--) {
+				pixel_copy24(in_buf, x + _xp, y + _yp, x_stride, _tr);
+				in_buf += 3;
+			}
+		}
+	}
+	else if (_inv & BMP_ROT90) {
+		//‰¡“|‚µ‚É‚È‚Á‚Ä‚¢‚éê‡
+		_inv &= (~BMP_ROT90);	//‰¡“|‚µƒtƒ‰ƒO‚ÍÁ‚·
+		if (_inv == 0) {
+			//‰¡“|‚µ‚Ì‚İi“ª‚ª‰EE•@‚ª‰ºj¡¥
+			for (int x = _bmp->height - 1; x >= 0; x--) {
+				for (int y = 0; y < _bmp->width; y++) {
+					pixel_copy24(in_buf, x + _xp, y + _yp, x_stride, _tr);
+					in_buf += 3;
+				}
+			}
+		}
+		else if (_inv == BMP_HINV) {
+			//‰¡“|‚µ{…•½”½“]i“ª‚ª¶E•@‚ª‰ºj¥¡
+			for (int x = 0; x < _bmp->height; x++) {
+				for (int y = 0; y < _bmp->width; y++) {
+					pixel_copy24(in_buf, x + _xp, y + _yp, x_stride, _tr);
+					in_buf += 3;
+				}
+			}
+		}
+		else if (_inv == BMP_VINV) {
+			//‰¡“|‚µ{‚’¼”½“]i“ª‚ª‰EE•@‚ªãj¡£
+			for (int x = _bmp->height - 1; x >= 0; x--) {
+				for (int y = _bmp->width - 1; y >= 0; y--) {
+					pixel_copy24(in_buf, x + _xp, y + _yp, x_stride, _tr);
+					in_buf += 3;
+				}
+			}
+		}
+		else if (_inv == BMP_HVINV) {
+			//‰¡“|‚µ{…•½{‚’¼”½“]i“ª‚ª¶E•@‚ªãj£¡
+			for (int x = 0; x < _bmp->height; x++) {
+				for (int y = _bmp->width - 1; y >= 0; y--) {
+					pixel_copy24(in_buf, x + _xp, y + _yp, x_stride, _tr);
+					in_buf += 3;
+				}
+			}
+		}
+	}
 }	//draw_bmp_bpp24
 
+/**
+* @brief	‰æ‘œ‚Ìo—Í
+*
+* @param	int _xpF•\¦À•Wi‚O?j
+* @param	int _ypF•\¦À•Wi‚O?j
+* @param	Bmp _bmpFBmp\‘¢‘Ì‚Ö‚Ìƒ|ƒCƒ“ƒ^
+* @param	int _invF”½“]ƒtƒ‰ƒOF0=”½“]–³‚µ/BMP_HINV=…•½”½“]/BMP_VINV=‚’¼”½“]/BMP_HVINV=…•½‚’¼”½“](‚P‚W‚O‹‰ñ“])
+* @param	bool _trF“§–¾ƒtƒ‰ƒOFtrue=“§–¾/false=•s“§–¾@--- '‚O'‚Ì•”•ª‚ğ•`‚«‚±‚Ü‚È‚¢‚±‚Æ‚Å“§–¾ˆ—‚ğ‚·‚éB
+*
+* @note		Bmp‰æ‘œ‚ÌF”‚ğ©“®”»’è‚µ‚Ä•`‰æ‚µ‚Ä‚¢‚é
+*/
+void DrawBmp(int _xp, int _yp, const Bmp* _bmp, int _inv, bool _tr)
+{
+	_ASSERT(_bmp);
+	if (_bmp == NULL) { return; }
+	if (_bmp->colbit == 4) {
+		draw_bmp_bpp04(_xp, _yp, _bmp, _inv, _tr);
+	}
+	else if (_bmp->colbit == 8) {
+		draw_bmp_bpp04(_xp, _yp, _bmp, _inv, _tr);
+	}
+	else if (_bmp->colbit == 24) {
+		draw_bmp_bpp24(_xp, _yp, _bmp, _inv, _tr);
+	}
+}	//DrawBmp
 /**
 * @brief	‰æ‘œ‚Ìo—Í
 *
@@ -1477,17 +2679,8 @@ static void draw_bmp_bpp24(int _xp, int _yp, const Bmp* _bmp, bool _tr)
 */
 void DrawBmp(int _xp, int _yp, const Bmp* _bmp, bool _tr)
 {
-	_ASSERT(_bmp != NULL);
-	if (_bmp->colbit == 4) {
-		draw_bmp_bpp04(_xp, _yp, _bmp, _tr);
-	}
-	else if (_bmp->colbit == 8) {
-		draw_bmp_bpp04(_xp, _yp, _bmp, _tr);
-	}
-	else if (_bmp->colbit == 24) {
-		draw_bmp_bpp24(_xp, _yp, _bmp, _tr);
-	}
-}	//DrawBmp
+	DrawBmp(_xp, _yp, _bmp, 0, _tr);
+}
 
 //================================================================
 // ƒrƒbƒgƒ}ƒbƒvƒtƒ@ƒCƒ‹‘€ìƒ†[ƒeƒBƒŠƒeƒB[
@@ -1688,7 +2881,23 @@ enum FUNC_NUM {
 /**
 * @brief	BMPƒtƒ@ƒCƒ‹‚Ì“Ç‚İ‚İB
 *
-* @param	const char* _file_name	BMPƒtƒ@ƒCƒ‹–¼iƒpƒXj
+* @note	ƒpƒŒƒbƒg‚ÌŒ^‚É‚Â‚¢‚ÄF
+*	COLORREFŒ^‚ğƒƒ‚ƒŠã‚Ì•À‚Ñ‚ğ
+*		BYTE[]‚Å“Ç‚İæ‚é‚Æ{[0]Red,[1]Green,[2]Blue,[3]0}‚Æ‚È‚è
+*		DWORDŒ^‚Å“Ç‚İæ‚é‚Æ{0x00BBGGRR}
+*	‚Æ‚È‚éB
+*	RGBQUADŒ^‚ğƒƒ‚ƒŠã‚Ì•À‚Ñ‚ğ
+*		BYTE[]‚Å“Ç‚İæ‚é‚Æ{[0]Blue,[1]Green,[2]Red,[3]0}‚Æ‚È‚è
+*		DWORDŒ^‚Å“Ç‚İæ‚é‚Æ{0x00RRGGBB}
+*	‚Æ‚È‚éB
+*
+* @note	24/32ƒsƒNƒZƒ‹‚Ìƒf[ƒ^‚Ì•À‚Ñ‚É‚Â‚¢‚ÄF
+*	BITMAP‚ÌƒsƒNƒZƒ‹ƒf[ƒ^{24bit/pixel|32bit/pixel}‚Í,
+*		24bit/pixel‚Ìê‡BYTE[3]{Blue,Green,Red}/DWORD{0x**RRGGBB}
+*		32bit/pixel‚Ìê‡BYTE[4]{Blue,Green,Blue,alpha?}/DWORD{0xaaRRGGBB}
+*	‚Æ‚È‚Á‚Ä‚¢‚éB
+*
+* @param	const char* _file_name		BMPƒtƒ@ƒCƒ‹–¼iƒpƒXj
 * @param	bool _palset_or_swap24RB	ƒpƒŒƒbƒgF‰æ‘œƒf[ƒ^‚Ìê‡‚ÌƒpƒŒƒbƒgİ’è(true=‚·‚é/false=‚µ‚È‚¢)
 *										24bitƒtƒ‹ƒJƒ‰[‰æ‘œ‚Ìê‡‚ÉRed‚ÆBlue‚ğŒğŠ·(true=‚·‚é/false=‚µ‚È‚¢)
 *
@@ -1749,6 +2958,9 @@ Bmp* LoadBmp(const char* _file_name, bool _palset_or_swap24RB)
 	//ƒpƒŒƒbƒg‚ª‚ ‚é‚©‚È‚¢‚©‚ÍbiBitCount‚ğŒ©‚Ä”»’f‚·‚é
 	pb->numpal = 0;	//”»’f‘O‚ÍƒpƒŒƒbƒg–³‚µi‚Oj‚É‚µ‚Ä‚¨‚­
 	pb->pal = (COLORREF*)NULL;	//”»’f‘O‚ÍƒpƒŒƒbƒg–³‚µiNULLj‚É‚µ‚Ä‚¨‚­
+#ifdef USED2D
+	pb->pal_rgb = (RGBQUAD*)NULL;	//”»’f‘O‚ÍƒpƒŒƒbƒg–³‚µiNULLj‚É‚µ‚Ä‚¨‚­
+#endif // USED2D
 	//‚P?‚W‚ÍƒpƒŒƒbƒgİ‚èA‚»‚êˆÈŠO‚Í1ƒsƒNƒZƒ‹16ƒrƒbƒgb24ƒrƒbƒgb32ƒrƒbƒg
 	if (bih.biBitCount >= 1 && bih.biBitCount <= 8) {
 		//‚PbitF‚QFA‚SbitF‚P‚UFA‚WbitF‚Q‚T‚UF
@@ -1756,18 +2968,49 @@ Bmp* LoadBmp(const char* _file_name, bool _palset_or_swap24RB)
 		if (bih.biClrUsed > 0) {
 			pb->numpal = bih.biClrUsed;	//biClrUsed‚É’l‚ª“ü‚Á‚Ä‚¢‚éê‡‚Í—Dæ‚·‚éB
 		}
+#ifndef USED2D
 		//RGB’l‚ğ•\‚·RGBQUAD’l‚Ì”z—ñ‚ğƒpƒŒƒbƒg”‚Ì”‚¾‚¯Šm•Û‚·‚é
 		//‚PF‚ÍDWORD‚ÅƒoƒCƒg•À‚Ñ‡‚Í[B][G][R][A]‚Æ‚µ‚ÄŠi”[‚³‚ê‚Ä‚¢‚é
 		//‚PF‚Ìƒf[ƒ^‚ğRGBQUAD\‘¢‘Ì‚Æ‚µ‚Ä“Ç‚İ‚Ş¦ƒŠƒgƒ‹ƒGƒ“ƒfƒBƒAƒ“‚ÅŠi”[‚³‚ê‚Ä‚¢‚é‚Ì‚ÅDWORDŒ^‚Å“Ç‚İ‚Ş‚Æ0xAARRGGBB‚Æ‚È‚é
-		RGBQUAD* rgb4 = (RGBQUAD*)calloc(pb->numpal, sizeof(RGBQUAD));
-		if (!rgb4) {
+		RGBQUAD* pal_rgb = (RGBQUAD*)calloc(pb->numpal, sizeof(RGBQUAD));
+		if (!pal_rgb) {
 			//NULLƒ|ƒCƒ“ƒ^i’l‚Oj‚ª•Ô‚Á‚Ä‚«‚½‚ç¸”s(;_;)
 			DeleteBmp(&pb);
 			fclose(fp);	//ƒtƒ@ƒCƒ‹•Â‚¶‚é
 			return (Bmp*)NULL;
 		}
 		//Šm•Û‚µ‚½ƒTƒCƒY•ªƒpƒŒƒbƒgƒf[ƒ^iRGBQUAD~ƒpƒŒƒbƒg”j‚ğƒtƒ@ƒCƒ‹‚©‚ç“Ç‚İ‚ŞB
-		size_t er = fread(rgb4, pb->numpal, sizeof(RGBQUAD), fp);
+		size_t er = fread(pal_rgb, pb->numpal, sizeof(RGBQUAD), fp);
+		if (!er) {
+			DeleteBmp(&pb);
+			fclose(fp);	//ƒtƒ@ƒCƒ‹•Â‚¶‚é
+			return (Bmp*)NULL;
+		}
+		pb->pal = (COLORREF*)calloc(pb->numpal, sizeof(COLORREF));
+		if (!pb->pal) {
+			//NULLƒ|ƒCƒ“ƒ^i’l‚Oj‚ª•Ô‚Á‚Ä‚«‚½‚ç¸”s(;_;)
+			free(pal_rgb);
+			DeleteBmp(&pb);
+			fclose(fp);	//ƒtƒ@ƒCƒ‹•Â‚¶‚é
+			return (Bmp*)NULL;
+		}
+		//RGBQUAD{B,G,B,0}:0x00RRGGBBŒ^‚ğCOLORREF:0x00BBGGRRŒ^‚É•ÏŠ·
+		for (int n = 0; n < pb->numpal; n++) {
+			pb->pal[n] = (pal_rgb[n].rgbRed & 0x0000FF) | ((pal_rgb[n].rgbGreen << 8) & 0x00FF00) | ((pal_rgb[n].rgbBlue << 16) & 0xFF0000);
+		}
+#else
+		//RGB’l‚ğ•\‚·RGBQUAD’l‚Ì”z—ñ‚ğƒpƒŒƒbƒg”‚Ì”‚¾‚¯Šm•Û‚·‚é
+		//‚PF‚ÍDWORD‚ÅƒoƒCƒg•À‚Ñ‡‚Í[B][G][R][A]‚Æ‚µ‚ÄŠi”[‚³‚ê‚Ä‚¢‚é
+		//‚PF‚Ìƒf[ƒ^‚ğRGBQUAD\‘¢‘Ì‚Æ‚µ‚Ä“Ç‚İ‚Ş¦ƒŠƒgƒ‹ƒGƒ“ƒfƒBƒAƒ“‚ÅŠi”[‚³‚ê‚Ä‚¢‚é‚Ì‚ÅDWORDŒ^‚Å“Ç‚İ‚Ş‚Æ0xAARRGGBB‚Æ‚È‚é
+		RGBQUAD* pal_rgb4 = (RGBQUAD*)_malloca(pb->numpal * sizeof(RGBQUAD));	//ƒXƒ^ƒbƒNã‚ÉŠm•Ûifree•s—vj
+		if (!pal_rgb4) {
+			//NULLƒ|ƒCƒ“ƒ^i’l‚Oj‚ª•Ô‚Á‚Ä‚«‚½‚ç¸”s(;_;)
+			DeleteBmp(&pb);
+			fclose(fp);	//ƒtƒ@ƒCƒ‹•Â‚¶‚é
+			return (Bmp*)NULL;
+		}
+		//Šm•Û‚µ‚½ƒTƒCƒY•ªƒpƒŒƒbƒgƒf[ƒ^iRGBQUAD~ƒpƒŒƒbƒg”j‚ğƒtƒ@ƒCƒ‹‚©‚ç“Ç‚İ‚ŞB
+		size_t er = fread(pal_rgb4, pb->numpal, sizeof(RGBQUAD), fp);
 		if (!er) {
 			DeleteBmp(&pb);
 			fclose(fp);	//ƒtƒ@ƒCƒ‹•Â‚¶‚é
@@ -1777,16 +3020,15 @@ Bmp* LoadBmp(const char* _file_name, bool _palset_or_swap24RB)
 		pb->pal = (COLORREF*)calloc(pb->numpal, sizeof(COLORREF));
 		if (!pb->pal) {
 			//NULLƒ|ƒCƒ“ƒ^i’l‚Oj‚ª•Ô‚Á‚Ä‚«‚½‚ç¸”s(;_;)
-			free(rgb4);
 			DeleteBmp(&pb);
 			fclose(fp);	//ƒtƒ@ƒCƒ‹•Â‚¶‚é
 			return (Bmp*)NULL;
 		}
 		//RGBQUAD{B,G,B,0}:0x00RRGGBBŒ^‚ğCOLORREF:0x00BBGGRRŒ^‚É•ÏŠ·
 		for (int n = 0; n < pb->numpal; n++) {
-			pb->pal[n] = (rgb4[n].rgbRed & 0x0000FF) | ((rgb4[n].rgbGreen << 8) & 0x00FF00) | ((rgb4[n].rgbBlue << 16) & 0xFF0000);
+			pb->pal[n] = (pal_rgb4[n].rgbRed & 0x0000FF) | ((pal_rgb4[n].rgbGreen << 8) & 0x00FF00) | ((pal_rgb4[n].rgbBlue << 16) & 0xFF0000);
 		}
-
+#endif // USED2D
 	}
 	//c‚è‚ÍƒsƒNƒZƒ‹’l‚È‚Ì‚ÅAc‚è‚ğ‘S•”“Ç‚İ‚Ş
 	//BITMAPFILEHEADER{BITMAPINFOHEADERi{ƒpƒŒƒbƒg”z—ñj•”•ª‚ğœ‚­c‚è‚ÌƒTƒCƒY•ª‚ğ‘S‚Ä“Ç‚İ‚ñ‚Åƒtƒ@ƒCƒ‹‚ğ•Â‚¶‚éB
@@ -1875,7 +3117,7 @@ Bmp* LoadBmp(const char* _file_name, bool _palset_or_swap24RB)
 		Bmp24SwapRB(pb);	//<=swapRB‚ÍTRUE‚É‚È‚é
 	}
 	if (_palset_or_swap24RB && ((pb->colbit == 4) || (pb->colbit == 8))) {
-		SetPalette(pb->pal, 0, 15);
+		SetPalette(pb->pal, 0, 15);	//ƒRƒ“ƒ\[ƒ‹‚ÌƒpƒŒƒbƒg‚Ö‚±‚ÌBMP‚ÌƒpƒŒƒbƒg‚ğ“]‘—‚·‚éi16F•ª“]‘—j
 	}
 	//³í‚É“Ç‚İ‚ß‚½‚Ì‚ÅPicBmp\‘¢‘Ì‚Ö‚Ìƒ|ƒCƒ“ƒ^‚ğ•Ô‚·
 	return pb;
@@ -1920,12 +3162,13 @@ void DeleteBmp(Bmp** _pp_bmp)
 	free(*_pp_bmp);	//Bmp–{‘Ì‚ğ‰ğ•ú
 	(*_pp_bmp) = NULL;	//NULL‚É‚µ‚Ä‚¨‚­
 	return;
-}
+}	//DeleteBmp
 
 /**
 * @brief	‚Q‚Sƒrƒbƒg‰æ‘œ‚Ì'Red'‚Æ'Blue'‚ğ“ü‚ê‘Ö‚¦‚é
 *
-* @note		BMPƒtƒ@ƒCƒ‹‚Ì‚Q‚Sƒrƒbƒg‰æ‘œ‚Ì‚PƒsƒNƒZƒ‹‚ÌRGB’l‚Ì•À‚Ñ[B][R][G]‚ğA"conioex"‚Ì"PrintImage()"‚Åo—Í‚·‚é‚Ì•À‚Ñ[R][G][B]‚É•ÏŠ·‚·‚éB
+* @note		BMPƒtƒ@ƒCƒ‹‚Ì‚Q‚Sƒrƒbƒg‰æ‘œ‚Ì‚PƒsƒNƒZƒ‹‚ÌRGB’l‚Ì•À‚Ñ[B][R][G]‚ğA<br/>
+*			"conioex"‚Ì"PrintImage()"‚Åo—Í‚·‚é‚Ì•À‚Ñ[R][G][B]‚É•ÏŠ·‚·‚éB
 *
 * @param	Bmp\‘¢‘Ì‚Ö‚Ìƒ|ƒCƒ“ƒ^
 */
@@ -1952,11 +3195,325 @@ void Bmp24SwapRB(Bmp* _bmp)
 		}
 	}
 	_bmp->swapRB = TRUE;
-}
+}	//Bmp24SwapRB
+
+/*
+* @brief	BmpƒIƒuƒWƒFƒNƒg‚Ì¶¬
+*
+* @param	int _width,_heightF‰æ‘œ‚Ì•‚Æ‚‚³iƒsƒNƒZƒ‹”j
+* @param	int _colbitsFF”F‚PƒsƒNƒZƒ‹“–‚½‚è‚Ìƒrƒbƒg”
+* @param	int _numpalFƒpƒŒƒbƒg”F‚O‚È‚çAƒpƒŒƒbƒg—pƒoƒbƒtƒ@Šm•Û‚µ‚È‚¢iCOLORREF*pal‚ªNULL‚É‚È‚éj
+* @param	const COLORREF* const  _palF“]‘—Œ³ƒpƒŒƒbƒgF_numpal‚ª‚PˆÈã‚ ‚éê‡A“]‘—Œ³‚É‚È‚éƒpƒŒƒbƒgB
+*				‚±‚Ìƒ|ƒCƒ“ƒ^‚ªNULL‚Å_numpal‚ª‚PˆÈã‚ ‚éê‡‚ÍƒpƒŒƒbƒgŠm•Û‚µ‚ÄƒfƒtƒHƒ‹ƒgF‚ğƒZƒbƒg‚·‚éB
+*
+* @return	Bmp*Fì¬‚µ‚½Bmp\‘¢‘Ì‚Ö‚Ìƒ|ƒCƒ“ƒ^^ƒGƒ‰[‚Ìê‡‚ÍNULL‚ğ•Ô‚·
+*/
+Bmp* CreateBmp(int _width, int _height, int _colbits, size_t _numpal, const COLORREF* const  _pal)
+{
+	//ƒTƒCƒY‚ª•s³‚Èê‡‚Í¶¬‚µ‚È‚¢B
+	if ((_width <= 0) || (_height <= 0)) {
+		return (Bmp*)NULL;
+	}
+	Bmp* p_bmp = (Bmp*)calloc(1, sizeof(Bmp));
+	_ASSERT(p_bmp);
+
+	//=== ƒpƒŒƒbƒgİ’è ===
+	//ƒpƒŒƒbƒg”‚Ì•â³iŒ³‚ÌƒpƒŒƒbƒg”‚ªŠÔˆá‚Á‚Ä‚¢‚½‚ç³‚µ‚¢’l‚ğZoj
+	switch (_colbits) {
+	case	1:
+		_numpal = 2;
+		break;
+	case	4:
+		//ƒpƒŒƒbƒg”‚ªƒI[ƒo[‚µ‚Ä‚¢‚½‚ç•â³
+		if (_numpal > 16) {
+			_numpal = 16;
+		}
+		break;
+	case	8:
+		//ƒpƒŒƒbƒg”‚ªƒI[ƒo[‚µ‚Ä‚¢‚½‚ç•â³
+		if (_numpal > 256) {
+			_numpal = 256;
+		}
+		break;
+	case	16:
+	case	24:
+	case	32:
+		_numpal = 0;
+		break;
+	default:
+		//ƒpƒŒƒbƒg‚ª•K—v‚ÈFƒrƒbƒg”‚¶‚á‚È‚¯‚ê‚ÎƒpƒŒƒbƒg‚ÍŠm•Û‚µ‚È‚¢‚Ì‚ÅƒpƒŒƒbƒg”‚ğ‚O‚É‚·‚éB
+		_colbits = 4;	//”ÍˆÍŠO‚Í4bitColor
+		_numpal = 0;	//ƒpƒŒƒbƒg‚Í–³‚µ
+		break;
+	}
+	p_bmp->colbit = _colbits;		//•â³Ï‚İFƒrƒbƒg”
+	p_bmp->numpal = (int)_numpal;	//³‚µ‚¢’l‚ğV‚µ‚­ì‚éBmp‚ÌƒpƒŒƒbƒg”‚ÉƒZƒbƒg
+	//
+	//ƒpƒŒƒbƒg—pƒoƒbƒtƒ@‚ÌŠm•Û
+	p_bmp->pal = (COLORREF*)NULL;		//COLORREF*ƒpƒŒƒbƒgi16Fjƒf[ƒ^‚Ö‚Ìƒ|ƒCƒ“ƒ^¦–³‚¢ê‡‚ÍNULL
+	if (p_bmp->numpal > 0) {
+		//ƒpƒŒƒbƒg”w’è‚ª‚PˆÈã‚ ‚é‚Ì‚Åƒƒ‚ƒŠ‚ğŠm•Û
+		p_bmp->pal = (COLORREF*)calloc(p_bmp->numpal, sizeof(COLORREF));
+		_ASSERT(p_bmp->pal);
+		if (_pal != NULL) {
+			//“]‘—Œ³ƒpƒŒƒbƒgw’è‚ª‚ ‚ê‚ÎƒRƒs[‚·‚éB
+			memcpy(p_bmp->pal, _pal, p_bmp->numpal * sizeof(COLORREF));
+		}
+		else {
+			//w’è‚ª–³‚¢ê‡‚ÍƒfƒtƒHƒ‹ƒgƒJƒ‰[‚ğ“ü‚ê‚Ä‚¨‚­B
+			memcpy(p_bmp->pal, ANSI_PAL256_COLOR, p_bmp->numpal * sizeof(COLORREF));
+		}
+	}
+
+	//=== ‰æ‘œƒsƒNƒZƒ‹ ===
+	p_bmp->width = _width;		//•
+	p_bmp->height = _height;	//‚‚³
+	int bypp = 1;
+	switch (p_bmp->colbit) {
+	case	1:
+	case	2:
+	case	4:
+	case	8:
+		//‚PƒsƒNƒZƒ‹=1ƒoƒCƒg‚È‚Ì‚Å‚»‚Ì‚Ü‚Ü
+		break;
+	case	16:
+		//‚PƒsƒNƒZƒ‹=‚QƒoƒCƒg
+		bypp = 2;
+		break;
+	case	24:
+		bypp = 3;
+		break;
+	case	32:
+		bypp = 4;
+		break;
+	}
+	p_bmp->numpix = (p_bmp->width * p_bmp->height) * bypp;	//‰æ‘œƒf[ƒ^‚ÌƒoƒCƒg”
+	//ƒƒ‚ƒŠ‚ğŠm•Û
+	p_bmp->pixel = (char*)calloc(1, p_bmp->numpix);	//char*‰æ‘œƒf[ƒ^‚Ö‚Ìƒ|ƒCƒ“ƒ^
+	_ASSERT(p_bmp->pixel);
+	//
+	p_bmp->swapRB = false;	//24ƒrƒbƒgˆÈã‚Ì‰æ‘œ‚ÅAR‚ÆB‚ª“ü‚ê‘Ö‚í‚Á‚Ä‚¢‚éê‡‚Í'TRUE'‚É‚È‚é
+	//
+	p_bmp->wch = 0;		//•ÏŠ·Œ³‚Ì•¶š wchar_t
+	p_bmp->aaLv = 0;	//•¶š•\¦‚Ì‚ÌƒAƒ“ƒ`ƒGƒCƒŠƒAƒXƒŒƒxƒ‹
+	return p_bmp;
+}	//CreateBmp
+
+/*
+* @brief	‰æ‘œ‚Ì•ªŠ„“Ç
+*			4ƒrƒbƒg^‚Wƒrƒbƒg^‚Q‚Sƒrƒbƒg‰æ‘œ‚Ì‚İ‘Î‰
+*
+* @param	const char* _path	•ªŠ„Œ³‚É‚È‚é‰æ‘œƒtƒ@ƒCƒ‹–¼
+* @param	int _x0,_y0		•ªŠ„ŠJn‚·‚éÀ•W
+* @param	int _xpix,_ypix	•ªŠ„‚·‚éƒZƒ‹‰æ‘œ‚PŒÂ‚Ì•‚Æ‚‚³
+* @param	int _xcount		‰¡•ûŒü‚ÌŒÂ”
+* @param	int _ycount		c•ûŒü‚ÌŒÂ”
+* @param	Bmp** _pp_bmp	•ªŠ„‚µ‚½Bmp*‚ğ“ü‚ê‚é”z—ñ‚ÌƒAƒhƒŒƒX
+*
+* @return	boolF“Ç‚Ì¬”Ûitrue:¬Œ÷/false:¸”sj
+*/
+bool LoadDivBmp(const char* _path, int _x0, int _y0, size_t _xpix, size_t _ypix, size_t _xcount, size_t _ycount, Bmp** _pp_bmp)
+{
+	if ((_path == NULL) || (_pp_bmp == NULL)) {
+		return false;
+	}
+	if ((_xpix * _ypix * _xcount * _ycount) == 0) {
+		return false;
+	}
+	//_pp_bmp = ppBmp;
+	Bmp* ptb = LoadBmp(_path);	//
+	_ASSERT(ptb);
+	ptb->pixel;
+
+	int dest_idx = 0;
+	//‰¡Ëc•ûŒü‚Éæ‚è‚ñ‚Å‚ä‚­
+	for (int y = 0; y < _ycount; y++) {
+		for (int x = 0; x < _xcount; x++) {
+			//Ø‚èo‚µƒTƒCƒY‚ÅŒ³‚ÌBmp‚Æ“¯‚¶F”‚Ì‹ó‚ÌBmp‚ğì‚é
+			Bmp* pp = CreateBmp(_xpix, _ypix, ptb->colbit, ptb->numpal, ptb->pal);
+			CopyBmp(pp, 0, 0, ptb, _x0 + (x * _xpix), _y0 + (y * _ypix), _xpix, _ypix, false);
+			_pp_bmp[dest_idx] = pp;
+			dest_idx++;
+		}
+	}
+	return true;
+}	//LoadDivBmp
+
+/*
+* @brief	Bmp‚Ì‘SƒsƒNƒZƒ‹‚ğ‰Šú‰»‚·‚é
+*
+* @param	int	_color	ƒpƒŒƒbƒg”Ô†–”‚ÍRGB’l‚ğw’è
+*				ƒpƒŒƒbƒg‚Ì‚ ‚é‰æ‘œ‚Ìê‡‚ÍƒpƒŒƒbƒg”Ô†‚ğw’è‚·‚é
+*				ƒtƒ‹ƒJƒ‰[‚Ìê‡‚Í0x00RRGGBB‚ğw’è‚·‚é
+*/
+void ClearBmp(Bmp* _p, int _color)
+{
+	if (_p->colbit == 4) {
+		memset(_p->pixel, _color & 0xF, _p->numpix);
+	}
+	else if (_p->colbit == 8) {
+		memset(_p->pixel, _color & 0xFF, _p->numpix);
+	}
+	else if (_p->colbit == 24) {
+		int rr = (_color & 0xFF0000) >> 16;
+		int gg = (_color & 0x00FF00) >> 8;
+		int bb = (_color & 0x0000FF);
+		for (int i = 0; i < _p->numpix; i += 3) {
+			_p->pixel[i + 0] = bb;
+			_p->pixel[i + 1] = gg;
+			_p->pixel[i + 2] = rr;
+		}
+	}
+}	//ClearBmp
+
+/*
+* @brief	Bmp‰æ‘œ‚©‚çBmp‰æ‘œ‚Ö‚Ì‹éŒ`“]‘—
+*			E“]‘—æ‚Æ“]‘—Œ³‚Ì‰æ‘œ‚Ì‘å‚«‚³‚Íˆá‚Á‚Ä‚¢‚Ä‚à—Ç‚¢
+*			E“]‘—æ‚Æ“]‘—Œ³‚Ì‰æ‘œ‚ÌƒJƒ‰[ƒrƒbƒg”‚Í“¯‚¶‚Å‚È‚¯‚ê‚Î‚È‚ç‚È‚¢
+*			E“]‘—æ‚ÌƒpƒŒƒbƒg‚Í“]‘—Œ³‚ÌƒpƒŒƒbƒg‚Åã‘‚«‚³‚ê‚éiƒpƒŒƒbƒg‚ÌƒTƒCƒY‚ªˆá‚¤ê‡‚Í¬‚³‚¢•û‚É‡‚í‚¹‚éj
+*
+* @param	Bmp* _dest			“]‘—æBmp‰æ‘œiŒ³‚É‰æ‘œ‚Íã‘‚«‚³‚ê‚éj
+* @param	int _dx,_dy			“]‘—æ‚ÌÀ•W
+* @param	const Bmp* _src		“]‘—Œ³Bmp‰æ‘œ
+* @param	int	_sx,_sy			“]‘—Œ³‚ÌÀ•W
+* @param	int	_width,_height	“]‘—Œ³‚ÌƒTƒCƒY
+*/
+Bmp* CopyBmp(Bmp* _dest, int _dx, int _dy, const Bmp* _src, int _sx, int _sy, int _width, int _height, bool _tr)
+{
+	if ((_dest == NULL) || (_src == NULL) || (_width <= 0) || (_height <= 0)) {
+		return NULL;
+	}
+	if (_src->colbit != _dest->colbit) {
+		return NULL;
+	}
+	//ƒpƒŒƒbƒg‚ÌƒRƒs[
+	int pal_size = _src->numpal;	//“]‘—Œ³‚ÌƒTƒCƒY
+	if (_dest->numpal < _src->numpal) {
+		//“]‘—æ‚ÌƒTƒCƒY‚ª¬‚³‚¢ê‡‚ÍA“]‘—æ‚ÌƒTƒCƒY‚É‡‚í‚¹‚éB
+		pal_size = _dest->numpal;
+	}
+	memcpy(_dest->pal, _src->pal, pal_size);	//ƒpƒŒƒbƒg“]‘—Às
+	//////memset(_dest->pixel, 0, _dest->numpix);	//ƒsƒNƒZƒ‹‘S•”‚ğ‚O‚Å‰Šú‰»‚µ‚Ä‚¨‚­i“]‘—‚µ‚È‚¢•”•ª‚Í‚O‚É‚È‚éj
+	//‹éŒ`“]‘— ---
+	if ((_src->colbit == 4) || (_src->colbit == 8)) {
+		for (int y = 0; y < _height; y++) {
+			for (int x = 0; x < _width; x++) {
+				int dx = _dx + x;
+				int dy = _dy + y;
+				if ((dx < 0) || (dx >= _dest->width) || (dy < 0) || (dy >= _dest->height)) {
+					continue;
+				}
+				int xx = _sx + x;
+				int yy = _sy + y;
+				if ((xx >= 0) && (xx < _src->width) && (yy >= 0) && (yy < _src->height)) {
+					//Œ³‰æ‘œ‚Ì”ÍˆÍ“à‚Ì‚İ“]‘—‚·‚éË”ÍˆÍŠO‚ÍŒ³‚Ì‰æ‘œ‚Ì‚Ü‚Ü
+					char c = _src->pixel[yy * _src->width + xx];
+					if ((!_tr) || (c != 0)) {
+						//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
+						//*dest_p = c;
+						_dest->pixel[dy * _dest->width + dx] = c;
+					}
+				}
+				//dest_p++;
+			}
+		}
+	}
+	else if (_src->colbit == 16) {
+		//‹éŒ`ƒuƒƒbƒN“]‘—
+		for (int y = 0; y < _height; y++) {
+			for (int x = 0; x < _width; x++) {
+				int dx = _dx + x;
+				int dy = _dy + y;
+				if ((dx < 0) || (dx >= _dest->width) || (dy < 0) || (dy >= _dest->height)) {
+					continue;
+				}
+				int xx = _sx + x;
+				int yy = _sy + y;
+				if ((xx >= 0) && (xx < _src->width) && (yy >= 0) && (yy < _src->height)) {
+					//Œ³‰æ‘œ‚Ì”ÍˆÍ“à‚Ì‚İ“]‘—‚·‚éË”ÍˆÍŠO‚ÍŒ³‚Ì‰æ‘œ‚Ì‚Ü‚Ü
+					UINT16 ui16 = ((UINT16*)_src->pixel)[yy * _src->width + xx];
+					if ((!_tr) || (ui16 != 0)) {
+						//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
+						((UINT16*)_dest->pixel)[dy * _dest->width + dx] = ui16;
+					}
+				}
+			}
+		}
+	}
+	else if (_src->colbit == 24) {
+		//‹éŒ`ƒuƒƒbƒN“]‘—
+		for (int y = 0; y < _height; y++) {
+			for (int x = 0; x < _width; x++) {
+				int dx = _dx + x;
+				int dy = _dy + y;
+				if ((dx < 0) || (dx >= _dest->width) || (dy < 0) || (dy >= _dest->height)) {
+					continue;
+				}
+				int xx = _sx + x;
+				int yy = _sy + y;
+				if ((xx >= 0) && (xx < _src->width) && (yy >= 0) && (yy < _src->height)) {
+					char* pd = &_dest->pixel[dy * (_dest->width * 3) + (dx * 3)];
+					char* ps = &_src->pixel[yy * (_src->width * 3) + (xx * 3)];
+					int c = (ps[0] | ps[1] | ps[2]);
+					if ((!_tr) || (c != 0)) {
+						pd[0] = ps[0];
+						pd[1] = ps[1];
+						pd[2] = ps[2];
+					}
+				}
+				//dest_p += 3;
+			}
+		}
+	}
+	else if (_src->colbit == 32) {
+		//‹éŒ`ƒuƒƒbƒN“]‘—
+		for (int y = 0; y < _height; y++) {
+			for (int x = 0; x < _width; x++) {
+				int dx = _dx + x;
+				int dy = _dy + y;
+				if ((dx < 0) || (dx >= _dest->width) || (dy < 0) || (dy >= _dest->height)) {
+					continue;
+				}
+				int xx = _sx + x;
+				int yy = _sy + y;
+				if ((xx >= 0) && (xx < _src->width) && (yy >= 0) && (yy < _src->height)) {
+					//Œ³‰æ‘œ‚Ì”ÍˆÍ“à‚Ì‚İ“]‘—‚·‚éË”ÍˆÍŠO‚ÍŒ³‚Ì‰æ‘œ‚Ì‚Ü‚Ü
+					UINT32 ui32 = ((UINT32*)_src->pixel)[yy * _src->width + xx];
+					if ((!_tr) || (ui32 != 0)) {
+						//“§–¾w’è‚ª–³‚µor“§–¾ƒsƒNƒZƒ‹‚Å‚Í–³‚¢
+						((UINT32*)_dest->pixel)[dy * _dest->width + dx] = ui32;
+					}
+				}
+			}
+		}
+	}
+	return _dest;
+}	//CopyBmp
+
+/*
+* @brief	Bmp‰æ‘œ‚Ìw’è”ÍˆÍ‚ğŒ³‚ÉAV‚µ‚¢Bmp‚ğ¶¬‚·‚éB
+*
+* @param	const Bmp* _src		Œ³‚Ì‰æ‘œ
+* @param	int _xp,_yp			w’è”ÍˆÍ‚Ì¶ãÀ•W
+* @param	int _width,_height	w’è”ÍˆÍ‚Ì•‚Æ‚‚³
+*
+* @return	Bmp*	V‚µ‚­ì‚Á‚½Bmp‰æ‘œ‚Ìƒ|ƒCƒ“ƒ^
+*/
+Bmp* CreateFromBmp(const Bmp* _src, int _xp, int _yp, int _width, int _height)
+{
+	if ((_src == NULL) || (_width <= 0) || (_height <= 0)) {
+		return NULL;
+	}
+	Bmp* p_dest = CreateBmp(_width, _height, _src->colbit, _src->numpal, _src->pal);
+	_ASSERT(p_dest);
+	CopyBmp(p_dest, _src, _xp, _yp, _width, _height, false);
+	return p_dest;
+}	//CreateFromBmp
+
 
 //================================================================
 // BitmapƒtƒHƒ“ƒg¶¬ŠÖ”
-// 
+//
 // w’è‚ÌƒtƒHƒ“ƒg‚ğg‚Á‚Ä‚»‚ÌƒtƒHƒ“ƒg‚Å¶¬‚³‚ê‚½•¶š—ñƒCƒ[ƒW‚ğƒrƒbƒgƒ}ƒbƒv‰æ‘œƒf[ƒ^‚É•ÏŠ·‚·‚éB
 // y’zƒRƒ“ƒ\[ƒ‹ƒvƒƒOƒ‰ƒ€ê—pË“à•”‚ÅƒRƒ“ƒ\[ƒ‹ƒEƒBƒ“ƒhƒE‚Ìƒnƒ“ƒhƒ‹‚ğg‚Á‚Ä‚¢‚éB
 //
@@ -1964,6 +3521,93 @@ void Bmp24SwapRB(Bmp* _bmp)
 // ƒpƒŒƒbƒg‚Ì‰½”Ô‚ÌF‚ğg‚¤‚©‚ğŠO•”‚©‚ço—ˆ‚é—l‚É‚·‚éB
 // ex)‚Q’lF‚ÌA'0'->pal[13], '1'->pal[14]‚Æ‚©B
 //================================================================
+
+//const DWORD Gray65[65] = {
+//	//======== START ========
+//	0x00000000,
+//	0x00030303,0x00070707,0x000b0b0b,0x000f0f0f,0x00131313,0x00171717,0x001b1b1b,0x001f1f1f,
+//	0x00232323,0x00272727,0x002b2b2b,0x002f2f2f,0x00333333,0x00373737,0x003b3b3b,0x003f3f3f,//[16]
+//	0x00434343,0x00474747,0x004b4b4b,0x004f4f4f,0x00535353,0x00575757,0x005b5b5b,0x005f5f5f,
+//	0x00636363,0x00676767,0x006b6b6b,0x006f6f6f,0x00737373,0x00777777,0x007b7b7b,0x007f7f7f,//[32]
+//	0x00838383,0x00878787,0x008b8b8b,0x008f8f8f,0x00939393,0x00979797,0x009b9b9b,0x009f9f9f,
+//	0x00a3a3a3,0x00a7a7a7,0x00ababab,0x00afafaf,0x00b3b3b3,0x00b7b7b7,0x00bbbbbb,0x00bfbfbf,//[48]
+//	0x00c3c3c3,0x00c7c7c7,0x00cbcbcb,0x00cfcfcf,0x00d3d3d3,0x00d7d7d7,0x00dbdbdb,0x00dfdfdf,
+//	0x00e3e3e3,0x00e7e7e7,0x00ebebeb,0x00efefef,0x00f3f3f3,0x00f7f7f7,0x00fbfbfb,0x00ffffff,//[64]
+//	//======== END ========
+//};
+//const DWORD Gray17[17] = {
+//	//======== START ========
+//	0x00000000,
+//	0x000f0f0f,0x001f1f1f,0x002f2f2f,0x003f3f3f,0x004f4f4f,0x005f5f5f,0x006f6f6f,0x007f7f7f,
+//	0x008f8f8f,0x009f9f9f,0x00afafaf,0x00bfbfbf,0x00cfcfcf,0x00dfdfdf,0x00efefef,0x00ffffff,
+//	//======== END ========
+//};
+//const DWORD Gray5[5] = {
+//	//======== START ========
+//	0x00000000,
+//	0x003f3f3f,0x007f7f7f,0x00bfbfbf,0x00ffffff,
+//	//======== END ========
+//};
+//const DWORD Gray2[2] = {
+//	//======== START ========
+//	0x00000000,
+//	0x00ffffff,
+//	//======== END ========
+//};
+
+const DWORD Gray2[2] = {
+	//======== START ========
+	0x00000000,
+	0xFFffffff,//[ 1]
+	//======== END ========
+};
+const DWORD Gray5[5] = {
+	//======== START ========
+	0x00000000,
+	0x3F3f3f3f,0x7F7f7f7f,0xBFbfbfbf,0xFFffffff,//[ 4]
+	//======== END ========
+};
+const DWORD Gray17[17] = {
+	//======== START ========
+	0x00000000,
+	0x0F0f0f0f,0x1F1f1f1f,0x2F2f2f2f,0x3F3f3f3f,0x4F4f4f4f,0x5F5f5f5f,0x6F6f6f6f,0x7F7f7f7f,
+	0x8F8f8f8f,0x9F9f9f9f,0xAFafafaf,0xBFbfbfbf,0xCFcfcfcf,0xDFdfdfdf,0xEFefefef,0xFFffffff,//[16]
+	//======== END ========
+};
+const DWORD Gray65[65] = {
+	//======== START ========
+	0x00000000,
+	0x03030303,0x07070707,0x0B0b0b0b,0x0F0f0f0f,0x13131313,0x17171717,0x1B1b1b1b,0x1F1f1f1f,0x23232323,0x27272727,0x2B2b2b2b,0x2F2f2f2f,0x33333333,0x37373737,0x3B3b3b3b,0x3F3f3f3f,//[16]
+	0x43434343,0x47474747,0x4B4b4b4b,0x4F4f4f4f,0x53535353,0x57575757,0x5B5b5b5b,0x5F5f5f5f,0x63636363,0x67676767,0x6B6b6b6b,0x6F6f6f6f,0x73737373,0x77777777,0x7B7b7b7b,0x7F7f7f7f,//[32]
+	0x83838383,0x87878787,0x8B8b8b8b,0x8F8f8f8f,0x93939393,0x97979797,0x9B9b9b9b,0x9F9f9f9f,0xA3a3a3a3,0xA7a7a7a7,0xABababab,0xAFafafaf,0xB3b3b3b3,0xB7b7b7b7,0xBBbbbbbb,0xBFbfbfbf,//[48]
+	0xC3c3c3c3,0xC7c7c7c7,0xCBcbcbcb,0xCFcfcfcf,0xD3d3d3d3,0xD7d7d7d7,0xDBdbdbdb,0xDFdfdfdf,0xE3e3e3e3,0xE7e7e7e7,0xEBebebeb,0xEFefefef,0xF3f3f3f3,0xF7f7f7f7,0xFBfbfbfb,0xFFffffff,//[64]
+	//======== END ========
+};
+
+#if false
+//=== ƒrƒbƒgƒ}ƒbƒvƒtƒHƒ“ƒg—pƒOƒŒƒCƒXƒP[ƒ‹o—ÍƒR[ƒh ===
+void GrayDump(void)
+{
+	double rgb = 0;
+	const int resolution = 65;	//{2|5|17|65}
+	const double step = (1.0 / (double)(resolution - 1));
+	_RPTN(_CRT_WARN, "const DWORD Gray%d[%d]={\n", resolution, resolution);
+	_RPT0(_CRT_WARN, "//======== START ========\n");
+	_RPT0(_CRT_WARN, "0x00000000,\n");
+	for (int n = 1; n < resolution; n++) {
+		int rgb = (int)((step * (double)n) * 255.0);
+		_RPTN(_CRT_WARN, "0x00%02x%02x%02x,", rgb, rgb, rgb);
+		if ((n % 16) == 0) {
+			_RPTN(_CRT_WARN, "//[%2d]\n", n);
+		}
+		else if (n == (resolution - 1)) {
+			_RPTN(_CRT_WARN, "//[%2d]\n", n);
+		}
+	}
+	_RPT0(_CRT_WARN, "//======== END ========\n");
+	_RPT0(_CRT_WARN, "};\n");
+}
+#endif // false
 
 /**
 * @brief	1bpp‚Ì‰æ‘œ‚ğ8bpp‚Ì‰æ‘œ‚É•ÏŠ·‚·‚éB
@@ -2061,13 +3705,14 @@ static void build_bmp_char(Bmp* _pbc, const GLYPHMETRICS* _pgm, const TEXTMETRIC
 				//FƒR[ƒh‚O‚Í“§–¾ˆµ‚¢‚È‚Ì‚Åˆ—‚µ‚È‚¢
 				continue;
 			}
+#ifndef USED2D
 			/*
 			* ToDo:ƒpƒŒƒbƒg‚Ì‰½”Ô‚ÌF‚ğg‚¤‚©‚ğŠO•”‚©‚ç‘€ì‚Å‚«‚é‚æ‚¤‚É‚µ‚½‚¢B
 			* ex)‚Q’lF‚ÌA'0'->pal[13],'1'->pal[14]‚Æ‚©B
 			*/
 			if (_pbc->aaLv == 2)
 			{
-				//‚Q’l‚È‚Ì‚Å‚OˆÈŠO‚Í‘S‚Ä'‚e'‚Æ‚·‚éB
+				//‚Q’l‚Ìê‡‚Ío‚Ob‚Pp‚È‚Ì‚Å‚OˆÈŠO‚Í‘S‚Ä'‚e'‚Æ‚·‚éB
 				dot = 0x0F;
 			}
 			else
@@ -2078,6 +3723,7 @@ static void build_bmp_char(Bmp* _pbc, const GLYPHMETRICS* _pgm, const TEXTMETRIC
 					dot = 0x0F;	//ƒpƒŒƒbƒg‚Í‚P‚UF‚µ‚©‚È‚¢‚Ì‚Å‚P‚T‚ğ’´‚¦‚È‚¢—l‚É‚·‚éB
 				}
 			}
+#endif // USED2D
 			pDest[yp * dest_width + xp] = dot;
 		}
 	}
@@ -2160,7 +3806,14 @@ Bmp* CreateBmpChar(const TCHAR* _font_name, int _font_size, int _bold, int _ggo,
 	lf.lfPitchAndFamily = (DEFAULT_PITCH | FF_MODERN);
 	lf.lfFaceName[0] = '\0';
 	//‘‘Ì–¼‚ğƒRƒs[i•¶š”§ŒÀ‚ ‚èj
-	CopyMemory(lf.lfFaceName, _font_name, LF_FACESIZE * sizeof(TCHAR));
+	if (_font_name != nullptr) {
+		CopyMemory(lf.lfFaceName, _font_name, LF_FACESIZE * sizeof(TCHAR));
+	}
+	else {
+		//w’è‚ª–³‚¢‚Íu‚l‚r–¾’©v‚Æ‚·‚é
+		CopyMemory(lf.lfFaceName, _T("‚l‚r –¾’©"), LF_FACESIZE * sizeof(TCHAR));
+		//CopyMemory(lf.lfFaceName, _T(""), LF_FACESIZE * sizeof(TCHAR));
+	}
 	//ƒtƒHƒ“ƒg¶¬
 	HFONT hFont = CreateFontIndirect(&lf);
 	_ASSERT(hFont);
@@ -2202,8 +3855,10 @@ Bmp* CreateBmpChar(const TCHAR* _font_name, int _font_size, int _bold, int _ggo,
 		code_ary[i] = get_MBC((BYTE**)&p);
 	}
 #endif // UNICODE
-	Bmp* pBmpChr = (Bmp*)calloc(buff_len, sizeof(Bmp));	//Bmp—pƒoƒbƒtƒ@‚ğ•¶š”•ªŠm•ÛiÅŒã‚Ì'\0'—p‚ÌBmp‚àŠÜ‚ß‚éji‘S‚Ä‚O‚Å‰Šú‰»j
+	//Bmp—pƒoƒbƒtƒ@‚ğ•¶š”•ªŠm•ÛiÅŒã‚Ì'\0'—p‚ÌBmp‚àŠÜ‚ß‚éji‘S‚Ä‚O‚Å‰Šú‰»j
+	Bmp* pBmpChr = (Bmp*)calloc(buff_len, sizeof(Bmp));
 	_ASSERT(pBmpChr != NULL);
+	//‚P•¶š‚É•t‚«‚P‚Â‚ÌBmpƒIƒuƒWƒFƒNƒg‚ğ¶¬‚µ‚ÄBmp‚Ì”z—ñ‚ÉŠi”[‚µ‚Äs‚­
 	for (size_t txn = 0; txn < length; txn++) {
 		code = (UINT)code_ary[txn];
 		//‚±‚ê‚©‚ç¶¬‚·‚é•¶šƒrƒbƒgƒ}ƒbƒvƒf[ƒ^‚ÌƒoƒCƒg”‚ğæ“¾‚·‚éB
@@ -2217,19 +3872,42 @@ Bmp* CreateBmpChar(const TCHAR* _font_name, int _font_size, int _bold, int _ggo,
 			GetGlyphOutline(hdc, code, _ggo, &gm, buff_size, pBmpChr[txn].pixel, &mat2);
 			if (_ggo == GGO_BITMAP)
 			{
-				//1bpp‚Ìƒrƒbƒgƒ}ƒbƒv‚Í•\¦‚µ‚É‚­‚¢‚Ì‚Å‚Wbpp‚É•ÏŠ·‚·‚éB
+				//‚Pbpp‚Ìƒrƒbƒgƒ}ƒbƒv‚Í•\¦‚µ‚É‚­‚¢‚Ì‚Å‚Wbpp‚É•ÏŠ·‚·‚éB
 				pBmpChr[txn].numpix = buff_size;		//ƒoƒbƒtƒ@ƒTƒCƒY
-				convert_bpp1_to_bpp8(&pBmpChr[txn], &gm);
+				convert_bpp1_to_bpp8(&pBmpChr[txn], &gm);	//‚Pƒrƒbƒg/ƒsƒNƒZƒ‹‰æ‘œ‚ğ‚Wƒrƒbƒg/ƒsƒNƒZƒ‹‰æ‘œ‚É•ÏŠ·
 				buff_size = pBmpChr[txn].numpix;
 			}
 			pBmpChr[txn].width = gm.gmBlackBoxX;	//‰¡ƒsƒNƒZƒ‹”
 			pBmpChr[txn].height = gm.gmBlackBoxY;	//cƒsƒNƒZƒ‹”
-			pBmpChr[txn].colbit = 4;				//4ƒrƒbƒg/pixel‰æ‘œ
+			//‘S‚Ä‚Ì•¶š‰æ‘œ‚ğ‚Wƒrƒbƒg/ƒsƒNƒZƒ‹‚Ì‰æ‘œ‚Æ‚µ‚Äˆµ‚¤
+			pBmpChr[txn].colbit = 8;				//‚Wƒrƒbƒg/pixel‰æ‘œ
 			pBmpChr[txn].numpix = buff_size;		//ƒoƒbƒtƒ@ƒTƒCƒY
 			pBmpChr[txn].aaLv = aa_level;			//ƒAƒ“ƒ`ƒGƒCƒŠƒAƒX‚Ìæ~’²ƒŒƒxƒ‹
 			pBmpChr[txn].wch = code;				//•ÏŠ·Œ³‚Ì•¶šƒR[ƒh
 			//•¶šˆÊ’u‚ğ’²®‚µ‚Äƒoƒbƒtƒ@‚ğì‚è’¼‚·B
 			build_bmp_char(&pBmpChr[txn], &gm, &txm);
+#ifdef USED2D
+			//ˆÊ’u’²®‚ªÏ‚ñ‚¾‰æ‘œ‚ÉƒpƒŒƒbƒg(RGBQUADŒ^)‚ğŠm•Û‚·‚é
+			pBmpChr[txn].pal = 0;	//COLORREFŒ^‚ÍŠm•Û‚µ‚È‚¢
+			pBmpChr[txn].pal_rgb = (RGBQUAD*)calloc(NUM_D2D_PAL, sizeof(RGBQUAD));
+			pBmpChr[txn].numpal = NUM_D2D_PAL;	//ƒpƒŒƒbƒg”‚Í256FŒÅ’è‚Æ‚·‚é
+			switch (_ggo)
+			{
+			default:	//‚Q’l
+			case GGO_BITMAP:
+				memcpy_s(pBmpChr[txn].pal_rgb, NUM_D2D_PAL * sizeof(RGBQUAD), Gray2, sizeof(Gray2));
+				break;	//‚Q’l
+			case GGO_GRAY2_BITMAP:
+				memcpy_s(pBmpChr[txn].pal_rgb, NUM_D2D_PAL * sizeof(RGBQUAD), Gray5, sizeof(Gray5));
+				break;	//‚TŠK’²
+			case GGO_GRAY4_BITMAP:
+				memcpy_s(pBmpChr[txn].pal_rgb, NUM_D2D_PAL * sizeof(RGBQUAD), Gray17, sizeof(Gray17));
+				break;	//‚P‚VŠK’²
+			case GGO_GRAY8_BITMAP:
+				memcpy_s(pBmpChr[txn].pal_rgb, NUM_D2D_PAL * sizeof(RGBQUAD), Gray65, sizeof(Gray65));
+				break;	//‚U‚TŠK’²
+			}
+#endif // USED2D
 		}
 	}
 	//ƒfƒoƒCƒX‚ÌƒtƒHƒ“ƒg‘I‘ğ‚ğ‰ğœ‚·‚éiŒ³‚É–ß‚·j
@@ -2268,21 +3946,27 @@ Bmp* CreateBmpString(const TCHAR* _font_name, int _font_size, int _bold, int _gg
 	int xpos = 0;
 	if (pBc != NULL) {
 		while (pBc[n].pixel != NULL) {
-			//‚P•¶š•ª‚Ìƒrƒbƒgƒ}ƒbƒv‚ğƒtƒŒ[ƒ€ƒoƒbƒtƒ@‚É‘‚«‚Ş
+			//‘S‚Ä‚Ì•¶š‚ğŒq‚¬‡‚í‚¹‚½‚Ì•iƒsƒNƒZƒ‹”j‚ğŒvZ‚·‚é
 			xpos += pBc[n].width;	//Ÿ‚Ì•¶š‚Ì‰¡•ûŒüˆÊ’u‚ğƒZƒbƒg
 			n++;	//Ÿ‚Ì•¶š
 		}
 	}
-	int width = xpos; //...Width
-	int height = _font_size;
-	Bmp* bm_str = (Bmp*)calloc(1, sizeof(Bmp));
+	int width = xpos; //•¶š—ñ‰æ‘œ‘S‘Ì‚Ì•iƒsƒNƒZƒ‹”j
+	int height = _font_size;	//‚±‚Ì•¶š—ñ‰æ‘œ‚Ì‚‚³iƒsƒNƒZƒ‹”j
+	Bmp* bm_str = (Bmp*)calloc(1, sizeof(Bmp));	//BmpƒIƒuƒWƒFƒNƒg‚PŒÂ¶¬F‘S‚Ä‚Ì•¶šBmp‚ğ‚P‚Â‚ÌBmp‚ÉW–ñ‚·‚éB
 	//ZeroMemory(bm_str, sizeof(Bmp));
-	bm_str->numpix = (width * height * sizeof(char));
-	bm_str->pixel = (char*)calloc(bm_str->numpix, sizeof(char));
-	bm_str->aaLv = pBc[0].aaLv;
-	bm_str->width = width;
-	bm_str->height = height;
-	bm_str->colbit = 4;	//4ƒrƒbƒg‰æ‘œ
+	bm_str->numpix = (width * height * sizeof(char));	//•¶š—ñ‰æ‘œ‚ÌƒsƒNƒZƒ‹ƒTƒCƒY
+	bm_str->pixel = (char*)calloc(bm_str->numpix, sizeof(char));	//‰æ‘œƒoƒbƒtƒ@Šm•Û
+	bm_str->aaLv = pBc[0].aaLv;	//æ“ª•¶š[0]‚Ìæ~’²ƒR[ƒh‚ğg‚¤
+	bm_str->width = width;		//‰æ‘œ‚Ì•iƒsƒNƒZƒ‹j
+	bm_str->height = height;	//‰æ‘œ‚‚³iƒsƒNƒZƒ‹j
+	//ƒpƒŒƒbƒgì¬‚ÆƒRƒs[
+	bm_str->colbit = pBc[0].colbit;	//æ“ª•¶š[0]‚Ìƒrƒbƒg”/ƒsƒNƒZƒ‹‚ğg‚¤
+	bm_str->numpal = pBc[0].numpal;	//æ“ª•¶š[0]‚ÌƒpƒŒƒbƒg”
+#ifdef USED2D
+	bm_str->pal_rgb = (RGBQUAD*)calloc(pBc[0].numpal, sizeof(RGBQUAD));	//[0]‚Æ“¯‚¶ƒpƒŒƒbƒg‚ğŠm•Û‚·‚é
+	memcpy_s(bm_str->pal_rgb, NUM_D2D_PAL * sizeof(RGBQUAD), pBc[0].pal_rgb, NUM_D2D_PAL * sizeof(RGBQUAD));
+#endif // USED2D
 	//
 	n = 0;
 	xpos = 0;
@@ -2306,6 +3990,16 @@ Bmp* CreateBmpString(const TCHAR* _font_name, int _font_size, int _bold, int _gg
 	while (pBc[n].pixel != NULL) {
 		free(pBc[n].pixel);
 		pBc[n].pixel = NULL;
+#ifdef USED2D
+		if (pBc[n].pal_rgb != NULL) {
+			free(pBc[n].pal_rgb);
+			pBc[n].pal_rgb = NULL;
+		}
+		if (pBc[n].pal != NULL) {
+			free(pBc[n].pal);
+			pBc[n].pal = NULL;
+		}
+#endif // USED2D
 		n++;
 	}
 	free(pBc);
@@ -2371,6 +4065,46 @@ Bmp* CreateBmpStringF(const TCHAR* _font_name, int _font_size, int _bold, int _g
 	return p_bmp;
 }	//CreateBmpStringF
 
+Bmp* CreateBmpStringF(const TCHAR* _font_name, int _font_size, int _bold, bool _zenkaku, const TCHAR* _format, ...)
+{
+	Bmp* p_bmp = nullptr;
+	va_list ap;
+	va_start(ap, _format);
+	//VPrintStringFA(_zenkaku, _format, ap);
+#ifdef UNICODE
+	size_t length = _vscwprintf(_format, ap) + 1;	//'\0'ŠÜ‚Ü‚È‚¢‚Ì‚Å{‚P‚µ‚Ä‚¢‚é
+	wchar_t* buf = (wchar_t*)_malloca(length * sizeof(wchar_t));
+	vswprintf_s(buf, length, _format, ap);
+	if (_zenkaku == true) {
+		//‘S‚Ä‘SŠp‚É•ÏŠ·‚µ‚Ä‚©‚ç¶¬
+		wchar_t* p = HanToZenW(buf);
+		p_bmp = CreateBmpString(_font_name, _font_size, _bold, GGO_BITMAP, p);
+		free(p);
+	}
+	else {
+		//”¼Šp‚Ì‚Ü‚Ü¶¬
+		p_bmp = CreateBmpString(_font_name, _font_size, _bold, GGO_BITMAP, buf);
+	}
+#else
+	//VPrintStringFA(_zenkaku, _format, ap);
+	size_t length = _vscprintf(_format, ap) + 1;	//'\0'ŠÜ‚Ü‚È‚¢‚Ì‚Å{‚P‚µ‚Ä‚¢‚é
+	char* buf = (char*)_malloca(length);
+	vsprintf_s(buf, length, _format, ap);
+	if (_zenkaku == true) {
+		//‘S‚Ä‘SŠp‚É•ÏŠ·‚µ‚Ä‚©‚ç¶¬
+		char* p = HanToZen(buf);
+		p_bmp = CreateBmpString(_font_name, _font_size, _bold, GGO_BITMAP, p);
+		free(p);
+	}
+	else {
+		//”¼Šp‚Ì‚Ü‚Ü¶¬
+		p_bmp = CreateBmpString(_font_name, _font_size, _bold, GGO_BITMAP, buf);
+	}
+#endif // UNICODE
+	va_end(ap);
+	return p_bmp;
+}	//CreateBmpStringF
+
 //================================================================
 // ƒL[“ü—ÍŠÖŒW
 //================================================================
@@ -2399,11 +4133,21 @@ int InputKeyMouse(int port)
 	MOUSE_EVENT_RECORD* mouse_event;
 
 	// ƒL[ƒ{[ƒhƒCƒxƒ“ƒgƒ`ƒFƒbƒN
-	if (GetNumberOfConsoleInputEvents(g_InputHandle, &event) && event) {
+#ifdef USED2D
+	if (GetNumberOfConsoleInputEvents(g_InputHandleD2D, &event) && event)
+#else
+	if (GetNumberOfConsoleInputEvents(g_InputHandle, &event) && event)
+#endif // USED2D
+	{
 		read = 0;
 		input_record = (PINPUT_RECORD)_malloca(event * sizeof(INPUT_RECORD));
 
-		if (ReadConsoleInput(g_InputHandle, input_record, event, &read) && read) {
+#ifdef USED2D
+		if (ReadConsoleInput(g_InputHandleD2D, input_record, event, &read) && read)
+#else
+		if (ReadConsoleInput(g_InputHandle, input_record, event, &read) && read)
+#endif // USED2D
+		{
 			//input_record = input_record;
 			for (unsigned int count = 0; count < read; count++, input_record++) {
 				switch (input_record->EventType) {
@@ -2982,6 +4726,7 @@ void MciSetVolume(int* sound_id, int percent)
 	}
 }	//MciSetVolume
 
+#ifndef USED2D
 //================================================================
 // ‚Q‚SƒrƒbƒgF‰æ‘œ
 //================================================================
@@ -3049,7 +4794,7 @@ void PrintImage(const char* _buf)
 			out_buf[7 + 6] = CharRGBconvTBL[2][*in_buf];	//0x30 + (*in_buf % 10);
 			in_buf++;
 			// Bİ’è
-			out_buf[7 + 8] = CharRGBconvTBL[0][*in_buf];	//0x30 + (*in_buf / 100); 
+			out_buf[7 + 8] = CharRGBconvTBL[0][*in_buf];	//0x30 + (*in_buf / 100);
 			out_buf[7 + 9] = CharRGBconvTBL[1][*in_buf];	//0x30 + (*in_buf % 100 / 10);
 			out_buf[7 + 10] = CharRGBconvTBL[2][*in_buf];	//0x30 + (*in_buf % 10);
 			in_buf++;
@@ -3059,6 +4804,7 @@ void PrintImage(const char* _buf)
 	}
 	WriteConsoleA(g_DisplayHandle[g_SwapFlg], g_ScreenBufferFull, (g_ScreenBufferSize.X * PIXEL24ESCSIZE) * g_ScreenBufferSize.Y + (g_ScreenBufferSize.Y - 1), &write_num, NULL);
 }	//PrintImage
+#endif // !USED2D
 
 //================================================================
 //@256F‰æ‘œyH–’†zd—l‚ª•Ï‚í‚é‰Â”\«‚ª‘å‚«‚¢
@@ -3075,13 +4821,12 @@ void PrintImage(const char* _buf)
 * Å‰‚Ì‚P‚UF‚ª’Êí‚Ì‚P‚UF‚É‘Î‰‚·‚éB
 * ‚P‚VF?‚Q‚T‚UF‚ª’Ç‰Á‚ÌF‚É‚È‚éB
 */
+
 /**
 * @brief	ANSI color 256.\n
 * COLORREF : #00BBGGRR
-*
-* @note	yH–’†z
 */
-static const COLORREF ANSI_PAL256_COLOR[NUM_ANSI_PAL] = {
+const COLORREF ANSI_PAL256_COLOR[NUM_ANSI_PAL] = {
 0x000000,0x800000,0x008000,0x808000,0x000080,0x800080,0x008080,0xC0C0C0,0x808080,0xFF0000,0x00FF00,0xFFFF00,0x0000FF,0xFF00FF,0x00FFFF,0xFFFFFF,
 0x000000,0x00005F,0x000087,0x0000AF,0x0000D7,0x0000FF,0x005F00,0x005F5F,0x005F87,0x005FAF,0x005FD7,0x005FFF,0x008700,0x00875F,0x008787,0x0087AF,
 0x0087D7,0x0087FF,0x00AF00,0x00AF5F,0x00AF87,0x00AFAF,0x00AFD7,0x00AFFF,0x00D700,0x00D75F,0x00D787,0x00D7AF,0x00D7D7,0x00D7FF,0x00FF00,0x00FF5F,
@@ -3103,10 +4848,8 @@ static const COLORREF ANSI_PAL256_COLOR[NUM_ANSI_PAL] = {
 /**
 * @brief	ANSI color 256.\n
 * RGBQUAD : #00RRGGBB{bb,gg,rr,00}
-*
-* @note	yH–’†z
 */
-static const RGBQUAD ANSI_PAL256_RGB[NUM_ANSI_PAL] = {
+const RGBQUAD ANSI_PAL256_RGB[NUM_ANSI_PAL] = {
 {0x00,0x00,0x00,0},{0x80,0x00,0x00,0},{0x00,0x80,0x00,0},{0x80,0x80,0x00,0},{0x00,0x00,0x80,0},{0x80,0x00,0x80,0},{0x00,0x80,0x80,0},{0xC0,0xC0,0xC0,0},{0x80,0x80,0x80,0},{0xFF,0x00,0x00,0},{0x00,0xFF,0x00,0},{0xFF,0xFF,0x00,0},{0x00,0x00,0xFF,0},{0xFF,0x00,0xFF,0},{0x00,0xFF,0xFF,0},{0xFF,0xFF,0xFF,0},
 {0x00,0x00,0x00,0},{0x00,0x00,0x5F,0},{0x00,0x00,0x87,0},{0x00,0x00,0xAF,0},{0x00,0x00,0xD7,0},{0x00,0x00,0xFF,0},{0x00,0x5F,0x00,0},{0x00,0x5F,0x5F,0},{0x00,0x5F,0x87,0},{0x00,0x5F,0xAF,0},{0x00,0x5F,0xD7,0},{0x00,0x5F,0xFF,0},{0x00,0x87,0x00,0},{0x00,0x87,0x5F,0},{0x00,0x87,0x87,0},{0x00,0x87,0xAF,0},
 {0x00,0x87,0xD7,0},{0x00,0x87,0xFF,0},{0x00,0xAF,0x00,0},{0x00,0xAF,0x5F,0},{0x00,0xAF,0x87,0},{0x00,0xAF,0xAF,0},{0x00,0xAF,0xD7,0},{0x00,0xAF,0xFF,0},{0x00,0xD7,0x00,0},{0x00,0xD7,0x5F,0},{0x00,0xD7,0x87,0},{0x00,0xD7,0xAF,0},{0x00,0xD7,0xD7,0},{0x00,0xD7,0xFF,0},{0x00,0xFF,0x00,0},{0x00,0xFF,0x5F,0},
@@ -3125,6 +4868,7 @@ static const RGBQUAD ANSI_PAL256_RGB[NUM_ANSI_PAL] = {
 {0x58,0x58,0x58,0},{0x62,0x62,0x62,0},{0x6C,0x6C,0x6C,0},{0x76,0x76,0x76,0},{0x80,0x80,0x80,0},{0x8A,0x8A,0x8A,0},{0x94,0x94,0x94,0},{0x9E,0x9E,0x9E,0},{0xA8,0xA8,0xA8,0},{0xB2,0xB2,0xB2,0},{0xBC,0xBC,0xBC,0},{0xC6,0xC6,0xC6,0},{0xD0,0xD0,0xD0,0},{0xDA,0xDA,0xDA,0},{0xE4,0xE4,0xE4,0},{0xEE,0xEE,0xEE,0},
 };
 
+#ifndef USED2D
 /**
 * @brief	256Fƒoƒbƒtƒ@ŠÖ˜A‚Ì‰Šú‰»
 *
@@ -3263,7 +5007,511 @@ void DrawPixelBuffer256(int _xp, int _yp, int _w, int _h, BYTE* _buf)
 	DWORD wrn;
 	WriteConsoleA(g_DisplayHandle[g_SwapFlg], g_ScreenBuffer256, screen_area_pixel_size * sizeof(pixel256Esc), &wrn, NULL);
 }	//SetPixel256
+#endif // !USED2D
+
+#ifdef CONIOEX_DDA_SHAPE
+//================================================================
+//	}Œ`‚Ì•`‰æiDDA‚Å•`‰æj
+//================================================================
+template<typename T>
+inline void swap(T& _a, T& _b) { T tmp = _a; _a = _b; _b = tmp; }
+//=== …•½ü ===
+/*
+* @brief	…•½ü‚ğ•`‰æ‚·‚é
+* @param	int _x1,_y1	ŠJnÀ•W
+* @param	int _x2		I—¹‚wÀ•Wi‚xÀ•W‚Í_y1‚Æ“¯‚¶j
+* @param	RGBQUAD _rgb	•`‰æF‚ÌRGB’l
+*/
+void DrawLineH(int _x1, int _y1, int _x2, RGBQUAD _rgb)
+{
+	if (_x2 < _x1) {
+		//left<Right‚É‚·‚é
+		swap(_x1, _x2);
+	}
+	for (; _x1 <= _x2; _x1++) {
+		DrawPixel(_x1, _y1, _rgb);
+	}
+}
+/*
+* @brief	…•½ü‚ğ•`‰æ‚·‚é
+* @param	int _x1,_y1	ŠJnÀ•W
+* @param	int _x2		I—¹‚wÀ•Wi‚xÀ•W‚Í_y1‚Æ“¯‚¶j
+* @param	int _cc		ƒJƒ‰[ƒR[ƒhiƒpƒŒƒbƒg‚Ì”Ô†j
+*/
+void DrawLineH(int _x1, int _y1, int _x2, int _cc)
+{
+	DrawLineH(_x1, _y1, _x2, g_PaletteD2D[_cc % NUM_D2D_PAL]);
+}	//DrawLineH
+//=== ‚’¼ü ===
+/*
+* @brief	‚’¼ü‚ğ•`‰æ‚·‚é
+* @param	int _x1,_y1	ŠJnÀ•W
+* @param	int _y2		I—¹‚xÀ•Wi‚wÀ•W‚Í_x1‚Æ“¯‚¶j
+* @param	RGBQUAD _rgb	•`‰æF‚ÌRGB’l
+*/
+void DrawLineV(int _x1, int _y1, int _y2, RGBQUAD _rgb)
+{
+	if (_y2 < _y1) {
+		//Top<Bottom‚É‚·‚é
+		swap(_y1, _y2);
+	}
+	for (; _y1 <= _y2; _y1++) {
+		DrawPixel(_x1, _y1, _rgb);
+	}
+}	//DrawLineV
+/*
+* @brief	‚’¼ü‚ğ•`‰æ‚·‚é
+* @param	int _x1,_y1	ŠJnÀ•W
+* @param	int _y2		I—¹‚xÀ•Wi‚wÀ•W‚Í_x1‚Æ“¯‚¶j
+* @param	int _cc		ƒJƒ‰[ƒR[ƒhiƒpƒŒƒbƒg‚Ì”Ô†j
+*/
+void DrawLineV(int _x1, int _y1, int _y2, int _cc)
+{
+	DrawLineV(_x1, _y1, _y2, g_PaletteD2D[_cc % NUM_D2D_PAL]);
+}	//DrawLineV
+//=== 45“xŒXÎü ===
+/*
+* @brief	45“x‚Ì’¼ü‚Ì•`‰æ
+* @param	int _x1,_y2	ŠJnÀ•W
+* @param	int _len	’·‚³
+* @param	int _dir	•ûŒü
+* @param	RGBQUAD _rgb	•`‰æF‚ÌRGB’l
+*/
+void DrawLine45(int _x1, int _y1, int _len, int _dir, RGBQUAD _rgb)
+{
+	//45“x
+	switch (_dir) {
+	case 0:	//‰E‰º45“x_
+		_len = _x1 + _len;
+		for (; _x1 < _len; _x1++, _y1++) {
+			DrawPixel(_x1, _y1, _rgb);
+		}
+		break;
+	case 1:	//¶‰º45“x^
+		_len = _y1 + _len;
+		for (; _y1 < _len; _x1--, _y1++) {
+			DrawPixel(_x1, _y1, _rgb);
+		}
+		break;
+	case 2:	//‰Eã45“x^
+		_len = _x1 + _len;
+		for (; _x1 < _len; _x1++, _y1--) {
+			DrawPixel(_x1, _y1, _rgb);
+		}
+		break;
+	case 3:	//¶ã45“x_
+		_len = _x1 - _len;
+		for (; _x1 > _len; _x1--, _y1--) {
+			DrawPixel(_x1, _y1, _rgb);
+		}
+		break;
+	}
+}
+/*
+* @brief	45“x‚Ì’¼ü‚Ì•`‰æ
+* @param	int _x1,_y2	ŠJnÀ•W
+* @param	int _len	’·‚³
+* @param	int _dir	•ûŒü
+* @param	int _cc		ƒJƒ‰[ƒR[ƒhiƒpƒŒƒbƒg‚Ì”Ô†j
+*/
+void DrawLine45(int _x1, int _y1, int _len, int _dir, int _cc)
+{
+	DrawLine45(_x1, _y1, _len, _dir, g_PaletteD2D[_cc % NUM_D2D_PAL]);
+}
+//=== ’¼ü(ü•ª) ===
+/*
+* @brief	’¼ü‚Ì•`‰æ
+* @param	int _x1,_y2	ŠJnÀ•W
+* @param	int _x2,_y2	I—¹À•W
+* @param	RGBQUAD _rgb	•`‰æF‚ÌRGB’l
+*/
+void DrawLine(int _x1, int _y1, int _x2, int _y2, RGBQUAD _rgb)
+{
+	if (_x1 == _x2 && _y1 == _y2) {
+		DrawPixel(_x1, _y1, _rgb);	//“_
+		return;
+	}
+	else if (_y1 == _y2) {
+		DrawLineH(_x1, _y1, _x2, _rgb);	//…•½ü
+		return;
+	}
+	else if (_x1 == _x2) {
+		DrawLineV(_x1, _y1, _y2, _rgb);	//‚’¼ü
+		return;
+	}
+	//DDA-line
+	int dx = abs(_x2 - _x1);	//•
+	int dy = abs(_y2 - _y1);	//‚
+	int err = dx - dy;	//•‚Æ‚‚Ì·•ª(+)‚È‚ç‰¡’·(-)‚È‚çc’·
+	if (err == 0) {
+		int area = 0;
+		if (_x2 < _x1)area |= 1;
+		if (_y2 < _y1)area |= 2;
+		DrawLine45(_x1, _y1, dx, area, _rgb);	//45“x
+		return;
+	}
+	int sx = (_x1 < _x2) ? (1) : (-1);	//X•ûŒü‚Ì•„†
+	int sy = (_y1 < _y2) ? (1) : (-1);	//Y•ûŒü‚Ì•„†
+	do {
+		DrawPixel(_x1, _y1, _rgb);
+		int e2 = (err << 1);	//
+		if (e2 > -dy) {
+			err -= dy;
+			_x1 += sx;
+		}
+		if (e2 < dx) {
+			err += dx;
+			_y1 += sy;
+		}
+	} while ((_x1 != _x2) || (_y1 != _y2));
+	return;
+}	//DrawLine
+/*
+* @brief	’¼ü‚Ì•`‰æ
+* @param	int _x1,_y2	ŠJnÀ•W
+* @param	int _x2,_y2	I—¹À•W
+* @param	int _cc		ƒJƒ‰[ƒR[ƒhiƒpƒŒƒbƒg‚Ì”Ô†j
+*/
+void DrawLine(int _x1, int _y1, int _x2, int _y2, int _cc)
+{
+	DrawLine(_x1, _y1, _x2, _y2, g_PaletteD2D[_cc % NUM_D2D_PAL]);
+}	//DrawLine
+//=== ‹éŒ` ===
+/*
+* @brief	‹éŒ`‚ğ•`‰æ‚·‚é
+* @param	int _x1,_y1	¶ãÀ•W
+* @param	int _x2,_y2	‰E‰ºÀ•W
+* @param	RGBQUAD _rgb	•`‰æF‚ÌRGB’l
+*/
+void DrawRect(int _x1, int _y1, int _x2, int _y2, RGBQUAD _rgb, bool _fill)
+{
+	if (_fill) {
+		if (_y2 < _y1)swap(_y1, _y2);
+		for (; _y1 <= _y2; _y1++) {
+			DrawLineH(_x1, _y1, _x2, _rgb);	//Top-line
+		}
+	}
+	else {
+		DrawLineH(_x1, _y1, _x2, _rgb);	//Top-line
+		DrawLineH(_x1, _y2, _x2, _rgb);	//Bottom-line
+		DrawLineV(_x1, _y1, _y2, _rgb);	//Left-line
+		DrawLineV(_x2, _y1, _y2, _rgb);	//Right-line
+	}
+}	//DrawRect
+/*
+* @brief	‹éŒ`‚ğ•`‰æ‚·‚é
+* @param	int _x1,_y1	¶ãÀ•W
+* @param	int _x2,_y2	‰E‰ºÀ•W
+* @param	int _cc		ƒJƒ‰[ƒR[ƒhiƒpƒŒƒbƒg‚Ì”Ô†j
+*/
+void DrawRect(int _x1, int _y1, int _x2, int _y2, int _cc, bool _fill) {
+	DrawRect(_x1, _y1, _x2, _y2, g_PaletteD2D[_cc % NUM_D2D_PAL], _fill);
+}
+//=== ‰~Œ` ===
+/*
+* @brief	‰~‚ğ•`‰æ‚·‚é
+* @param	int _cx,_cy	’†SÀ•W
+* @param	int _r		”¼Œa
+* @param	RGBQUAD _rgb	•`‰æF‚ÌRGB’l
+*/
+void DrawCircle(int _cx, int _cy, int _r, RGBQUAD _rgb, bool _fill)
+{
+	int D = _r;
+	int x = (D - 1);
+	int y = 0;
+	if (_fill) {
+		while (x >= y) {
+			//‰E‰ñ‚è‚Å…•½‚ª‚O“xF‚P‰ñ‚Å‚Wƒhƒbƒgi‚WÛŒÀ•ªj‚ğ•`‚­
+			DrawLineH(_cx, _cy + y, _cx + x,/* _cy + y,*/ _rgb);	//‘æ‚PÛŒÀF@@‚O‹?
+			DrawLineH(_cx, _cy + x, _cx + y,/* _cy + x,*/ _rgb);	//‘æ‚QÛŒÀF@‚S‚T‹?
+			DrawLineH(_cx, _cy + x, _cx - y,/* _cy + x,*/ _rgb);	//‘æ‚RÛŒÀF@‚X‚O‹?
+			DrawLineH(_cx, _cy + y, _cx - x,/* _cy + y,*/ _rgb);	//‘æ‚RÛŒÀF‚P‚R‚T‹?
+			DrawLineH(_cx, _cy - y, _cx - x,/* _cy - y,*/ _rgb);	//‘æ‚RÛŒÀF‚P‚W‚O‹?
+			DrawLineH(_cx, _cy - x, _cx - y,/* _cy - x,*/ _rgb);	//‘æ‚RÛŒÀF‚Q‚Q‚T‹?
+			DrawLineH(_cx, _cy - x, _cx + y,/* _cy - x,*/ _rgb);	//‘æ‚RÛŒÀF‚Q‚V‚O‹?
+			DrawLineH(_cx, _cy - y, _cx + x,/* _cy - y,*/ _rgb);	//‘æ‚RÛŒÀF‚R‚P‚T‹?‚R‚U‚O‹
+			D -= (y << 1);
+			if (D <= 0) {
+				x--;
+				D += (x << 1);
+			}
+			y++;
+		}
+	}
+	else {
+		while (x >= y) {
+			//‰E‰ñ‚è‚Å…•½‚ª‚O“xF‚P‰ñ‚Å‚Wƒhƒbƒgi‚WÛŒÀ•ªj‚ğ•`‚­
+			DrawPixel(_cx + x, _cy + y, _rgb);	//‘æ‚PÛŒÀF@@‚O‹?
+			DrawPixel(_cx + y, _cy + x, _rgb);	//‘æ‚QÛŒÀF@‚S‚T‹?
+			DrawPixel(_cx - y, _cy + x, _rgb);	//‘æ‚RÛŒÀF@‚X‚O‹?
+			DrawPixel(_cx - x, _cy + y, _rgb);	//‘æ‚RÛŒÀF‚P‚R‚T‹?
+			DrawPixel(_cx - x, _cy - y, _rgb);	//‘æ‚RÛŒÀF‚P‚W‚O‹?
+			DrawPixel(_cx - y, _cy - x, _rgb);	//‘æ‚RÛŒÀF‚Q‚Q‚T‹?
+			DrawPixel(_cx + y, _cy - x, _rgb);	//‘æ‚RÛŒÀF‚Q‚V‚O‹?
+			DrawPixel(_cx + x, _cy - y, _rgb);	//‘æ‚RÛŒÀF‚R‚P‚T‹?‚R‚U‚O‹
+			D -= (y << 1);
+			if (D <= 0) {
+				x--;
+				D += (x << 1);
+			}
+			y++;
+		}
+	}
+}	//DDA_Circle
+/*
+* @brief	‰~‚ğ•`‰æ‚·‚é
+* @param	int _cx,_cy	’†SÀ•W
+* @param	int _r		”¼Œa
+* @param	int _cc		ƒJƒ‰[ƒR[ƒhiƒpƒŒƒbƒg‚Ì”Ô†j
+*/
+void DrawCircle(int _cx, int _cy, int _r, int _cc, bool _fill) {
+	DrawCircle(_cx, _cy, _r, g_PaletteD2D[_cc % NUM_D2D_PAL], _fill);
+}
+
+#endif // !CONIOEX_DDA_SHAPE
+
+//================================================================
+//	ƒtƒŒ[ƒ€“¯Šú•Œv‘ª—pŠÖ”
+#define	USE_NONE	0
+#define	USE_MMSEC	1	//mm(ƒ~ƒŠ)•b¸“x"timeGetTime()"‚ğg‚¤
+#define	USE_QPC		2	//ƒÊ(ƒ}ƒCƒNƒ)•b¸“x"QueryPerformanceCounter"‚ğg‚¤
+#define	USE_RDTSC	3	//"ReaD Time Stamp Counter"‚ğg‚¤iCPU‚ÌƒNƒƒbƒNƒJƒEƒ“ƒ^j
+#define	FRAME_SYNC	USE_RDTSC	//USE_NONE
+
+#if (FRAME_SYNC==USE_RDTSC)
+#include	"intrin.h"
+#endif // USE_RDTSC
+
+//ƒtƒŒ[ƒ€ƒXƒs[ƒhŒv‘ª—p
+#ifdef _DEBUG
+static char dbg_str[4096] = {};	//ƒfƒoƒbƒO—p•¶š—ñ
+static int dbg_frame_count = 0;	//ƒtƒŒ[ƒ€”
+#endif // _DEBUG
+static double FPS = 60.0;
+
+#if (FRAME_SYNC==USE_RDTSC)
+// ‚Ú×Œv‘ª—p
+static __int64	i64_frequency = 0;
+static __int64	i64_t1 = 0;
+static __int64	i64_t2 = 0;
+static double f_1sec = 0.0;		//‚P•b‚ÌƒJƒEƒ“ƒg”
+static double f_tpf = 0.0;		//‚PƒtƒŒ[ƒ€‚ÌƒJƒEƒ“ƒg”i•ª‰ğ”\j
+#ifdef _DEBUG
+static double f_total = 0.0;
+#endif // _DEBUG
+/*
+* ƒtƒŒ[ƒ€“¯Šú
+* ‚‰ğ‘œ“xƒ^ƒCƒ€ ƒXƒ^ƒ“ƒv‚ğg‚Á‚ÄŒv‘ª
+*/
+//‰Šú‰»
+void InitFrameSync(double _FPS)
+{
+	if (_FPS <= 0) {
+		//”ÍˆÍŠO‚Í‚PFPS‚Æ‚·‚é
+		_FPS = 1;
+	}
+	FPS = _FPS;
+	timeBeginPeriod(1);	//Œv‘ª¸“x‚ğ1ƒ~ƒŠ•b‚Éİ’è
+	i64_t1 = __rdtsc();
+	Sleep(1000 / 10);	//Œv‘ªŠî€‚Æ‚µ‚Äˆê’èŠÔ‘Ò‚Âi1/10•bj
+	i64_t2 = __rdtsc();
+	//1/10•bŠÔ‚Ìt1?t2ŠÔ‚ÌƒJƒEƒ“ƒg‚©‚ç‚P•bŠÔ‚ÌƒJƒEƒ“ƒg‚ğZo
+	i64_frequency = (i64_t2 - i64_t1) * (__int64)10;	//1513233427/1681604920/1813127620
+	f_1sec = (double)i64_frequency;	//‚P•bŠÔ‚ÌƒJƒEƒ“ƒg”i•ª‰ğ”\j
+	f_tpf = (f_1sec / FPS);	//‚PƒtƒŒ[ƒ€‚ÌƒJƒEƒ“ƒg”i•ª‰ğ”\j
+}
+//“¯Šú
+void FrameSync(void)
+{
+	//ƒtƒŒ[ƒ€‘Ò‚¿ŠÔŒv‘ª
+	i64_t2 = __rdtsc();	//Œ»İŠÔæ“¾
+	double f_frame_interval = (double)(i64_t2 - i64_t1);	//ƒtƒŒ[ƒ€ŠÔŠu(ŠÔ)Zo
+	double f_wait = (f_tpf - f_frame_interval);	//‘Ò‚¿ŠÔ‚ğZoi‘Ò‚¿ŠÔ‚PƒtƒŒ[ƒ€‚É•K—v‚ÈŠÔ?ÀÛ‚ÉŠ|‚©‚Á‚½ŠÔj
+	if (f_wait > 0) {
+		__int64 t2 = 0;
+		do {
+			//Sleep(1);
+			t2 = __rdtsc();	//Œ»İŠÔæ“¾
+			//‚±‚Ìƒ‹[ƒv‚ÌŒo‰ßŠÔ‚ğ‘ª‚èA‘Ò‚¿ŠÔˆÈ‰º‚È‚çƒ‹[ƒvŒp‘±‚·‚éB
+		} while ((double)(t2 - i64_t2) < f_wait);
+#ifdef _DEBUG
+		//‚PƒtƒŒ[ƒ€ŠÔ‚ğÏZi‚PƒtƒŒ[ƒ€ŠÔ‘O‚ÌƒtƒŒ[ƒ€‚©‚ç¡‚ÌƒtƒŒ[ƒ€‚Ü‚Å‚ÌŒo‰ßŠÔ{‘«‚è‚È‚©‚Á‚½•ª‚Ì‘Ò‚¿ŠÔj
+		f_total += (f_frame_interval + f_wait);
+	}
+	else {
+		//‘Ò‚¿ŠÔ‚ª–³‚©‚Á‚½‚Ì‚Å‚PƒtƒŒ[ƒ€ŠÔ‚¾‚¯‚ğÏZ
+		f_total += f_frame_interval;
+	}
+	dbg_frame_count++;	//‚P•bŠÔ‚ÌƒtƒŒ[ƒ€”ƒJƒEƒ“ƒg(ƒfƒoƒbƒO—p)
+	if ((f_total >= f_1sec) && (dbg_frame_count > 0)) {
+		double fps = f_1sec / (f_total / (double)dbg_frame_count);
+		sprintf_s(dbg_str, sizeof(dbg_str),
+			"[fps:%7.2f][count:%3d][1sec:%7.2f][tpf:%7.2f][wait:%7.2f][interval:%7.2f][total:%7.2f]\n",
+			(double)fps, (int)dbg_frame_count, (double)f_1sec, (double)f_tpf, (double)f_wait, (double)f_frame_interval, (double)f_total);
+		OutputDebugStringA(dbg_str);
+		SetCaption(dbg_str);
+		dbg_frame_count = 0;
+		f_total = 0.0;
+#endif // _DEBUG
+	}
+	i64_t1 = __rdtsc();	//Œv‘ªŠJnŠÔæ“¾
+}
+#elif (FRAME_SYNC==USE_QPC)
+// ‚Ú×Œv‘ª—p
+LARGE_INTEGER	li_frequency = {};
+LARGE_INTEGER	li_t1 = {};
+LARGE_INTEGER	li_t2 = {};
+double f_1sec = 0.0;	//‚P•b‚ÌƒJƒEƒ“ƒg”
+double f_tpf = 0.0;		//‚PƒtƒŒ[ƒ€‚ÌƒJƒEƒ“ƒg”i•ª‰ğ”\j
+#ifdef _DEBUG
+double f_total = 0.0;
+#endif // _DEBUG
+/*
+* ƒtƒŒ[ƒ€“¯Šú
+* ‚‰ğ‘œ“xƒ^ƒCƒ€ ƒXƒ^ƒ“ƒv‚ğg‚Á‚ÄŒv‘ª
+*/
+//‰Šú‰»
+void InitFrameSync(double _FPS)
+{
+	if (_FPS <= 0) {
+		//”ÍˆÍŠO‚Í‚PFPS‚Æ‚·‚é
+		_FPS = 1;
+	}
+	FPS = _FPS;
+	timeBeginPeriod(1);	//Œv‘ª¸“x‚ğ1ƒ~ƒŠ•b‚Éİ’è
+	//•ª‰ğ”\FƒJƒEƒ“ƒ^‚Ìü”g”i‚P•bŠÔ‚É‰½ƒJƒEƒ“ƒgs‚¤‚©j‚ğæ“¾
+	if (!QueryPerformanceFrequency(&li_frequency)) {
+		//¸”s‚µ‚½ê‡‚ÍA10,000,000Hz(10MHz)‚É‚·‚éB
+		li_frequency.QuadPart = 1000 * 1000 * 10;	//•ª‰ğ”\(1/10,000,000)
+	}
+	f_1sec = (double)li_frequency.QuadPart;	//‚P•bŠÔ‚ÌƒJƒEƒ“ƒg”i•ª‰ğ”\j
+	f_tpf = (f_1sec / FPS);	//‚PƒtƒŒ[ƒ€‚ÌƒJƒEƒ“ƒg”i•ª‰ğ”\j
+}
+//“¯Šú
+void FrameSync(void)
+{
+	//ƒtƒŒ[ƒ€‘Ò‚¿ŠÔŒv‘ª
+	QueryPerformanceCounter(&li_t2);	//Œ»İŠÔæ“¾
+	double f_frame_interval = (double)(li_t2.QuadPart - li_t1.QuadPart);	//ƒtƒŒ[ƒ€ŠÔŠu(ŠÔ)Zo
+	double f_wait = (f_tpf - f_frame_interval);	//‘Ò‚¿ŠÔ‚ğZoi‘Ò‚¿ŠÔ‚PƒtƒŒ[ƒ€‚É•K—v‚ÈŠÔ?ÀÛ‚ÉŠ|‚©‚Á‚½ŠÔj
+	if (f_wait > 0) {
+		LARGE_INTEGER t2 = {};
+		do {
+			//Sleep(1);
+			//std::this_thread::yield();
+			QueryPerformanceCounter(&t2);	//Œ»İŠÔæ“¾
+			//‚±‚Ìƒ‹[ƒv‚ÌŒo‰ßŠÔ‚ğ‘ª‚èA‘Ò‚¿ŠÔˆÈ‰º‚È‚çƒ‹[ƒvŒp‘±‚·‚éB
+		} while ((double)(t2.QuadPart - li_t2.QuadPart) < f_wait);
+#ifdef _DEBUG
+		//‚PƒtƒŒ[ƒ€ŠÔ‚ğÏZi‚PƒtƒŒ[ƒ€ŠÔ‘O‚ÌƒtƒŒ[ƒ€‚©‚ç¡‚ÌƒtƒŒ[ƒ€‚Ü‚Å‚ÌŒo‰ßŠÔ{‘«‚è‚È‚©‚Á‚½•ª‚Ì‘Ò‚¿ŠÔj
+		f_total += (f_frame_interval + f_wait);
+	}
+	else {
+		//‘Ò‚¿ŠÔ‚ª–³‚©‚Á‚½‚Ì‚Å‚PƒtƒŒ[ƒ€ŠÔ‚¾‚¯‚ğÏZ
+		f_total += f_frame_interval;
+	}
+	dbg_frame_count++;	//‚P•bŠÔ‚ÌƒtƒŒ[ƒ€”ƒJƒEƒ“ƒg(ƒfƒoƒbƒO—p)
+	if ((f_total >= f_1sec) && (dbg_frame_count > 0)) {
+		double fps = f_1sec / (f_total / (double)dbg_frame_count);
+		sprintf_s(dbg_str, sizeof(dbg_str),
+			"[fps:%7.2f][count:%3d][1sec:%7.2f][tpf:%7.2f][wait:%7.2f][interval:%7.2f][total:%7.2f]\n",
+			(double)fps, (int)dbg_frame_count, (double)f_1sec, (double)f_tpf, (double)f_wait, (double)f_frame_interval, (double)f_total);
+		OutputDebugStringA(dbg_str);
+		dbg_frame_count = 0;
+		f_total = 0.0;
+#endif // _DEBUG
+	}
+	QueryPerformanceCounter(&li_t1);	//Œv‘ªŠJnŠÔæ“¾
+}
+#elif (FRAME_SYNC==USE_MMSEC)
+DWORD	dd_frequency = 0;
+DWORD	dd_t1 = 0;
+DWORD	dd_t2 = 0;
+double f_1sec = 0.0;	//‚P•b‚ÌƒJƒEƒ“ƒg”
+double f_tpf = 0.0;		//‚PƒtƒŒ[ƒ€‚ÌŠÔiƒ~ƒŠ•bj
+#ifdef _DEBUG
+double f_total = 0.0;
+#endif // _DEBUG
+/*
+* ƒtƒŒ[ƒ€“¯Šú
+* ‚‰ğ‘œ“xƒ^ƒCƒ€ ƒXƒ^ƒ“ƒv‚ğg‚Á‚ÄŒv‘ª
+*/
+//‰Šú‰»
+void InitFrameSync(double _FPS)
+{
+	if (_FPS <= 0) {
+		//”ÍˆÍŠO‚Í‚PFPS‚Æ‚·‚é
+		_FPS = 1;
+	}
+	FPS = _FPS;
+	timeBeginPeriod(1);				//•ª‰ğ”\‚ğ‚Pƒ~ƒŠ•b‚Éİ’è
+	dd_frequency = 1000;			//‚P•b‚ÌƒJƒEƒ“ƒg”i‚P‚O‚O‚Oƒ~ƒŠ•bj
+	f_1sec = (double)dd_frequency;	//‚P•b‚ÌƒJƒEƒ“ƒg”i‚P‚O‚O‚Oƒ~ƒŠ•bj
+	f_tpf = (f_1sec / FPS);	//‚PƒtƒŒ[ƒ€‚ÌŠÔiƒ~ƒŠ•bj
+}
+//“¯Šú
+void FrameSync(void)
+{
+	//ƒtƒŒ[ƒ€‘Ò‚¿ŠÔŒv‘ª
+	dd_t2 = timeGetTime();	//Œ»İŠÔæ“¾
+	double f_frame_interval = (double)(dd_t2 - dd_t1);	//ƒtƒŒ[ƒ€ŠÔŠu(ŠÔ)Zo
+	double f_wait = (f_tpf - f_frame_interval);	//‘Ò‚¿ŠÔ‚ğZoi‘Ò‚¿ŠÔ‚PƒtƒŒ[ƒ€‚É•K—v‚ÈŠÔ?ÀÛ‚ÉŠ|‚©‚Á‚½ŠÔj
+	if (f_wait > 0) {
+		DWORD t2 = 0;
+		do {
+			Sleep(1);
+			//std::this_thread::yield();
+			t2 = timeGetTime();	//Œ»İŠÔæ“¾
+			//‚±‚Ìƒ‹[ƒv‚ÌŒo‰ßŠÔ‚ğ‘ª‚èA‘Ò‚¿ŠÔˆÈ‰º‚È‚çƒ‹[ƒvŒp‘±‚·‚éB
+		} while ((double)(t2 - dd_t2) < f_wait);
+#ifdef _DEBUG
+		//‚PƒtƒŒ[ƒ€ŠÔ‚ğÏZi‚PƒtƒŒ[ƒ€ŠÔ‘O‚ÌƒtƒŒ[ƒ€‚©‚ç¡‚ÌƒtƒŒ[ƒ€‚Ü‚Å‚ÌŒo‰ßŠÔ{‘«‚è‚È‚©‚Á‚½•ª‚Ì‘Ò‚¿ŠÔj
+		f_total += (f_frame_interval + f_wait);
+	}
+	else {
+		//‘Ò‚¿ŠÔ‚ª–³‚©‚Á‚½‚Ì‚Å‚PƒtƒŒ[ƒ€ŠÔ‚¾‚¯‚ğÏZ
+		f_total += f_frame_interval;
+	}
+	dbg_frame_count++;	//‚P•bŠÔ‚ÌƒtƒŒ[ƒ€”ƒJƒEƒ“ƒg(ƒfƒoƒbƒO—p)
+	if ((f_total >= f_1sec) && (dbg_frame_count > 0)) {
+		double fps = f_1sec / (f_total / (double)dbg_frame_count);
+		sprintf_s(dbg_str, sizeof(dbg_str),
+			"[fps:%7.2f][count:%3d][1sec:%7.2f][tpf:%7.2f][wait:%7.2f][interval:%7.2f][total:%7.2f]\n",
+			(double)fps, (int)dbg_frame_count, (double)f_1sec, (double)f_tpf, (double)f_wait, (double)f_frame_interval, (double)f_total);
+		OutputDebugStringA(dbg_str);
+		dbg_frame_count = 0;
+		f_total = 0.0;
+#endif // _DEBUG
+	}
+	dd_t1 = timeGetTime();	//Œ»İŠÔæ“¾
+}
+#else	// USE_RDTSC
+//DWORD	dd_frequency = 0;
+int	dd_t1 = 0;
+int	dd_t2 = 0;
+int mmpf = 0;
+void InitFrameSync(double _fps)
+{
+	if (_fps <= 0) {
+		_fps = 1;
+	}
+	FPS = _fps;
+	timeBeginPeriod(1);				//•ª‰ğ”\‚ğ‚Pƒ~ƒŠ•b‚Éİ’è
+	dd_t1 = timeGetTime();	//Œ»İŠÔæ“¾
+	mmpf = (int)(1000.0 / FPS);
+}
+void FrameSync(void)
+{
+	//ƒtƒŒ[ƒ€‘Ò‚¿ŠÔŒv‘ª
+	dd_t2 = timeGetTime();	//Œ»İŠÔæ“¾
+	int t_wait = (mmpf - (dd_t2 - dd_t1));
+	if (t_wait > 0) {
+		Sleep(t_wait);
+	}
+	dd_t1 = timeGetTime();	//Œ»İŠÔæ“¾
+}
+#endif // USE_RDTSC
 
 /**
-* @copyright (c) 2018-2023 HAL Osaka College of Technology & Design (Ihara, H.)
+* @copyright (c) 2018-2019 HAL Osaka College of Technology & Design (Ihara, H.)
 */

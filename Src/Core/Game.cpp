@@ -7,7 +7,6 @@
 #include <format>
 
 #include "../Animation/SpriteSheetLoader.h"
-#include "../Lib/Shape.h"
 #include "../Config/EntityConfigs.h"
 #include "../Config/SystemConfigs.h"
 #include "../Systems/EnemyManager.h"
@@ -138,7 +137,7 @@ void Game::Start()
 	{
 		const DWORD currTime = timeGetTime();
 		float deltaTime = static_cast<float>(currTime - lastFrameTime) / 1000.0f;
-		
+
 		if (deltaTime > FRAME_TIME * 2)
 		{
 			deltaTime = FRAME_TIME * 2;
@@ -209,7 +208,7 @@ void Game::Draw()
 		vfxManager.ApplyNormalPal();
 	}
 	
-	ClearFrameBuffer();
+	ClearScreen();
 	tileMap.Draw(cam);
 	
 	for (const auto &e: EnemyManager::Instance().GetActiveEnemies())

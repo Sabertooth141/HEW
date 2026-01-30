@@ -39,6 +39,7 @@ protected:
 
     float gravity{};
     float maxFallSpeed{};
+    float checkGroundOffset{};
 
     float currHp{};
     float maxHp{};
