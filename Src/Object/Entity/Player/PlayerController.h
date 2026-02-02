@@ -37,9 +37,11 @@ public:
     void Draw(const Camera& cam) override;
     void Die() override;
     void InitAnimation(const PlayerNormalAnimPaths& path);
+    void InitAttackAnimation(const PlayerCombatAnimPaths& path);
 
+    SpriteSheet* GetSpriteSheetFromAnimator(PlayerCombatState attkState);
     [[nodiscard]] PlayerStateMachine<PlayerNormalState> GetMoveStateMachine() const { return normalStateMachine; }
-    [[nodiscard]] PlayerAttackController GetAttackController() const { return attackController; }
+    [[nodiscard]] const PlayerAttackController& GetAttackController() const { return attackController; }
 
 protected:
     void HandleMovement(float deltaTime, const Tilemap& tileMap) override;

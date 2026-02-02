@@ -26,10 +26,9 @@ class PlayerAttackController
 public:
     PlayerAttackController() = default;
 
-    void Initialize(const PlayerAttackConfig& config);
+    void Initialize(const PlayerAttackConfig& config, PlayerController* controller);
     void Update(float deltaTime, const Transform& playerTransform, bool isFacingRight);
-    void InitAnimation(const PlayerCombatAnimPaths& path);
-    void Draw(Camera& camera);
+    void LoadAttackDuration();
 
     // returns true if can attack
     bool TryAttack();
@@ -42,24 +41,20 @@ public:
     [[nodiscard]] bool CanMove() const;
     [[nodiscard]] float GetCurrentDamage() const;
 private:
-    void LoadAttackDuration();
     void StartAttack(PlayerCombatState combatState);
     void EndAttack();
     void AdvanceCombo(PlayerCombatState currState, const AttkData& currData);
     void HandleAttackCollisions();
     [[nodiscard]] const AttkData& GetAttackData(PlayerCombatState currState) const;
 
+public:
+
 private:
     PlayerStateMachine<PlayerCombatState> combatStateMachine{PlayerCombatState::DEFAULT};
-    void HandleAnimationUpdate(float deltaTime);
     Hitbox hitbox{};
 
-    PlayerController* playerController{};
-
     std::vector<AttkData> attackData;
-
-    PlayerAnimators combatAnimators;
-    Animator* animatorPlaying;
+    PlayerController* playerController;
 
     // combo tracking
     float comboTimer = 0.0f;

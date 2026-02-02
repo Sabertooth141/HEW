@@ -132,7 +132,7 @@ bool Game::Initialize()
 
     for (auto animation : playerCombatAnimationPaths)
     {
-        playerController.GetAttackController().InitAnimation(animation);
+        playerController.InitAttackAnimation(animation);
     }
 
     // TODO: TEMP

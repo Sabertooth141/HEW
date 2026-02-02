@@ -30,13 +30,14 @@ void PlayerController::Initialize(const PlayerConfig& config, const PlayerAttack
     airResistance = config.airResistance;
     normalGravity = config.gravity;
 
-    attackController.Initialize(attackConfig);
+    attackController.Initialize(attackConfig, this);
 }
 
 void PlayerController::Start()
 {
     Entity::Start();
 
+    attackController.LoadAttackDuration();
     currSpeed = walkSpeed;
     normalStateMachine.ChangeState(PlayerNormalState::IDLE);
     animatorPlaying = playerAnimators.GetAnimator(normalStateMachine.GetCurrState());
@@ -100,6 +101,21 @@ void PlayerController::InitAnimation(const PlayerNormalAnimPaths& path)
     animator->SetLoopStartFrame(path.startFrame);
 
     playerAnimators.AddAnimator(path.animationState, std::move(animator));
+}
+
+void PlayerController::InitAttackAnimation(const PlayerCombatAnimPaths& path)
+{
+    std::unique_ptr<Animator> animator = std::make_unique<Animator>();
+    animator->LoadSpriteSheet(path.jsonPath.c_str(), path.bmpPath.c_str());
+    animator->SetLoopStartFrame(path.startFrame);
+
+    playerAnimators.AddAnimator(path.animationState, std::move(animator));
+}
+
+SpriteSheet* PlayerController::GetSpriteSheetFromAnimator(const PlayerCombatState attkState)
+{
+    const Animator* resAnimator = playerAnimators.GetAnimator(attkState);
+    return resAnimator->GetSpriteSheet();
 }
 
 void PlayerController::HandleMovement(const float deltaTime, const Tilemap& tileMap)
@@ -226,10 +242,24 @@ void PlayerController::HandleAnimationUpdate(const float deltaTime)
     }
     else
     {
+        if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(attackController.GetCurrState()))
+        {
+            animatorPlaying->Update(deltaTime);
+            return;
+        }
+
         if (animatorPlaying != nullptr)
         {
             animatorPlaying->Stop();
         }
+
+        animatorPlaying = playerAnimators.GetAnimator(attackController.GetCurrState());
+        if (animatorPlaying == nullptr)
+        {
+            animatorPlaying = playerAnimators.GetAnimator(PlayerCombatState::ATTK1);
+        }
+        animatorPlaying->Play(false);
+        animatorPlaying->Update(deltaTime);
     }
 
 }

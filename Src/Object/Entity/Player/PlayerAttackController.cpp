@@ -7,11 +7,13 @@
 #include "../../../Systems/EnemyManager.h"
 #include "PlayerController.h"
 
-void PlayerAttackController::Initialize(const PlayerAttackConfig& config)
+void PlayerAttackController::Initialize(const PlayerAttackConfig& config, PlayerController* controller)
 {
     attackData = config.data;
 
     attackData.back().comboWindow = 0;
+
+    playerController = controller;
 }
 
 void PlayerAttackController::Update(const float deltaTime, const Transform& playerTransform,
@@ -35,8 +37,6 @@ void PlayerAttackController::Update(const float deltaTime, const Transform& play
 
     const AttkData& data = GetAttackData(currentState);
     hitbox.Update(deltaTime, ownerCenterX, ownerCenterY);
-
-    HandleAnimationUpdate(deltaTime);
 
     // attack
     if (comboTimer <= data.duration)
@@ -76,23 +76,6 @@ void PlayerAttackController::Update(const float deltaTime, const Transform& play
     else
     {
         EndAttack();
-    }
-}
-
-void PlayerAttackController::InitAnimation(const PlayerCombatAnimPaths& path)
-{
-    std::unique_ptr<Animator> animator = std::make_unique<Animator>();
-    animator->LoadSpriteSheet(path.jsonPath.c_str(), path.bmpPath.c_str());
-    animator->SetLoopStartFrame(path.startFrame);
-
-    combatAnimators.AddAnimator(path.animationState, std::move(animator));
-}
-
-void PlayerAttackController::Draw(Camera& cam)
-{
-    if (animatorPlaying != nullptr)
-    {
-        // animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, !isFacingRight);
     }
 }
 
@@ -160,7 +143,19 @@ float PlayerAttackController::GetCurrentDamage() const
 
 void PlayerAttackController::LoadAttackDuration()
 {
-
+    for (int i = 0; i < attackData.size(); i++)
+    {
+        SpriteSheet* sheet = playerController->GetSpriteSheetFromAnimator(static_cast<PlayerCombatState>(i));
+        if (sheet != nullptr)
+        {
+            float durationMs = 0;
+            for (const auto frame : sheet->frames)
+            {
+                durationMs += frame.duration;
+            }
+            attackData[i].duration = durationMs / 1000.0f;
+        }
+    }
 }
 
 void PlayerAttackController::StartAttack(const PlayerCombatState combatState)
@@ -248,30 +243,5 @@ const AttkData& PlayerAttackController::GetAttackData(const PlayerCombatState cu
     case PlayerCombatState::ATTK2:
     default:
         return attackData[2];
-    }
-}
-
-void PlayerAttackController::HandleAnimationUpdate(const float deltaTime)
-{
-    if (IsAttacking())
-    {
-        if (animatorPlaying != nullptr && animatorPlaying == combatAnimators.GetAnimator(combatStateMachine.GetCurrState()))
-        {
-            animatorPlaying->Update(deltaTime);
-            return;
-        }
-
-        if (animatorPlaying != nullptr)
-        {
-            animatorPlaying->Stop();
-        }
-
-        animatorPlaying = combatAnimators.GetAnimator(combatStateMachine.GetCurrState());
-        if (animatorPlaying == nullptr)
-        {
-            animatorPlaying = combatAnimators.GetAnimator(PlayerCombatState::ATTK1);
-        }
-        animatorPlaying->Play();
-        animatorPlaying->Update(deltaTime);
     }
 }
