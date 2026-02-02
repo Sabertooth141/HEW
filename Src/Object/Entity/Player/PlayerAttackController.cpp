@@ -11,8 +11,6 @@ void PlayerAttackController::Initialize(const PlayerAttackConfig& config, Player
 {
     attackData = config.data;
 
-    attackData.back().comboWindow = 0;
-
     playerController = controller;
 }
 
@@ -41,11 +39,9 @@ void PlayerAttackController::Update(const float deltaTime, const Transform& play
     // attack
     if (comboTimer <= data.duration)
     {
-        char debug[64];
-        sprintf_s(debug, "CurrentAttk: %d\n", currentState);
-        OutputDebugStringA(debug);
-        // hitbox.Activate(ownerX, ownerY, data.offsetX, data.offsetY,
-        //                 data.width, data.height, data.duration);
+        // char debug[64];
+        // sprintf_s(debug, "CurrentAttk: %d\n", currentState);
+        // OutputDebugStringA(debug);
     }
     // if combo buffered
     else if (comboTimer <= data.duration + data.recovery)
@@ -55,26 +51,22 @@ void PlayerAttackController::Update(const float deltaTime, const Transform& play
             hitbox.isActive = false;
         }
 
-        if (comboInputBuffer && comboTimer >= data.duration + data.recovery * 0.3f)
+    	char debug[64];
+    	sprintf_s(debug, "ATTACK REC %f\n", comboTimer - data.duration);
+    	OutputDebugStringA(debug);
+    	isInRecovery = true;
+        if (comboInputBuffer && comboTimer >= data.duration)
         {
             comboInputBuffer = false;
 
-            AdvanceCombo(currentState, data);
-        }
-    }
-    // if combo pressed within window
-    else if (comboTimer <= data.duration + data.recovery + data.comboWindow)
-    {
-        if (comboInputBuffer)
-        {
-            comboInputBuffer = false;
-
+        	isInRecovery = false;
             AdvanceCombo(currentState, data);
         }
     }
     // complete attack
-    else
+    else if (comboTimer > data.duration + data.recovery)
     {
+    	isInRecovery = false;
         EndAttack();
     }
 }
@@ -112,7 +104,7 @@ void PlayerAttackController::CancelCombo()
 
 bool PlayerAttackController::IsAttacking() const
 {
-    return combatStateMachine.GetCurrState() != PlayerCombatState::DEFAULT;
+    return combatStateMachine.GetCurrState() != PlayerCombatState::DEFAULT && !isInRecovery;
 }
 
 bool PlayerAttackController::CanMove() const
@@ -148,12 +140,13 @@ void PlayerAttackController::LoadAttackDuration()
         SpriteSheet* sheet = playerController->GetSpriteSheetFromAnimator(static_cast<PlayerCombatState>(i));
         if (sheet != nullptr)
         {
-            float durationMs = 0;
-            for (const auto frame : sheet->frames)
-            {
-                durationMs += frame.duration;
-            }
-            attackData[i].duration = durationMs / 1000.0f;
+            float duration = 0;
+        	for (int frame = 0; frame < sheet->frames.size() - 1; frame++)
+        	{
+				duration += sheet->frames[frame].duration;
+        	}
+            attackData[i].duration = duration;
+			attackData[i].recovery = sheet->frames[sheet->frames.size() - 1].duration;
         }
     }
 }
@@ -203,11 +196,11 @@ void PlayerAttackController::EndAttack()
 
 void PlayerAttackController::AdvanceCombo(const PlayerCombatState currState, const AttkData& currData)
 {
-    if (currState == PlayerCombatState::ATTK0 && currData.comboWindow > 0)
+    if (currState == PlayerCombatState::ATTK0 && currData.recovery > 0)
     {
         StartAttack(PlayerCombatState::ATTK1);
     }
-    else if (currState == PlayerCombatState::ATTK1 && currData.comboWindow > 0)
+    else if (currState == PlayerCombatState::ATTK1 && currData.recovery > 0)
     {
         StartAttack(PlayerCombatState::ATTK2);
     }

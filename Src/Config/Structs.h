@@ -149,7 +149,6 @@ struct AttkData
     float height;
     float duration;
     float recovery;
-    float comboWindow;
 };
 
 struct PlayerAttackConfig

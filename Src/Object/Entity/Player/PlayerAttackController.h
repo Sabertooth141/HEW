@@ -38,6 +38,7 @@ public:
     [[nodiscard]] const Hitbox& GetHitBox() const { return hitbox; }
     [[nodiscard]] PlayerCombatState GetCurrState() const { return combatStateMachine.GetCurrState(); }
     [[nodiscard]] bool IsAttacking() const;
+	[[nodiscard]] bool IsInRecovery() const { return isInRecovery; }
     [[nodiscard]] bool CanMove() const;
     [[nodiscard]] float GetCurrentDamage() const;
 private:
@@ -54,12 +55,13 @@ private:
     Hitbox hitbox{};
 
     std::vector<AttkData> attackData;
-    PlayerController* playerController;
+    PlayerController* playerController{};
 
     // combo tracking
     float comboTimer = 0.0f;
     bool comboInputBuffer = false;
     bool hasHit = false;
+	bool isInRecovery = false;
 
     // owner position
     float ownerCenterX = 0;

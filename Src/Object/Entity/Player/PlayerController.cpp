@@ -218,6 +218,16 @@ void PlayerController::HandleTimeRewind()
 
 void PlayerController::HandleAnimationUpdate(const float deltaTime)
 {
+	if (attackController.IsInRecovery())
+	{
+		OutputDebugStringA("RECOVERY\n");
+		if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(attackController.GetCurrState()))
+		{
+			animatorPlaying->Pause();
+		}
+		return;
+	}
+
     if (!attackController.IsAttacking())
     {
         // if state not changed
@@ -240,7 +250,8 @@ void PlayerController::HandleAnimationUpdate(const float deltaTime)
         animatorPlaying->Play();
         animatorPlaying->Update(deltaTime);
     }
-    else
+
+	if (attackController.IsAttacking())
     {
         if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(attackController.GetCurrState()))
         {

@@ -5,7 +5,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 180
+    "duration": 50
    },
    "PlayerCharacterAttk_1": {
     "frame": { "x": 64, "y": 0, "w": 64, "h": 64 },
@@ -45,7 +45,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 50
+    "duration": 40
    },
    "PlayerCharacterAttk_6": {
     "frame": { "x": 128, "y": 64, "w": 64, "h": 64 },
@@ -61,7 +61,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 40
+    "duration": 140
    },
    "PlayerCharacterAttk_8": {
     "frame": { "x": 0, "y": 128, "w": 64, "h": 64 },
@@ -69,7 +69,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 140
+    "duration": 80
    },
    "PlayerCharacterAttk_9": {
     "frame": { "x": 64, "y": 128, "w": 64, "h": 64 },
@@ -97,14 +97,6 @@
    },
    "PlayerCharacterAttk_12": {
     "frame": { "x": 0, "y": 192, "w": 64, "h": 64 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
-    "sourceSize": { "w": 64, "h": 64 },
-    "duration": 80
-   },
-   "PlayerCharacterAttk_13": {
-    "frame": { "x": 64, "y": 192, "w": 64, "h": 64 },
     "rotated": false,
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
