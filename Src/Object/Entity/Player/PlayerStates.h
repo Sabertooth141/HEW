@@ -6,9 +6,9 @@
 #define HEW_PLAYERSTATES_H
 #include <type_traits>
 
-enum class PlayerMoveState
+enum class PlayerNormalState : uint8_t
 {
-    IDLE,
+    IDLE = 0,
     MOVE,
     JUMP,
     FALL,
@@ -16,17 +16,17 @@ enum class PlayerMoveState
     DEFAULT
 };
 
-enum class PlayerCombatState
+enum class PlayerCombatState : uint8_t
 {
+    ATTK0 = 0,
     ATTK1,
     ATTK2,
-    ATTK3,
     ATTK_RECOVERY,
     DEFAULT
 };
 
 template <typename T>
-concept IsAllowedType = std::is_same_v<T, PlayerMoveState> || std::is_same_v<T, PlayerCombatState>;
+concept IsAllowedType = std::is_same_v<T, PlayerNormalState> || std::is_same_v<T, PlayerCombatState>;
 
 template <IsAllowedType T>
 struct PlayerStateMachine

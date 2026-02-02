@@ -40,7 +40,7 @@ namespace config
         config.data[0].offsetY = 5;
         config.data[0].width = 30;
         config.data[0].height = 54;
-        config.data[0].duration = 1;    // to be set by frame data
+        config.data[0].duration = 1;    // to be set by frame data IN SEC
         config.data[0].recovery = 0.15f;
         config.data[0].comboWindow = 0.3f;
 
@@ -50,7 +50,7 @@ namespace config
         config.data[1].offsetY = 5;
         config.data[1].width = 40;
         config.data[1].height = 54;
-        config.data[1].duration = 1;    // to be set by frame data
+        config.data[1].duration = 1;    // to be set by frame data IN SEC
         config.data[1].recovery = 0.15f;
         config.data[1].comboWindow = 0.3f;
 
@@ -60,7 +60,7 @@ namespace config
         config.data[2].offsetY = 5;
         config.data[2].width = 50;
         config.data[2].height = 54;
-        config.data[2].duration = 1;    // to be set by frame data
+        config.data[2].duration = 1;    // to be set by frame data IN SEC
         config.data[2].recovery = 0.15f;
         config.data[2].comboWindow = 0.0f;
 

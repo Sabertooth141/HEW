@@ -5,12 +5,25 @@
 #ifndef HEW_PLAYERCONTROLLER_H
 #define HEW_PLAYERCONTROLLER_H
 
-#include "PlayerStates.h"
+#include <string>
+
 #include "PlayerAttackController.h"
-#include "../Entity.h"
 #include "../../../Animation/Animator.h"
+#include "PlayerStates.h"
+#include "../Entity.h"
+
+#define SPEED_WHEN_ATTK 10
+#define GRAV_WHEN_ATTK 20
 
 class Camera;
+
+struct PlayerNormalAnimPaths
+{
+    PlayerNormalState animationState;
+    std::string jsonPath;
+    std::string bmpPath;
+    int startFrame = 0;
+};
 
 class PlayerController final : public Entity
 {
@@ -18,13 +31,15 @@ class PlayerController final : public Entity
 public:
     PlayerController();
 
-    void Initialize(const PlayerConfig& config, const PlayerAttackConfig& attackConfig) ;
+    void Initialize(const PlayerConfig& config, const PlayerAttackConfig& attackConfig);
     void Start() override;
     void Update(float deltaTime, const Tilemap& tileMap) override;
     void Draw(const Camera& cam) override;
     void Die() override;
+    void InitAnimation(const PlayerNormalAnimPaths& path);
 
-    [[nodiscard]] PlayerStateMachine<PlayerMoveState> GetMoveStateMachine() const { return moveStateMachine; }
+    [[nodiscard]] PlayerStateMachine<PlayerNormalState> GetMoveStateMachine() const { return normalStateMachine; }
+    [[nodiscard]] PlayerAttackController GetAttackController() const { return attackController; }
 
 protected:
     void HandleMovement(float deltaTime, const Tilemap& tileMap) override;
@@ -33,7 +48,6 @@ protected:
 private:
     void HandleInput(float deltaTime);
     void HandleTimeRewind();
-    void InitAnimations();
     void HandleAnimationUpdate(float deltaTime);
 
     // vars
@@ -43,16 +57,16 @@ private:
     float jumpForce;
     float timeStopDuration;
     float airResistance;
+    float normalGravity;
 
     InputConfig input;
     PlayerSnapshot snapshot;
 
-    PlayerStateMachine<PlayerMoveState> moveStateMachine;
+    PlayerStateMachine<PlayerNormalState> normalStateMachine;
     PlayerAttackController attackController;
 
     // animations
-    PlayerAnimators moveAnimators;
-    PlayerAnimators combatAnimators;
+    PlayerAnimators playerAnimators;
     Animator* animatorPlaying;
 };
 

@@ -37,6 +37,8 @@ bool Animator::LoadSpriteSheet(const char* jsonFile, const char* bmpFile)
     }
 
     spriteSheet = SpriteSheetLoader::LoadFromFile(jsonFile, bmpFile);
+
+    SetAnimEndFrame(static_cast<int>(spriteSheet->frames.size()) - 1);
     return spriteSheet != nullptr && !spriteSheet->frames.empty();
 }
 
@@ -47,7 +49,7 @@ void Animator::Play(const bool loop)
         return;
     }
 
-    PlayFromFrame(0, static_cast<int>(spriteSheet->frames.size()) - 1, loop);
+    PlayFromFrame(startFrame, endFrame, loop);
 
     if (isDirectionForward)
     {
@@ -149,7 +151,6 @@ void Animator::Draw(const Camera& cam, const float worldX, const float worldY, c
 
     if (flipHorizontal)
     {
-        // TODO: implement flipped draw BMP
         DrawBmp(screenX, screenY, frame->image, BMP_HINV);
     }
     else
@@ -166,6 +167,22 @@ void Animator::SetLoopStartFrame(const int frameNo)
     }
 
     loopStartFrame = frameNo;
+}
+
+void Animator::SetAnimStartFrame(const int frameNo)
+{
+    if (frameNo >= 0)
+    {
+        startFrame = frameNo;
+    }
+}
+
+void Animator::SetAnimEndFrame(const int frameNo)
+{
+    if (frameNo >= 0)
+    {
+        endFrame = frameNo;
+    }
 }
 
 SpriteFrame* Animator::GetCurrentFrame() const

@@ -11,8 +11,8 @@
 #include "SpriteFrame.h"
 #include "../Object/Entity/Player/PlayerStates.h"
 
-enum class PlayerCombatState;
-enum class PlayerMoveState;
+enum class PlayerCombatState : uint8_t;
+enum class PlayerNormalState : uint8_t;
 class Camera;
 
 class Animator
@@ -33,6 +33,9 @@ public:
     void Update(float deltaTime);
     void Draw(const Camera& cam, float worldX, float worldY, bool flipHorizontal = false) const;
     void SetLoopStartFrame(int frameNo);
+
+    void SetAnimStartFrame(int frameNo);
+    void SetAnimEndFrame(int frameNo);
 
     [[nodiscard]] SpriteSheet* GetSpriteSheet() const { return spriteSheet; }
 
@@ -64,10 +67,10 @@ private:
 
 struct PlayerAnimators
 {
-    std::unordered_map<PlayerMoveState, std::unique_ptr<Animator>> moveAnimators;
+    std::unordered_map<PlayerNormalState, std::unique_ptr<Animator>> moveAnimators;
     std::unordered_map<PlayerCombatState, std::unique_ptr<Animator>> combatAnimators;
 
-    bool AddAnimator(const PlayerMoveState animationName, std::unique_ptr<Animator> animator)
+    bool AddAnimator(const PlayerNormalState animationName, std::unique_ptr<Animator> animator)
     {
         if (animator == nullptr)
         {
@@ -101,7 +104,7 @@ struct PlayerAnimators
         return true;
     }
 
-    Animator* GetAnimator(const PlayerMoveState animationName)
+    Animator* GetAnimator(const PlayerNormalState animationName)
     {
         auto it = moveAnimators.find(animationName);
         if (it != moveAnimators.end())

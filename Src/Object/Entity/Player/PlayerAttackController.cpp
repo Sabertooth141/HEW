@@ -5,6 +5,7 @@
 #include "PlayerAttackController.h"
 
 #include "../../../Systems/EnemyManager.h"
+#include "PlayerController.h"
 
 void PlayerAttackController::Initialize(const PlayerAttackConfig& config)
 {
@@ -25,7 +26,7 @@ void PlayerAttackController::Update(const float deltaTime, const Transform& play
     combatStateMachine.Update(deltaTime);
     comboTimer += deltaTime;
 
-    PlayerCombatState currentState = combatStateMachine.GetCurrState();
+    const PlayerCombatState currentState = combatStateMachine.GetCurrState();
 
     if (currentState == PlayerCombatState::DEFAULT)
     {
@@ -34,6 +35,8 @@ void PlayerAttackController::Update(const float deltaTime, const Transform& play
 
     const AttkData& data = GetAttackData(currentState);
     hitbox.Update(deltaTime, ownerCenterX, ownerCenterY);
+
+    HandleAnimationUpdate(deltaTime);
 
     // attack
     if (comboTimer <= data.duration)
@@ -76,6 +79,23 @@ void PlayerAttackController::Update(const float deltaTime, const Transform& play
     }
 }
 
+void PlayerAttackController::InitAnimation(const PlayerCombatAnimPaths& path)
+{
+    std::unique_ptr<Animator> animator = std::make_unique<Animator>();
+    animator->LoadSpriteSheet(path.jsonPath.c_str(), path.bmpPath.c_str());
+    animator->SetLoopStartFrame(path.startFrame);
+
+    combatAnimators.AddAnimator(path.animationState, std::move(animator));
+}
+
+void PlayerAttackController::Draw(Camera& cam)
+{
+    if (animatorPlaying != nullptr)
+    {
+        // animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, !isFacingRight);
+    }
+}
+
 bool PlayerAttackController::TryAttack()
 {
     const PlayerCombatState currState = combatStateMachine.GetCurrState();
@@ -83,12 +103,12 @@ bool PlayerAttackController::TryAttack()
     // if currently not attacking - attack
     if (currState == PlayerCombatState::DEFAULT)
     {
-        StartAttack(PlayerCombatState::ATTK1);
+        StartAttack(PlayerCombatState::ATTK0);
         return true;
     }
 
     // if currently attacking && comboable - buffer combo
-    if (currState == PlayerCombatState::ATTK1 || currState == PlayerCombatState::ATTK2)
+    if (currState == PlayerCombatState::ATTK0 || currState == PlayerCombatState::ATTK1)
     {
         comboInputBuffer = true;
         return true;
@@ -138,6 +158,11 @@ float PlayerAttackController::GetCurrentDamage() const
     return GetAttackData(currState).damage;
 }
 
+void PlayerAttackController::LoadAttackDuration()
+{
+
+}
+
 void PlayerAttackController::StartAttack(const PlayerCombatState combatState)
 {
     if (combatState == combatStateMachine.GetCurrState())
@@ -183,13 +208,13 @@ void PlayerAttackController::EndAttack()
 
 void PlayerAttackController::AdvanceCombo(const PlayerCombatState currState, const AttkData& currData)
 {
-    if (currState == PlayerCombatState::ATTK1 && currData.comboWindow > 0)
+    if (currState == PlayerCombatState::ATTK0 && currData.comboWindow > 0)
+    {
+        StartAttack(PlayerCombatState::ATTK1);
+    }
+    else if (currState == PlayerCombatState::ATTK1 && currData.comboWindow > 0)
     {
         StartAttack(PlayerCombatState::ATTK2);
-    }
-    else if (currState == PlayerCombatState::ATTK2 && currData.comboWindow > 0)
-    {
-        StartAttack(PlayerCombatState::ATTK3);
     }
 }
 
@@ -216,12 +241,37 @@ const AttkData& PlayerAttackController::GetAttackData(const PlayerCombatState cu
 {
     switch (currState)
     {
-    case PlayerCombatState::ATTK1:
+    case PlayerCombatState::ATTK0:
         return attackData[0];
-    case PlayerCombatState::ATTK2:
+    case PlayerCombatState::ATTK1:
         return attackData[1];
-    case PlayerCombatState::ATTK3:
+    case PlayerCombatState::ATTK2:
     default:
         return attackData[2];
+    }
+}
+
+void PlayerAttackController::HandleAnimationUpdate(const float deltaTime)
+{
+    if (IsAttacking())
+    {
+        if (animatorPlaying != nullptr && animatorPlaying == combatAnimators.GetAnimator(combatStateMachine.GetCurrState()))
+        {
+            animatorPlaying->Update(deltaTime);
+            return;
+        }
+
+        if (animatorPlaying != nullptr)
+        {
+            animatorPlaying->Stop();
+        }
+
+        animatorPlaying = combatAnimators.GetAnimator(combatStateMachine.GetCurrState());
+        if (animatorPlaying == nullptr)
+        {
+            animatorPlaying = combatAnimators.GetAnimator(PlayerCombatState::ATTK1);
+        }
+        animatorPlaying->Play();
+        animatorPlaying->Update(deltaTime);
     }
 }

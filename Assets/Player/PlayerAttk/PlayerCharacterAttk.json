@@ -5,7 +5,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 300
+    "duration": 100
    },
    "PlayerCharacterAttk_1": {
     "frame": { "x": 64, "y": 0, "w": 64, "h": 64 },
@@ -13,7 +13,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 100
+    "duration": 30
    },
    "PlayerCharacterAttk_2": {
     "frame": { "x": 128, "y": 0, "w": 64, "h": 64 },
@@ -37,7 +37,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 30
+    "duration": 50
    },
    "PlayerCharacterAttk_5": {
     "frame": { "x": 320, "y": 0, "w": 64, "h": 64 },
@@ -61,7 +61,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 50
+    "duration": 70
    },
    "PlayerCharacterAttk_8": {
     "frame": { "x": 128, "y": 64, "w": 64, "h": 64 },
@@ -69,7 +69,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 70
+    "duration": 140
    },
    "PlayerCharacterAttk_9": {
     "frame": { "x": 192, "y": 64, "w": 64, "h": 64 },
@@ -77,7 +77,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 140
+    "duration": 70
    },
    "PlayerCharacterAttk_10": {
     "frame": { "x": 256, "y": 64, "w": 64, "h": 64 },
@@ -85,7 +85,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 70
+    "duration": 40
    },
    "PlayerCharacterAttk_11": {
     "frame": { "x": 320, "y": 64, "w": 64, "h": 64 },
@@ -101,7 +101,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 40
+    "duration": 70
    },
    "PlayerCharacterAttk_13": {
     "frame": { "x": 64, "y": 128, "w": 64, "h": 64 },
@@ -117,7 +117,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 70
+    "duration": 60
    },
    "PlayerCharacterAttk_15": {
     "frame": { "x": 192, "y": 128, "w": 64, "h": 64 },
@@ -125,7 +125,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 60
+    "duration": 140
    },
    "PlayerCharacterAttk_16": {
     "frame": { "x": 256, "y": 128, "w": 64, "h": 64 },
@@ -133,7 +133,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 140
+    "duration": 70
    },
    "PlayerCharacterAttk_17": {
     "frame": { "x": 320, "y": 128, "w": 64, "h": 64 },
@@ -173,7 +173,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 70
+    "duration": 60
    },
    "PlayerCharacterAttk_22": {
     "frame": { "x": 256, "y": 192, "w": 64, "h": 64 },
@@ -189,7 +189,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 60
+    "duration": 100
    },
    "PlayerCharacterAttk_24": {
     "frame": { "x": 0, "y": 256, "w": 64, "h": 64 },
@@ -197,7 +197,7 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 100
+    "duration": 80
    },
    "PlayerCharacterAttk_25": {
     "frame": { "x": 64, "y": 256, "w": 64, "h": 64 },
@@ -229,14 +229,6 @@
     "trimmed": false,
     "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
     "sourceSize": { "w": 64, "h": 64 },
-    "duration": 80
-   },
-   "PlayerCharacterAttk_29": {
-    "frame": { "x": 320, "y": 256, "w": 64, "h": 64 },
-    "rotated": false,
-    "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 64, "h": 64 },
-    "sourceSize": { "w": 64, "h": 64 },
     "duration": 600
    }
  },
@@ -248,7 +240,7 @@
   "size": { "w": 384, "h": 320 },
   "scale": "1",
   "frameTags": [
-   { "name": "Loop", "from": 0, "to": 29, "direction": "forward", "color": "#000000ff" }
+   { "name": "Loop", "from": 0, "to": 28, "direction": "forward", "color": "#000000ff" }
   ],
   "layers": [
    { "name": "legs", "opacity": 255, "blendMode": "normal" },

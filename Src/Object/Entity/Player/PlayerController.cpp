@@ -6,16 +6,15 @@
 
 #include <memory>
 
-#include "../../../Animation/Animator.h"
-#include "../../../Lib/Shape.h"
+#include "../../../Core/Game.h"
 #include "../../../Systems/TimeManager.h"
 
 PlayerController::PlayerController() : walkSpeed(0), sprintSpeed(0),
                                        jumpForce(0),
                                        timeStopDuration(0),
-                                       airResistance(0),
+                                       airResistance(0), normalGravity(0),
                                        snapshot(),
-                                       moveStateMachine(PlayerMoveState::DEFAULT),
+                                       normalStateMachine(PlayerNormalState::DEFAULT), attackController(),
                                        animatorPlaying(nullptr)
 {
 }
@@ -29,9 +28,9 @@ void PlayerController::Initialize(const PlayerConfig& config, const PlayerAttack
     jumpForce = config.jumpForce;
     timeStopDuration = config.timeStopDuration;
     airResistance = config.airResistance;
+    normalGravity = config.gravity;
 
     attackController.Initialize(attackConfig);
-    InitAnimations();
 }
 
 void PlayerController::Start()
@@ -39,8 +38,8 @@ void PlayerController::Start()
     Entity::Start();
 
     currSpeed = walkSpeed;
-    moveStateMachine.ChangeState(PlayerMoveState::IDLE);
-    animatorPlaying = moveAnimators.GetAnimator(moveStateMachine.GetCurrState());
+    normalStateMachine.ChangeState(PlayerNormalState::IDLE);
+    animatorPlaying = playerAnimators.GetAnimator(normalStateMachine.GetCurrState());
     animatorPlaying->Play();
 }
 
@@ -94,12 +93,18 @@ void PlayerController::Die()
     Entity::Die();
 }
 
+void PlayerController::InitAnimation(const PlayerNormalAnimPaths& path)
+{
+    std::unique_ptr<Animator> animator = std::make_unique<Animator>();
+    animator->LoadSpriteSheet(path.jsonPath.c_str(), path.bmpPath.c_str());
+    animator->SetLoopStartFrame(path.startFrame);
+
+    playerAnimators.AddAnimator(path.animationState, std::move(animator));
+}
+
 void PlayerController::HandleMovement(const float deltaTime, const Tilemap& tileMap)
 {
-    if (!attackController.CanMove())
-    {
-        return;
-    }
+    currSpeed = !attackController.CanMove() ? SPEED_WHEN_ATTK : walkSpeed;
 
     Entity::HandleMovement(deltaTime, tileMap);
 }
@@ -108,7 +113,12 @@ void PlayerController::ApplyPhysics(const float deltaTime)
 {
     if (!attackController.CanMove())
     {
-        return;
+        velY = 0;
+        gravity = GRAV_WHEN_ATTK;
+    }
+    else
+    {
+        gravity = normalGravity;
     }
 
     Entity::ApplyPhysics(deltaTime);
@@ -120,19 +130,19 @@ void PlayerController::HandleInput(const float deltaTime)
     {
         isFacingRight = false;
         velX = -currSpeed;
-        moveStateMachine.ChangeState(PlayerMoveState::MOVE);
+        normalStateMachine.ChangeState(PlayerNormalState::MOVE);
     }
     else if (input.moveRight.IsPressed())
     {
         isFacingRight = true;
         velX = currSpeed;
-        moveStateMachine.ChangeState(PlayerMoveState::MOVE);
+        normalStateMachine.ChangeState(PlayerNormalState::MOVE);
     }
     else
     {
         if (isGrounded)
         {
-            moveStateMachine.ChangeState(PlayerMoveState::IDLE);
+            normalStateMachine.ChangeState(PlayerNormalState::IDLE);
             velX = 0;
         }
         else
@@ -149,7 +159,7 @@ void PlayerController::HandleInput(const float deltaTime)
     if (input.jump.IsEdge() && isGrounded)
     {
         velY = -jumpForce;
-        moveStateMachine.ChangeState(PlayerMoveState::JUMP);
+        normalStateMachine.ChangeState(PlayerNormalState::JUMP);
     }
 
     if (input.attack.IsEdge())
@@ -190,36 +200,12 @@ void PlayerController::HandleTimeRewind()
     isFacingRight = playerSnapshot.isFacingRight;
 }
 
-void PlayerController::InitAnimations()
-{
-    // MOVE
-    {
-        std::unique_ptr<Animator> animator = std::make_unique<Animator>();
-        animator->LoadSpriteSheet("../Assets/Player/PlayerMove/PlayerCharacterMove.json",
-                                  "../Assets/Player/PlayerMove/PlayerCharacterMove.bmp");
-        animator->SetLoopStartFrame(1);
-
-        moveAnimators.AddAnimator(PlayerMoveState::MOVE, std::move(animator));
-    }
-
-    // IDLE
-    {
-        std::unique_ptr<Animator> animator = std::make_unique<Animator>();
-        animator->LoadSpriteSheet("../Assets/Player/PlayerIdle/PlayerCharacterIdle.json",
-                                  "../Assets/Player/PlayerIdle/PlayerCharacterIdle.bmp");
-
-        moveAnimators.AddAnimator(PlayerMoveState::IDLE, std::move(animator));
-    }
-
-    // ATTK
-}
-
 void PlayerController::HandleAnimationUpdate(const float deltaTime)
 {
     if (!attackController.IsAttacking())
     {
         // if state not changed
-        if (animatorPlaying != nullptr && animatorPlaying == moveAnimators.GetAnimator(moveStateMachine.GetCurrState()))
+        if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(normalStateMachine.GetCurrState()))
         {
             animatorPlaying->Update(deltaTime);
             return;
@@ -230,12 +216,20 @@ void PlayerController::HandleAnimationUpdate(const float deltaTime)
             animatorPlaying->Stop();
         }
 
-        animatorPlaying = moveAnimators.GetAnimator(moveStateMachine.GetCurrState());
+        animatorPlaying = playerAnimators.GetAnimator(normalStateMachine.GetCurrState());
         if (animatorPlaying == nullptr)
         {
-            animatorPlaying = moveAnimators.GetAnimator(PlayerMoveState::IDLE);
+            animatorPlaying = playerAnimators.GetAnimator(PlayerNormalState::IDLE);
         }
         animatorPlaying->Play();
         animatorPlaying->Update(deltaTime);
     }
+    else
+    {
+        if (animatorPlaying != nullptr)
+        {
+            animatorPlaying->Stop();
+        }
+    }
+
 }

@@ -22,8 +22,6 @@ add_executable(HEW
         src/World/Tilemap.h
         src/Object/Object.cpp
         src/Object/Object.h
-        src/lib/Shape.h
-        src/lib/Shape.cpp
         src/Config/EntityConfigs.h
         src/Config/EntityConfigs.h
         src/Systems/TimeManager.cpp
