@@ -47,8 +47,7 @@ protected:
     bool isGrounded = false;
     bool isFacingRight{};
 
-    float currSpeed{};
-
+    float currSpeedX;
 };
 
 

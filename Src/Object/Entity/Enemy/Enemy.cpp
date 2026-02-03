@@ -23,7 +23,7 @@ void Enemy::Start()
 {
     Entity::Start();
 
-    currSpeed = moveSpeed;
+    currSpeedX = moveSpeed;
 }
 
 void Enemy::Update(const float deltaTime, const Tilemap& tileMap)
@@ -41,13 +41,13 @@ void Enemy::HandleMovement(const float deltaTime, const Tilemap& tilemap)
     Entity::HandleMovement(deltaTime, tilemap);
 
     // FOR TESTING PURPOSES
-    velX = currSpeed;
+    velX = currSpeedX;
 
     const float newX = transform.topLeft.x + velX * deltaTime;
 
     if (CheckCollisionX(tilemap, newX))
     {
-        currSpeed = -currSpeed;
+        currSpeedX = -currSpeedX;
     }
 }
 

@@ -16,11 +16,12 @@ namespace config
         config.height = 64;
         config.color = LIGHTCYAN;
         config.walkSpeed = 300.0f;
-        config.sprintSpeed = 700.0f;
+        config.dashSpeed = 1000.0f;
         config.jumpForce = 500.0f;
         config.gravity = 1000.0f;
         config.maxFallSpeed = 1000.0f;
         config.airResistance = 3.0f;
+        config.dashDuration = 0.1f;
 
         config.maxHp = 100;
 

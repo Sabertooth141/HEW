@@ -203,6 +203,7 @@ void PlayerAttackController::AdvanceCombo(const PlayerCombatState currState, con
     else if (currState == PlayerCombatState::ATTK1 && currData.recovery > 0)
     {
         StartAttack(PlayerCombatState::ATTK2);
+        playerController->Dash(2000, 0.1, true);
     }
 }
 

@@ -38,6 +38,7 @@ public:
     void Die() override;
     void InitAnimation(const PlayerNormalAnimPaths& path);
     void InitAttackAnimation(const PlayerCombatAnimPaths& path);
+    void Dash(float dashVel, float inDashDuration, bool isInvic);
 
     SpriteSheet* GetSpriteSheetFromAnimator(PlayerCombatState attkState);
     [[nodiscard]] PlayerStateMachine<PlayerNormalState> GetMoveStateMachine() const { return normalStateMachine; }
@@ -55,11 +56,19 @@ private:
     // vars
 private:
     float walkSpeed;
-    float sprintSpeed;
+    float normalDashSpeed;
+    float currDashSpeed;
     float jumpForce;
     float timeStopDuration;
     float airResistance;
     float normalGravity;
+    bool isDamageable;
+
+    // dash
+    float dashTimer;
+    float normalDashDuration;
+    float currDashDuration;
+    bool isDashing;
 
     InputConfig input;
     PlayerSnapshot snapshot;

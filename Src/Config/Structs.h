@@ -81,9 +81,10 @@ struct EntityConfig : ObjectConfig
 struct PlayerConfig : EntityConfig
 {
     float walkSpeed;
-    float sprintSpeed;
+    float dashSpeed;
     float jumpForce;
     float timeStopDuration;
+    float dashDuration;
     float airResistance;
 };
 
@@ -125,6 +126,7 @@ struct InputConfig
     KeyBinding moveRight = {PK_RIGHT, PK_D};
     KeyBinding jump = {PK_SP, PK_W};
     KeyBinding attack = {PK_J};
+    KeyBinding dash = {PK_SHIFT};
 
     // time skills
     KeyBinding timeStop = {PK_K};

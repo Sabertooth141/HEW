@@ -49,4 +49,6 @@ add_executable(HEW
         Src/Animation/Animator.h
         Src/Object/Entity/Player/PlayerAttackController.cpp
         Src/Object/Entity/Player/PlayerAttackController.h
-        Src/Object/Entity/Player/PlayerStates.h)
+        Src/Object/Entity/Player/PlayerStates.h
+        Src/Util/Physics.h
+        Src/Util/Physics.h)

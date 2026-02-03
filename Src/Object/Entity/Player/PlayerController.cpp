@@ -9,10 +9,13 @@
 #include "../../../Core/Game.h"
 #include "../../../Systems/TimeManager.h"
 
-PlayerController::PlayerController() : walkSpeed(0), sprintSpeed(0),
+PlayerController::PlayerController() : walkSpeed(0), normalDashSpeed(0), currDashSpeed(0),
                                        jumpForce(0),
                                        timeStopDuration(0),
-                                       airResistance(0), normalGravity(0),
+                                       airResistance(0), normalGravity(0), isDamageable(true), dashTimer(0),
+                                       normalDashDuration(0),
+                                       currDashDuration(0),
+                                       isDashing(false),
                                        snapshot(),
                                        normalStateMachine(PlayerNormalState::DEFAULT), attackController(),
                                        animatorPlaying(nullptr)
@@ -24,11 +27,12 @@ void PlayerController::Initialize(const PlayerConfig& config, const PlayerAttack
     Entity::Initialize(config);
 
     walkSpeed = config.walkSpeed;
-    sprintSpeed = config.sprintSpeed;
     jumpForce = config.jumpForce;
     timeStopDuration = config.timeStopDuration;
     airResistance = config.airResistance;
     normalGravity = config.gravity;
+    normalDashDuration = config.dashDuration;
+    normalDashSpeed = config.dashSpeed;
 
     attackController.Initialize(attackConfig, this);
 }
@@ -38,7 +42,7 @@ void PlayerController::Start()
     Entity::Start();
 
     attackController.LoadAttackDuration();
-    currSpeed = walkSpeed;
+    currSpeedX = walkSpeed;
     normalStateMachine.ChangeState(PlayerNormalState::IDLE);
     animatorPlaying = playerAnimators.GetAnimator(normalStateMachine.GetCurrState());
     animatorPlaying->Play();
@@ -112,6 +116,15 @@ void PlayerController::InitAttackAnimation(const PlayerCombatAnimPaths& path)
     playerAnimators.AddAnimator(path.animationState, std::move(animator));
 }
 
+void PlayerController::Dash(const float dashVel, const float inDashDuration, const bool isInvic)
+{
+    isDamageable = !isInvic;
+    currDashDuration = inDashDuration;
+
+    currDashSpeed = dashVel;
+    isDashing = true;
+}
+
 SpriteSheet* PlayerController::GetSpriteSheetFromAnimator(const PlayerCombatState attkState)
 {
     const Animator* resAnimator = playerAnimators.GetAnimator(attkState);
@@ -120,7 +133,34 @@ SpriteSheet* PlayerController::GetSpriteSheetFromAnimator(const PlayerCombatStat
 
 void PlayerController::HandleMovement(const float deltaTime, const Tilemap& tileMap)
 {
-    currSpeed = !attackController.CanMove() ? SPEED_WHEN_ATTK : walkSpeed;
+    if (!isDashing)
+    {
+        currSpeedX = !attackController.CanMove() ? SPEED_WHEN_ATTK : walkSpeed;
+    }
+    else
+    {
+        currSpeedX = currDashSpeed;
+        if (isFacingRight)
+        {
+            velX = currSpeedX;
+        }
+        else
+        {
+            velX = -currSpeedX;
+        }
+
+
+        if (dashTimer <= currDashDuration)
+        {
+            dashTimer += deltaTime;
+        }
+        else
+        {
+            isDamageable = true;
+            dashTimer = 0;
+            isDashing = false;
+        }
+    }
 
     Entity::HandleMovement(deltaTime, tileMap);
 }
@@ -144,19 +184,37 @@ void PlayerController::HandleInput(const float deltaTime)
 {
     if (input.moveLeft.IsPressed())
     {
-        isFacingRight = false;
-        velX = -currSpeed;
+        if (isDashing)
+        {
+            return;
+        }
+
+        if (attackController.CanMove())
+        {
+            isFacingRight = false;
+        }
+
+        velX = -currSpeedX;
         normalStateMachine.ChangeState(PlayerNormalState::MOVE);
     }
     else if (input.moveRight.IsPressed())
     {
-        isFacingRight = true;
-        velX = currSpeed;
+        if (isDashing)
+        {
+            return;
+        }
+
+        if (attackController.CanMove())
+        {
+            isFacingRight = true;
+        }
+
+        velX = currSpeedX;
         normalStateMachine.ChangeState(PlayerNormalState::MOVE);
     }
     else
     {
-        if (isGrounded)
+        if (isGrounded && !isDashing)
         {
             normalStateMachine.ChangeState(PlayerNormalState::IDLE);
             velX = 0;
@@ -174,8 +232,18 @@ void PlayerController::HandleInput(const float deltaTime)
 
     if (input.jump.IsEdge() && isGrounded)
     {
+        if (isDashing)
+        {
+            return;
+        }
         velY = -jumpForce;
         normalStateMachine.ChangeState(PlayerNormalState::JUMP);
+    }
+
+    if (input.dash.IsEdge())
+    {
+        Dash(normalDashSpeed, normalDashDuration, true);
+        normalStateMachine.ChangeState(PlayerNormalState::MOVE);
     }
 
     if (input.attack.IsEdge())
@@ -218,20 +286,22 @@ void PlayerController::HandleTimeRewind()
 
 void PlayerController::HandleAnimationUpdate(const float deltaTime)
 {
-	if (attackController.IsInRecovery())
-	{
-		OutputDebugStringA("RECOVERY\n");
-		if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(attackController.GetCurrState()))
-		{
-			animatorPlaying->Pause();
-		}
-		return;
-	}
+    if (attackController.IsInRecovery())
+    {
+        OutputDebugStringA("RECOVERY\n");
+        if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(
+            attackController.GetCurrState()))
+        {
+            animatorPlaying->Pause();
+        }
+        return;
+    }
 
     if (!attackController.IsAttacking())
     {
         // if state not changed
-        if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(normalStateMachine.GetCurrState()))
+        if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(
+            normalStateMachine.GetCurrState()))
         {
             animatorPlaying->Update(deltaTime);
             return;
@@ -251,9 +321,10 @@ void PlayerController::HandleAnimationUpdate(const float deltaTime)
         animatorPlaying->Update(deltaTime);
     }
 
-	if (attackController.IsAttacking())
+    if (attackController.IsAttacking())
     {
-        if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(attackController.GetCurrState()))
+        if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(
+            attackController.GetCurrState()))
         {
             animatorPlaying->Update(deltaTime);
             return;
@@ -272,5 +343,4 @@ void PlayerController::HandleAnimationUpdate(const float deltaTime)
         animatorPlaying->Play(false);
         animatorPlaying->Update(deltaTime);
     }
-
 }

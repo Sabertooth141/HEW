@@ -4,6 +4,8 @@
 
 #include "Entity.h"
 
+#include "../../Util/Physics.h"
+
 class Camera;
 
 void Entity::Initialize(const EntityConfig& config)
@@ -37,7 +39,6 @@ void Entity::Update(const float deltaTime, const Tilemap& tileMap)
     isGrounded = CheckGrounded(tileMap);
 
     HandleMovement(deltaTime, tileMap);
-
 }
 
 void Entity::Draw(const Camera& cam)
@@ -48,6 +49,33 @@ void Entity::Draw(const Camera& cam)
 void Entity::HandleMovement(const float deltaTime, const Tilemap& tileMap)
 {
     float newX = transform.topLeft.x + velX * deltaTime;
+    float newY = transform.topLeft.y + velY * deltaTime;
+
+    float moveDistance = fabsf(velX * deltaTime) + fabsf(velY * deltaTime);
+    float threshHold = static_cast<float>(tileMap.GetTileSize()) * 0.5f;
+
+    if (moveDistance > threshHold)
+    {
+        RaycastHit hit = Physics::Raycast(tileMap, transform.center.x, transform.center.y,
+                                          newX + transform.size.x / 2, newY + transform.size.y / 2);
+
+        if (hit.hit)
+        {
+            transform.topLeft.x = hit.hitX - transform.size.x / 2;
+            transform.topLeft.y = hit.hitY - transform.size.y / 2;
+
+            if (hit.normalX != 0)
+            {
+                velX = 0;
+            }
+            if (hit.normalY != 0)
+            {
+                velY = 0;
+                isGrounded = hit.normalY < 0;
+            }
+            return;
+        }
+    }
 
     if (!CheckCollisionX(tileMap, newX))
     {
@@ -57,8 +85,6 @@ void Entity::HandleMovement(const float deltaTime, const Tilemap& tileMap)
     {
         velX = 0;
     }
-
-    float newY = transform.topLeft.y + velY * deltaTime;
 
     if (!CheckCollisionY(tileMap, newY))
     {
