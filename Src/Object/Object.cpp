@@ -43,6 +43,37 @@ void Object::Draw(const Camera& cam)
              color, true);
 }
 
+bool Object::CheckCollision(const Transform* other)
+{
+    const float targetLeft = other->topLeft.x;
+    const float targetRight = other->topLeft.x + other->size.x;
+    const float targetTop = other->topLeft.y;
+    const float targetBottom = other->topLeft.y + other->size.y;
+
+    const float selfLeft = transform.topLeft.x;
+    const float selfRight = transform.topLeft.x + transform.size.x;
+    const float selfTop = transform.topLeft.y;
+    const float selfBottom = transform.topLeft.y + transform.size.y;
+
+    return selfLeft < targetRight && selfRight > targetLeft && selfTop < targetBottom && selfBottom > targetTop;
+}
+
+bool Object::CheckCircleRectCollision(const float cx, const float cy, const float radius, const Transform* other)
+{
+    const float closestX = fmaxf(other->topLeft.x, fminf(cx, other->topLeft.x + other->size.x));
+    const float closestY = fmaxf(other->topLeft.y, fminf(cy, other->topLeft.y + other->size.y));
+
+    const float dx = cx - closestX;
+    const float dy = cy - closestY;
+
+    return dx * dx + dy * dy <= radius * radius;
+}
+
+float Object::Lerp(const float start, const float end, const float t)
+{
+    return start + (end - start) * t;
+}
+
 void Object::SetPosition(const float inX, const float inY)
 {
     transform.topLeft.x = inX;

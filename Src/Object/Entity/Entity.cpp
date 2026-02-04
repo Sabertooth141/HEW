@@ -173,8 +173,8 @@ bool Entity::CheckGrounded(const Tilemap& tilemap)
 {
     const float checkY = transform.topLeft.y + transform.size.y;
 
-    const float leftX = transform.center.x + transform.size.x / 2 - 1;
-    const float rightX = transform.topLeft.x - transform.size.x / 2 + 1;
+    const float leftX = transform.center.x + checkGroundOffset;
+    const float rightX = transform.center.x - checkGroundOffset;
 
     return tilemap.IsSolidAt(leftX, checkY) || tilemap.IsSolidAt(rightX, checkY)
         || tilemap.IsPlatformAt(leftX, checkY) || tilemap.IsPlatformAt(rightX, checkY);

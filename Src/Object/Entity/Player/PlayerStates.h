@@ -27,7 +27,6 @@ enum class PlayerCombatState : uint8_t
 
 template <typename T>
 concept IsAllowedType = std::is_same_v<T, PlayerNormalState> || std::is_same_v<T, PlayerCombatState>;
-
 template <IsAllowedType T>
 struct PlayerStateMachine
 {

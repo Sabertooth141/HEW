@@ -69,5 +69,4 @@ private:
     bool ownerFacingRight = true;
 };
 
-
 #endif //HEW_PLAYERATTACKCONTROLLER_H

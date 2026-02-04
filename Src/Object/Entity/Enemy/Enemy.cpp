@@ -6,7 +6,7 @@
 
 #include "../../../Systems/EnemyManager.h"
 
-Enemy::Enemy() : target({}), attackCooldown(0), moveSpeed(0)
+Enemy::Enemy() : targetTransform(nullptr), attackCooldown(0), moveSpeed(0), damage(0), stateMachine(EnemyState::DEFAULT)
 {
 }
 
@@ -14,7 +14,7 @@ void Enemy::Initialize(const EnemyConfig& config)
 {
     Entity::Initialize(config);
 
-    target = config.target;
+    targetTransform = config.targetTransform;
     attackCooldown = config.attackCooldown;
     moveSpeed = config.moveSpeed;
 }
@@ -23,6 +23,7 @@ void Enemy::Start()
 {
     Entity::Start();
 
+    stateMachine.ChangeState(EnemyState::IDLE);
     currSpeedX = moveSpeed;
 }
 
@@ -49,6 +50,10 @@ void Enemy::HandleMovement(const float deltaTime, const Tilemap& tilemap)
     {
         currSpeedX = -currSpeedX;
     }
+}
+
+void Enemy::HandleAttack(Vector2 targetPos)
+{
 }
 
 void Enemy::Die()

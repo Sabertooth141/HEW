@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 #include "../Object/Entity/Enemy/Enemy.h"
+#include "../Object/Entity/Enemy/Mine/Mine.h"
 
 struct EnemyManager
 {
@@ -24,6 +25,14 @@ struct EnemyManager
         enemy->Initialize(config);
 
         activeEnemies.push_back(std::move(enemy));
+    }
+
+    void CreateMine(const MineConfig& config)
+    {
+        auto mine = std::make_unique<Mine>();
+        mine->Initialize(config);
+
+        activeEnemies.push_back(std::move(mine));
     }
 
     void UnregisterEnemy(Enemy* inEnemy)

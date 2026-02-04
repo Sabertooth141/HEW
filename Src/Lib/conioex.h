@@ -391,11 +391,18 @@ inline void ResetPalette(void) { SetPalette(ANSI_PAL256_COLOR, 0, 15); }
 #ifdef USED2D
 //----------------------------------------------------------------
 //フレームバッファ画像描画
+
+//パレットテーブル
+//static COLORREF	g_ConsoleColorTableD2D[NUM_D2D_PAL] = { 0 };	//コンソールのパレット
+static COLORREF	g_OrgColorTableD2D[NUM_D2D_PAL] = { 0 };	//Conioexが起動したときのパレット
+inline RGBQUAD	g_PaletteD2D[NUM_ANSI_PAL] = {};	//256色パレット：COLORREF:0x00BBGGRR->{R8,G8,B8,X}/RGBQUAD:{B8,G8,R8,A8}->0xAARRGGBB
+
 void	ClearScreen(void);				//画面（スクリーンバッファ）消去
 void	ClearScreen(int _cc);			//消去するパレット番号を指定する
 void	ClearScreen(int _red, int _green, int _blue);		//消去するＲＧＢ値を指定する
 void	PrintFrameBuffer(void);
 void	DrawPixel(int _x, int _y, unsigned char _c);	//点を打つ
+void	DrawPixel(int _x, int _y, RGBQUAD _rgb);
 #ifdef UNICODE
 #define	WriteText	WriteTextW
 #else

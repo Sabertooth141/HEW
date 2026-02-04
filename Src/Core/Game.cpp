@@ -9,6 +9,7 @@
 #include "../Animation/SpriteSheetLoader.h"
 #include "../Config/EntityConfigs.h"
 #include "../Config/SystemConfigs.h"
+#include "../Lib/conioex_custom.h"
 #include "../Systems/EnemyManager.h"
 
 #define TEST_MAP_WIDTH 100
@@ -125,12 +126,12 @@ bool Game::Initialize()
     playerCfg.y = playerStartY;
 
     playerController.Initialize(playerCfg, playerAttackConfig);
-    for (auto animation : playerNormalAnimationPaths)
+    for (const auto& animation : playerNormalAnimationPaths)
     {
         playerController.InitAnimation(animation);
     }
 
-    for (auto animation : playerCombatAnimationPaths)
+    for (const auto& animation : playerCombatAnimationPaths)
     {
         playerController.InitAttackAnimation(animation);
     }
@@ -140,11 +141,19 @@ bool Game::Initialize()
     constexpr float enemyStartY = playerStartY;
 
     // enemies
-    EnemyConfig enemyCfg = config::Enemy();
-    enemyCfg.x = enemyStartX;
-    enemyCfg.y = enemyStartY;
+    // EnemyConfig enemyCfg = config::Enemy();
+    // enemyCfg.x = enemyStartX;
+    // enemyCfg.y = enemyStartY;
+    // enemyCfg.targetTransform = &playerController.transform;
+    //
+    // EnemyManager::Instance().CreateEnemy(enemyCfg);
 
-    EnemyManager::Instance().CreateEnemy(enemyCfg);
+    MineConfig mineCfg = config::Mine();
+    mineCfg.x = enemyStartX + 50;
+    mineCfg.y = enemyStartY;
+    mineCfg.targetTransform = &playerController.transform;
+
+    EnemyManager::Instance().CreateMine(mineCfg);
 
     // subsystems
     const VFXConfig vfxCfg = sysCfg::VFXCfg();
@@ -226,41 +235,26 @@ void Game::ShutDown()
     EndConioEx();
 }
 
-void PaletteBox16(int _x, int _y, int _w, int _h, int _stride)
-{
-    // パレットの色数分ループ
-    for (int i = 0; i < 16; i++)
-    {
-        // 四角形を描く
-        int x1 = _x + (i % _stride) * _w;
-        int y1 = _y + (i / _stride) * _h;
-        int x2 = x1 + _w - 1;
-        int y2 = y1 + _h - 1;
-        DrawRect(x1, y1, x2, y2, i, true);
-    }
-}
-
-
 void Game::Draw()
 {
-    if (TimeManager::Instance().IsTimeStopped())
-    {
-        vfxManager.ApplyGrayscale();
-    }
-    else
-    {
-        vfxManager.ApplyNormalPal();
-    }
 
     ClearScreen();
     tileMap.Draw(cam);
+
+    playerController.Draw(cam);
 
     for (const auto& e : EnemyManager::Instance().GetActiveEnemies())
     {
         e->Draw(cam);
     }
 
-    playerController.Draw(cam);
+    if (TimeManager::Instance().IsTimeStopped())
+    {
+        DebugPrintf("time stopped\n");
+        vfxManager.ApplyGrayScaleToFrameBuffer();
+
+        playerController.Draw(cam);
+    }
 
     PrintFrameBuffer();
     FlipScreen();

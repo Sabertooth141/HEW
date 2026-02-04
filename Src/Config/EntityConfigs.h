@@ -68,7 +68,7 @@ namespace config
     inline EnemyConfig Enemy()
     {
         EnemyConfig config{};
-        config.width = 48;
+        config.width = 64;
         config.height = 64;
         config.color = GREEN;
         config.gravity = 800.0f;
@@ -80,6 +80,27 @@ namespace config
 
         config.moveSpeed = 200.0f;
         config.attackCooldown = 2;
+
+        return config;
+    }
+
+    inline MineConfig Mine()
+    {
+        MineConfig config{};
+        config.width = 32;
+        config.height = 32;
+        config.color = GREEN;
+        config.gravity = 800.0f;
+        config.maxFallSpeed = 1000.0f;
+        config.checkGroundOffset = 2;
+
+        config.maxHp = 50;
+        config.isFacingRight = true;
+
+        config.moveSpeed = 200.0f;
+
+        config.explosionRadius = 50;
+        config.timeToExplode = 4;
 
         return config;
     }

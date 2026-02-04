@@ -4,8 +4,8 @@
 
 #ifndef HEW_ENEMY_H
 #define HEW_ENEMY_H
+#include "EnemyStates.h"
 #include "../Entity.h"
-
 
 class Enemy : public Entity
 {
@@ -18,17 +18,20 @@ public:
     void Draw(const Camera& cam) override;
 protected:
     void HandleMovement(float deltaTime, const Tilemap& tilemap) override;
+    virtual void HandleAttack(Vector2 targetPos);
 
     void Die() override;
 
 private:
     void TargetDetection();
 
-private:
-    Vector2 target;
-
+protected:
+    Transform* targetTransform;
     float attackCooldown;
     float moveSpeed;
+    float damage;
+
+    EnemyStateMachine stateMachine;
 };
 
 

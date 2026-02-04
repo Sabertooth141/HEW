@@ -40,7 +40,7 @@ static int		g_SwapFlg = 0;	//ƒ_ƒuƒ‹ƒoƒbƒtƒ@—LŒø‚ÌƒfƒBƒXƒvƒŒƒCƒnƒ“ƒhƒ‹“ü‘Ö—pƒtƒ
 
 static DWORD	g_ConioKeyMap[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 static COORD	g_ConioMousePosition = { 0, 0 };
-static COORD	g_ScreenBufferSize = { 0,0 };
+COORD	g_ScreenBufferSize = { 0,0 };
 static WORD		g_ScreenBufferAttribute = LIGHTGRAY;
 
 static CONSOLE_SCREEN_BUFFER_INFOEX g_ScreenBufferInfoEx = { sizeof(CONSOLE_SCREEN_BUFFER_INFOEX) };
@@ -111,11 +111,6 @@ std::vector<ID2D1Bitmap*>	g_pTextBmpList;	//ƒeƒLƒXƒg—p
 RGBQUAD* g_FrameBuffer32bitD2D = NULL;	//ƒtƒ‹ƒJƒ‰[—pƒtƒŒ[ƒ€ƒoƒbƒtƒ@
 //RGBQUAD* g_pMask = NULL;
 COORD	g_CursorPosD2D = { 0,0 };		//•¶š•\¦ŠJnˆÊ’uiƒJ[ƒ\ƒ‹ˆÊ’uj
-
-//ƒpƒŒƒbƒgƒe[ƒuƒ‹
-//static COLORREF	g_ConsoleColorTableD2D[NUM_D2D_PAL] = { 0 };	//ƒRƒ“ƒ\[ƒ‹‚ÌƒpƒŒƒbƒg
-static COLORREF	g_OrgColorTableD2D[NUM_D2D_PAL] = { 0 };	//Conioex‚ª‹N“®‚µ‚½‚Æ‚«‚ÌƒpƒŒƒbƒg
-RGBQUAD	g_PaletteD2D[NUM_ANSI_PAL] = {};	//256FƒpƒŒƒbƒgFCOLORREF:0x00BBGGRR->{R8,G8,B8,X}/RGBQUAD:{B8,G8,R8,A8}->0xAARRGGBB
 
 bool g_PrintStringCompatibleMode = false;	//true=ConsoleAPI‚Ì‚Ì‚PF‚Q‚Ì•¶šƒTƒCƒY
 

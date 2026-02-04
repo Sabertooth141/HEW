@@ -51,4 +51,12 @@ add_executable(HEW
         Src/Object/Entity/Player/PlayerAttackController.h
         Src/Object/Entity/Player/PlayerStates.h
         Src/Util/Physics.h
-        Src/Util/Physics.h)
+        Src/Util/Physics.h
+        Src/Object/Entity/Enemy/Mine/Mine.cpp
+        Src/Object/Entity/Enemy/Mine/Mine.h
+        Src/Object/Entity/Enemy/Mine/Mine.h
+        Src/Lib/conioex_custom.cpp
+        Src/Lib/conioex_custom.h
+        Src/Lib/conioex_custom.h
+        Src/Object/Entity/Enemy/EnemyStates.h
+        Src/Object/Entity/Enemy/EnemyStates.h)

@@ -38,6 +38,16 @@ struct Transform
         topLeft.x = topLeftX;
         topLeft.y = topLeftY;
     }
+
+    static Vector2 ToTopLeft(const Vector2 position, const Vector2 size)
+    {
+        return Vector2(position.x - size.x / 2, position.y - size.y / 2);
+    }
+
+    static Vector2 ToCenter(const Vector2 position, const Vector2 size)
+    {
+        return Vector2(position.x + size.x / 2, position.y + size.y / 2);
+    }
 };
 
 // SYSTEM STRUCTS
@@ -90,10 +100,16 @@ struct PlayerConfig : EntityConfig
 
 struct EnemyConfig : EntityConfig
 {
-    Vector2 target;
+    Transform* targetTransform;
 
     float moveSpeed;
     float attackCooldown;
+};
+
+struct MineConfig : EnemyConfig
+{
+    float timeToExplode;
+    float explosionRadius;
 };
 
 // INPUT CONFIGS
