@@ -5,6 +5,13 @@
 #include "Mine.h"
 #include "../../../../Lib/conioex_custom.h"
 
+void Mine::Start()
+{
+    Enemy::Start();
+
+    SetTimeToExplode();
+}
+
 void Mine::Initialize(const MineConfig& config)
 {
     Enemy::Initialize(config);
@@ -19,46 +26,45 @@ void Mine::Update(const float deltaTime, const Tilemap& tileMap)
 {
     Enemy::Update(deltaTime, tileMap);
 
-    if (CheckCollision(targetTransform) && canExplode)
-    {
-        isExploding = true;
-    }
-
     HandleExplosion(deltaTime);
 }
 
 void Mine::Draw(const Camera& cam)
 {
-    Enemy::Draw(cam);
-
     if (isExploding)
     {
         const float screenX = cam.WorldToScreenX(transform.center.x);
         const float screenY = cam.WorldToScreenY(transform.center.y);
-        DrawCircleDithered(screenX, screenY, currIndicatorRadius, RED, true, 0.7);
+        DrawCircleDithered(screenX, screenY, currIndicatorRadius, RED, true, 0.1);
         DrawCircle(screenX, screenY, explosionRadius, RED, false);
     }
+
+    Enemy::Draw(cam);
 }
 
 void Mine::HandleMovement(const float deltaTime, const Tilemap& tileMap)
 {
-    currSpeedX = stateMachine.GetCurrentState() == EnemyState::ATTK ? currSpeedX = moveSpeed * 0.2f : currSpeedX;
-
     Enemy::HandleMovement(deltaTime, tileMap);
 }
 
-void Mine::HandleAttack(const Vector2 targetPos)
+void Mine::HandleAttack(Entity* inTarget)
 {
-    Enemy::HandleAttack(targetPos);
+    Enemy::HandleAttack(inTarget);
+
+    isExploding = true;
+}
+
+bool Mine::DetectTarget(const float deltaTime)
+{
+    if (CheckCollision(&target->transform) && canExplode)
+    {
+        return true;
+    }
+    return false;
 }
 
 void Mine::HandleExplosion(const float deltaTime)
 {
-    if (deltaTime == 0)
-    {
-        return;
-    }
-
     if (isExploding)
     {
         elapsedTime += deltaTime;
@@ -68,9 +74,28 @@ void Mine::HandleExplosion(const float deltaTime)
 
     if (currIndicatorRadius >= explosionRadius)
     {
+        if (CheckCircleRectCollision(transform.center.x, transform.center.y, explosionRadius, &target->transform))
+        {
+            target->TakeDamage(damage);
+        }
+
         currIndicatorRadius = 0;
         elapsedTime = 0;
         isExploding = false;
+        stateMachine.ChangeState(EnemyState::IDLE);
     }
+}
+
+void Mine::SetTimeToExplode()
+{
+    SpriteSheet* attkSheet = animators.GetAnimator(EnemyState::ATTK)->GetSpriteSheet();
+    float duration = 0;
+
+    for (const auto frame : attkSheet->frames)
+    {
+        duration += frame.duration;
+    }
+
+    timeToExplode = duration;
 }
 

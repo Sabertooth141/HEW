@@ -39,6 +39,7 @@ public:
     void InitAnimation(const PlayerNormalAnimPaths& path);
     void InitAttackAnimation(const PlayerCombatAnimPaths& path);
     void Dash(float dashVel, float inDashDuration, bool isInvic);
+    void TakeDamage(float inDamage) override;
 
     SpriteSheet* GetSpriteSheetFromAnimator(PlayerCombatState attkState);
     [[nodiscard]] PlayerStateMachine<PlayerNormalState> GetMoveStateMachine() const { return normalStateMachine; }

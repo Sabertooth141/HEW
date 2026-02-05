@@ -19,7 +19,7 @@ public:
     void ApplyNormalPal() const;
     void SetNormalPal(const COLORREF inPalette[16]);
 
-    void ApplyGrayScaleToFrameBuffer();
+    static void ApplyGrayScaleToFrameBuffer();
 
 private:
     COLORREF grayscalePal[16]{};

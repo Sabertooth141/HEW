@@ -8,6 +8,7 @@
 
 #include "../../../Core/Game.h"
 #include "../../../Systems/TimeManager.h"
+#include "../../../Lib/conioex_custom.h"
 
 PlayerController::PlayerController() : walkSpeed(0), normalDashSpeed(0), currDashSpeed(0),
                                        jumpForce(0),
@@ -125,6 +126,12 @@ void PlayerController::Dash(const float dashVel, const float inDashDuration, con
     isDashing = true;
 }
 
+void PlayerController::TakeDamage(const float inDamage)
+{
+    DebugPrintf("DAMAGE\n");
+    Entity::TakeDamage(inDamage);
+}
+
 SpriteSheet* PlayerController::GetSpriteSheetFromAnimator(const PlayerCombatState attkState)
 {
     const Animator* resAnimator = playerAnimators.GetAnimator(attkState);
@@ -148,7 +155,6 @@ void PlayerController::HandleMovement(const float deltaTime, const Tilemap& tile
         {
             velX = -currSpeedX;
         }
-
 
         if (dashTimer <= currDashDuration)
         {
@@ -288,7 +294,6 @@ void PlayerController::HandleAnimationUpdate(const float deltaTime)
 {
     if (attackController.IsInRecovery())
     {
-        OutputDebugStringA("RECOVERY\n");
         if (animatorPlaying != nullptr && animatorPlaying == playerAnimators.GetAnimator(
             attackController.GetCurrState()))
         {

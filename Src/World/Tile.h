@@ -4,7 +4,6 @@
 
 #ifndef HEW_TILE_H
 #define HEW_TILE_H
-#include <cstdint>
 #include "../Lib/conioex.h"
 
 enum class TileFlag : unsigned char
@@ -27,11 +26,11 @@ struct TileProperties
 inline constexpr TileProperties TILE_PROPERTIES[] =
 {
     // AIR
-    {false, false, false, BLACK},
+    {false, false, false, DARKGRAY},
     // SOLID
     {true, false, false, GREEN},
     // PLATFORM
-    {false, true, false, DARKGRAY},
+    {false, true, false, BLUE},
     // SPIKE
     {true, false, true, RED}
 };

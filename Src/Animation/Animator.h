@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 #include "SpriteFrame.h"
+#include "../Object/Entity/Enemy/EnemyStates.h"
 #include "../Object/Entity/Player/PlayerStates.h"
 
 enum class PlayerCombatState : uint8_t;
@@ -118,6 +119,38 @@ struct PlayerAnimators
     {
         auto it = combatAnimators.find(animationName);
         if (it != combatAnimators.end())
+        {
+            return it->second.get();
+        }
+        return nullptr;
+    }
+};
+
+struct EnemyAnimators
+{
+    std::unordered_map<EnemyState, std::unique_ptr<Animator>> animators;
+
+    bool AddAnimator(const EnemyState animationName, std::unique_ptr<Animator> animator)
+    {
+        if (animator == nullptr)
+        {
+            return false;
+        }
+
+        if (animators.contains(animationName))
+        {
+            return false;
+        }
+
+        animators[animationName] = std::move(animator);
+
+        return true;
+    }
+
+    Animator* GetAnimator(const EnemyState animationName)
+    {
+        auto it = animators.find(animationName);
+        if (it != animators.end())
         {
             return it->second.get();
         }

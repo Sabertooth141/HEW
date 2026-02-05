@@ -64,7 +64,7 @@ Tile Tilemap::GetTile(const int x, const int y) const
     return tiles[GetIndex(x, y)];
 }
 
-void Tilemap::SetTile(const int x, const int y, const TileFlag flag) const
+void Tilemap::SetTile(const int x, const int y, const TileFlag flag, const int tileID) const
 {
     if (!IsValidTile(x, y))
     {
@@ -76,7 +76,7 @@ void Tilemap::SetTile(const int x, const int y, const TileFlag flag) const
         return;
     }
 
-    tiles[GetIndex(x, y)] = Tile(flag);
+    tiles[GetIndex(x, y)] = Tile(flag, tileID);
 }
 
 Tile Tilemap::GetTileInWorld(const float x, const float y) const
@@ -180,10 +180,6 @@ void Tilemap::Draw(const Camera& cam) const
         for (int tileX = startDrawX; tileX <= endDrawX; tileX++)
         {
             Tile tile = GetTile(tileX, tileY);
-            if (tile.flag == TileFlag::AIR)
-            {
-                continue;
-            }
 
             float worldX = TileToWorldX(tileX);
             float worldY = TileToWorldY(tileY);
@@ -193,7 +189,15 @@ void Tilemap::Draw(const Camera& cam) const
 
             COLORS color = tile.GetColor();
 
-            DrawRect(screenX, screenY, screenX + tileSize - 1, screenY + tileSize - 1, color);
+            if (tile.flag == TileFlag::AIR)
+            {
+                DrawRect(screenX, screenY, screenX + tileSize - 1, screenY + tileSize - 1, color, true);
+            }
+            else
+            {
+                DrawRect(screenX, screenY, screenX + tileSize - 1, screenY + tileSize - 1, color);
+            }
+
         }
     }
 

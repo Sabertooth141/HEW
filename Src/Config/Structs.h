@@ -98,12 +98,16 @@ struct PlayerConfig : EntityConfig
     float airResistance;
 };
 
+class Entity;
+
 struct EnemyConfig : EntityConfig
 {
-    Transform* targetTransform;
+    Entity* target;
 
     float moveSpeed;
     float attackCooldown;
+
+    float invicCooldown;
 };
 
 struct MineConfig : EnemyConfig

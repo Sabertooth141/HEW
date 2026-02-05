@@ -53,6 +53,20 @@ std::vector<PlayerCombatAnimPaths> playerCombatAnimationPaths =
     }
 };
 
+std::vector<EnemyAnimPaths> mineAnimationPaths =
+{
+    {
+        EnemyState::MOVE,
+        "../Assets/Enemy/Mine/MineIdle/MineIdle.json",
+        "../Assets/Enemy/Mine/MineIdle/MineIdle.bmp"
+    },
+    {
+        EnemyState::ATTK,
+        "../Assets/Enemy/Mine/MineAttk/MineAttk.json",
+        "../Assets/Enemy/Mine/MineAttk/MineAttk.bmp"
+    }
+};
+
 static unsigned char testMapData[TEST_MAP_WIDTH * TEST_MAP_HEIGHT];
 
 static void GenerateTestLevel()
@@ -113,6 +127,7 @@ bool Game::Initialize()
               GameConfig::FONT_WIDTH, GameConfig::FONT_HEIGHT);
     SetCaption(title);
 
+    LoadTileset("../Assets/Tileset/SceneTileset/TestTileset.bmp");
     LoadTestLevel();
 
     // TODO: TEMP
@@ -151,9 +166,13 @@ bool Game::Initialize()
     MineConfig mineCfg = config::Mine();
     mineCfg.x = enemyStartX + 50;
     mineCfg.y = enemyStartY;
-    mineCfg.targetTransform = &playerController.transform;
+    mineCfg.target = &playerController;
 
-    EnemyManager::Instance().CreateMine(mineCfg);
+    Enemy* enemyPtr = EnemyManager::Instance().CreateEnemy<Mine, MineConfig>(mineCfg);
+    for (const auto& animation : mineAnimationPaths)
+    {
+        enemyPtr->InitAnimation(animation);
+    }
 
     // subsystems
     const VFXConfig vfxCfg = sysCfg::VFXCfg();
@@ -163,9 +182,9 @@ bool Game::Initialize()
     TimeManager::Instance().Initialize(timeManagerCfg);
 
     // camera
-    cam.Initialize(GameConfig::VIEW_WIDTH / 2, GameConfig::VIEW_HEIGHT / 2, GameConfig::VIEW_WIDTH,
+    cam.Initialize(static_cast<float>(GameConfig::VIEW_WIDTH) / 2, static_cast<float>(GameConfig::VIEW_HEIGHT) / 2, GameConfig::VIEW_WIDTH,
                    GameConfig::VIEW_HEIGHT);
-    cam.SetBounds(0, 0, tileMap.GetWidthPixels(), tileMap.GetHeightPixels());
+    cam.SetBounds(0, 0, static_cast<float>(tileMap.GetWidthPixels()), static_cast<float>(tileMap.GetHeightPixels()));
     cam.SetPosition(playerController.GetCenterPosition().x, playerController.GetCenterPosition().y);
 
     lastFrameTime = timeGetTime();
@@ -237,11 +256,12 @@ void Game::ShutDown()
 
 void Game::Draw()
 {
-
     ClearScreen();
     tileMap.Draw(cam);
 
     playerController.Draw(cam);
+
+    DrawBmp(50, 50, tileset.tiles[1]);
 
     for (const auto& e : EnemyManager::Instance().GetActiveEnemies())
     {
@@ -251,7 +271,7 @@ void Game::Draw()
     if (TimeManager::Instance().IsTimeStopped())
     {
         DebugPrintf("time stopped\n");
-        vfxManager.ApplyGrayScaleToFrameBuffer();
+        VFXManager::ApplyGrayScaleToFrameBuffer();
 
         playerController.Draw(cam);
     }
@@ -275,16 +295,16 @@ void Game::LoadTileset(const char* filePath)
     // Check 1: Did the file load?
     if (tilesetImage == nullptr)
     {
-        printf("ERROR: Failed to load tileset from: %s\n", filePath);
+        DebugPrintf("ERROR: Failed to load tileset from: %s\n", filePath);
         return;
     }
 
-    printf("Tileset loaded: %dx%d, %d-bit\n",
-           tilesetImage->width, tilesetImage->height, tilesetImage->colbit);
+    DebugPrintf("Tileset loaded: %dx%d, %d-bit\n",
+                tilesetImage->width, tilesetImage->height, tilesetImage->colbit);
 
     tileset.LoadTileset(tilesetImage, 32, 32);
 
-    printf("Tiles extracted: %d\n", (int)tileset.tiles.size());
+    DebugPrintf("Tiles extracted: %d\n", (int)tileset.tiles.size());
 }
 
 void Game::LoadTestLevel()

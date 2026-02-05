@@ -11,6 +11,8 @@ enum class EnemyState : uint8_t
     IDLE = 0,
     MOVE,
     ATTK,
+    HURT,
+    DEAD,
     DEFAULT
 };
 
@@ -36,11 +38,12 @@ struct EnemyStateMachine
             return;
         }
 
+        prevState = currState;
         currState = nextState;
     }
 
-    EnemyState GetCurrentState() const { return currState; }
-    EnemyState GetPreviousState() const { return prevState; }
+    [[nodiscard]] EnemyState GetCurrentState() const { return currState; }
+    [[nodiscard]] EnemyState GetPreviousState() const { return prevState; }
 };
 
 #endif //HEW_ENEMYSTATES_H

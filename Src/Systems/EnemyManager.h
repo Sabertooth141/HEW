@@ -19,20 +19,14 @@ struct EnemyManager
 
     std::vector<std::unique_ptr<Enemy>> activeEnemies;
 
-    void CreateEnemy(const EnemyConfig& config)
+    template<typename T, typename ConfigT>
+    T* CreateEnemy(const ConfigT& config)
     {
-        auto enemy = std::make_unique<Enemy>();
+        auto enemy = std::make_unique<T>();
         enemy->Initialize(config);
 
         activeEnemies.push_back(std::move(enemy));
-    }
-
-    void CreateMine(const MineConfig& config)
-    {
-        auto mine = std::make_unique<Mine>();
-        mine->Initialize(config);
-
-        activeEnemies.push_back(std::move(mine));
+        return static_cast<T*>(activeEnemies.back().get());
     }
 
     void UnregisterEnemy(Enemy* inEnemy)

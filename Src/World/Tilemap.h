@@ -19,7 +19,7 @@ public:
 
     // TILE ACCESS
     [[nodiscard]] Tile GetTile(int x, int y) const;
-    void SetTile(int x, int y, TileFlag flag) const;
+    void SetTile(int x, int y, TileFlag flag, int tileID = -1) const;
 
     // WORLD COORD CONVERSION
     [[nodiscard]] Tile GetTileInWorld(float x, float y) const;

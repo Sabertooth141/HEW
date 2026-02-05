@@ -51,9 +51,6 @@ void PlayerAttackController::Update(const float deltaTime, const Transform& play
             hitbox.isActive = false;
         }
 
-    	char debug[64];
-    	sprintf_s(debug, "ATTACK REC %f\n", comboTimer - data.duration);
-    	OutputDebugStringA(debug);
     	isInRecovery = true;
         if (comboInputBuffer && comboTimer >= data.duration)
         {
@@ -199,6 +196,7 @@ void PlayerAttackController::AdvanceCombo(const PlayerCombatState currState, con
     if (currState == PlayerCombatState::ATTK0 && currData.recovery > 0)
     {
         StartAttack(PlayerCombatState::ATTK1);
+        playerController->Dash(500, 0.04, false);
     }
     else if (currState == PlayerCombatState::ATTK1 && currData.recovery > 0)
     {
@@ -220,8 +218,8 @@ void PlayerAttackController::HandleAttackCollisions()
                                 enemy->GetSize().x, enemy->GetSize().y))
         {
             enemy->TakeDamage(GetCurrentDamage());
-            hitbox.isActive = false;
-            break;
+            // hitbox.isActive = false;
+            // break;
         }
     }
 }
