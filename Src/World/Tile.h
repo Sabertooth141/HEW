@@ -6,7 +6,7 @@
 #define HEW_TILE_H
 #include "../Lib/conioex.h"
 
-enum class TileFlag : unsigned char
+enum class TileFlag : uint8_t
 {
     AIR = 0,
     SOLID,

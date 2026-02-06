@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by saber on 1/14/2026.
 //
 
@@ -67,52 +67,6 @@ std::vector<EnemyAnimPaths> mineAnimationPaths =
     }
 };
 
-static unsigned char testMapData[TEST_MAP_WIDTH * TEST_MAP_HEIGHT];
-
-static void GenerateTestLevel()
-{
-    for (int i = 0; i < TEST_MAP_WIDTH * TEST_MAP_HEIGHT; i++)
-    {
-        testMapData[i] = 0; // AIR
-    }
-
-    for (int x = 0; x < TEST_MAP_WIDTH; x++)
-    {
-        for (int y = TEST_MAP_HEIGHT - 3; y < TEST_MAP_HEIGHT; y++)
-        {
-            testMapData[y * TEST_MAP_WIDTH + x] = 1; // SOLID
-        }
-    }
-
-    // PLATFORMS
-    for (int x = 10; x < 18; x++)
-    {
-        testMapData[(TEST_MAP_HEIGHT - 8) * TEST_MAP_WIDTH + x] = 2;
-    }
-
-    for (int x = 22; x < 32; x++)
-    {
-        testMapData[(TEST_MAP_HEIGHT - 12) * TEST_MAP_WIDTH + x] = 2;
-    }
-
-    // WALLS
-    for (int y = TEST_MAP_HEIGHT - 8; y < TEST_MAP_HEIGHT - 3; y++)
-    {
-        testMapData[y * TEST_MAP_WIDTH + 50] = 1;
-        testMapData[y * TEST_MAP_WIDTH + 51] = 1;
-    }
-
-    for (int y = 0; y < TEST_MAP_HEIGHT; y++)
-    {
-        testMapData[y * TEST_MAP_WIDTH + 0] = 1;
-    }
-
-    for (int y = 0; y < TEST_MAP_HEIGHT; y++)
-    {
-        testMapData[y * TEST_MAP_WIDTH + (TEST_MAP_WIDTH - 1)] = 1;
-    }
-}
-
 Game::Game()
 = default;
 
@@ -127,12 +81,16 @@ bool Game::Initialize()
               GameConfig::FONT_WIDTH, GameConfig::FONT_HEIGHT);
     SetCaption(title);
 
-    LoadTileset("../Assets/Tileset/SceneTileset/TestTileset.bmp");
-    LoadTestLevel();
+    // init tileMap
+    LoadTileset("../Assets/Tileset/SceneTileset/Tileset.bmp");
+
+    int mapWidth, mapHeight;
+    std::vector<uint8_t> mapData = tileMap.ParseMapCSV("../Assets/Maps/MapCsv/TestMap.csv", mapWidth, mapHeight);
+    tileMap.LoadFromArr(mapData, mapWidth, mapHeight, tileset, TILE_SIZE);
 
     // TODO: TEMP
-    constexpr float playerStartX = 5 * TILE_SIZE;
-    constexpr float playerStartY = (TEST_MAP_HEIGHT - 16) * TILE_SIZE;
+    const float playerStartX = mapWidth / 2 * TILE_SIZE;
+    const float playerStartY = mapHeight / 2 * TILE_SIZE + 40;
 
     // playerController
     PlayerConfig playerCfg = config::Player();
@@ -152,8 +110,8 @@ bool Game::Initialize()
     }
 
     // TODO: TEMP
-    constexpr float enemyStartX = playerStartX + 20;
-    constexpr float enemyStartY = playerStartY;
+    const float enemyStartX = playerStartX + 20;
+    const float enemyStartY = playerStartY;
 
     // enemies
     // EnemyConfig enemyCfg = config::Enemy();
@@ -261,8 +219,6 @@ void Game::Draw()
 
     playerController.Draw(cam);
 
-    DrawBmp(50, 50, tileset.tiles[1]);
-
     for (const auto& e : EnemyManager::Instance().GetActiveEnemies())
     {
         e->Draw(cam);
@@ -275,6 +231,8 @@ void Game::Draw()
 
         playerController.Draw(cam);
     }
+
+    WriteTextW(20, GameConfig::VIEW_HEIGHT - 30, L"テスト", 20);
 
     PrintFrameBuffer();
     FlipScreen();
@@ -306,14 +264,6 @@ void Game::LoadTileset(const char* filePath)
 
     DebugPrintf("Tiles extracted: %d\n", (int)tileset.tiles.size());
 }
-
-void Game::LoadTestLevel()
-{
-    GenerateTestLevel();
-    tileMap.Initialize(TEST_MAP_WIDTH, TEST_MAP_HEIGHT, TILE_SIZE);
-    tileMap.LoadFromArr(testMapData, TEST_MAP_WIDTH, TEST_MAP_HEIGHT);
-}
-
 
 int main()
 {

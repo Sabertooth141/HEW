@@ -14,6 +14,7 @@ struct Tileset
     int tileWidth{};
     int tileHeight{};
     std::vector<Bmp*> tiles{};
+    std::vector<TileFlag> flags{};
 
     void LoadTileset(const Bmp* inSource, const int inTileWidth, const int inTileHeight)
     {
@@ -93,6 +94,24 @@ struct Tileset
                 }
 
                 tiles.push_back(tile);
+            }
+        }
+
+        flags.resize(tiles.size(), TileFlag::AIR);
+
+        for (int y = 0; y < source->height / tileHeight; y++)
+        {
+            for (int x = 0; x < source->width / tileWidth; x++)
+            {
+                const int index = y * (source->width / tileWidth) + x;
+                if (x <= 2 && y <= 2)
+                {
+                    flags[index] = TileFlag::SOLID;
+                }
+                else if (x <= 2 && y == 3)
+                {
+                    flags[index] = TileFlag::PLATFORM;
+                }
             }
         }
     }

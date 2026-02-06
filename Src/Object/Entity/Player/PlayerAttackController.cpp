@@ -92,15 +92,23 @@ bool PlayerAttackController::TryAttack()
 
 void PlayerAttackController::CancelCombo()
 {
+    combatStateMachine.ChangeState(PlayerCombatState::DEFAULT);
     hitbox.isActive = false;
     comboInputBuffer = false;
     comboTimer = 0;
     hasHit = false;
-    combatStateMachine.ChangeState(PlayerCombatState::DEFAULT);
+    isInRecovery = false;
 }
 
 bool PlayerAttackController::IsAttacking() const
 {
+    const PlayerCombatState currState = combatStateMachine.GetCurrState();
+
+    if (currState == PlayerCombatState::DEFAULT)
+    {
+        return false;
+    }
+
     return combatStateMachine.GetCurrState() != PlayerCombatState::DEFAULT && !isInRecovery;
 }
 

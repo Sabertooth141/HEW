@@ -7,7 +7,7 @@
 
 #include <vector>
 
-#define TILE_SIZE 16
+#define TILE_SIZE 32
 #define TARGET_FPS 60
 #define FRAME_TIME (1.0f / TARGET_FPS)
 
@@ -49,9 +49,6 @@ private:
     void HandleGlobalInput();
     void LoadTileset(const char* filePath);
 
-    // FOR TESTING ONLY
-    void LoadTestLevel();
-
     // vars
 private:
     bool isGameRunning = false;
@@ -66,23 +63,6 @@ private:
     DWORD lastFrameTime = 0;
 
     GlobalInputConfig globalInputConfig;
-
-    // static COLORREF GetCurrentPalette(COLORREF* outPalette)
-    // {
-    //     CONSOLE_SCREEN_BUFFER_INFOEX csbi;
-    //     csbi.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
-    //
-    //     HANDLE hConsole = GetCurrentHandle();  // conioex function
-    //     GetConsoleScreenBufferInfoEx(hConsole, &csbi);
-    //
-    //     // Copy the 16 colors
-    //     for (int i = 0; i < 16; i++)
-    //     {
-    //         outPalette[i] = csbi.ColorTable[i];
-    //     }
-    //
-    //     return outPalette[0];  // or return nothing
-    // }
 };
 
 inline bool IsLegacyConsoleHost()

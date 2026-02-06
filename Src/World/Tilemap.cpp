@@ -4,9 +4,13 @@
 
 #include "Tilemap.h"
 
-#include "Camera.h"
+#include <fstream>
+#include <string>
 
-Tilemap::Tilemap() : tiles(nullptr), widthTiles(0), heightTiles(0), tileSize(16)
+#include "Camera.h"
+#include "Tileset.h"
+
+Tilemap::Tilemap() : tiles(nullptr), tileset(nullptr), widthTiles(0), heightTiles(0), tileSize(16)
 {
 }
 
@@ -86,7 +90,7 @@ Tile Tilemap::GetTileInWorld(const float x, const float y) const
 
 int Tilemap::WorldToTileX(const float worldX) const
 {
-    return static_cast<int>(worldX ) / tileSize;
+    return static_cast<int>(worldX) / tileSize;
 }
 
 int Tilemap::WorldToTileY(const float worldY) const
@@ -187,46 +191,85 @@ void Tilemap::Draw(const Camera& cam) const
             int screenX = cam.WorldToScreenX(worldX);
             int screenY = cam.WorldToScreenY(worldY);
 
-            COLORS color = tile.GetColor();
-
-            if (tile.flag == TileFlag::AIR)
+            if (tile.tileID < 0 || tile.tileID >= static_cast<int>(tileset->tiles.size()))
             {
-                DrawRect(screenX, screenY, screenX + tileSize - 1, screenY + tileSize - 1, color, true);
-            }
-            else
-            {
-                DrawRect(screenX, screenY, screenX + tileSize - 1, screenY + tileSize - 1, color);
+                continue;
             }
 
+            DrawBmp(screenX, screenY, tileset->tiles[tile.tileID]);
         }
     }
-
 }
 
-bool Tilemap::LoadFromArr(const unsigned char* data, const int width, const int height)
+bool Tilemap::LoadFromArr(const std::vector<uint8_t>& data, const int width, const int height, Tileset& inTileset, const int inTileSize)
 {
+    tileSize = inTileSize;
     if (!Initialize(width, height, tileSize))
     {
         return false;
     }
 
+    tileset = &inTileset;
+
     for (int y = 0; y < height; y++)
     {
         for (int x = 0; x < width; x++)
         {
-            unsigned char tileValue = data[x + y * width];
-            auto flag = TileFlag::AIR;
+            const unsigned char tileValue = data[x + y * width];
 
-            if (tileValue < static_cast<unsigned char>(TileFlag::COUNT))
+            if (tileValue >= inTileset.flags.size())
             {
-                flag = static_cast<TileFlag>(tileValue);
+                SetTile(x, y, TileFlag::AIR, -1);
+                continue;
             }
 
-            SetTile(x, y, flag);
+            const TileFlag flag = inTileset.flags[tileValue];
+            SetTile(x, y, flag, tileValue);
         }
     }
 
     return true;
+}
+
+std::vector<uint8_t> Tilemap::ParseMapCSV(const std::string& filePath, int& mapWidth, int& mapHeight)
+{
+    std::ifstream file(filePath);
+    if (!file.is_open())
+    {
+        return {};
+    }
+
+    std::string line;
+    std::vector<uint8_t> map;
+
+    int y = 0;
+
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string cell;
+
+        int x = 0;
+        while (std::getline(ss, cell, ','))
+        {
+            int tileID = std::stoi(cell);
+            map.push_back(tileID);
+            x++;
+        }
+
+        if (y == 0)
+        {
+            mapWidth = x;
+        }
+
+        y++;
+    }
+
+    mapHeight = y;
+    file.close();
+
+    return map;
+
 }
 
 int Tilemap::GetIndex(const int tileX, const int tileY) const

@@ -142,7 +142,27 @@ void PlayerController::HandleMovement(const float deltaTime, const Tilemap& tile
 {
     if (!isDashing)
     {
-        currSpeedX = !attackController.CanMove() ? SPEED_WHEN_ATTK : walkSpeed;
+        if (!attackController.CanMove())
+        {
+            currSpeedX = SPEED_WHEN_ATTK;
+        }
+        else
+        {
+            currSpeedX = walkSpeed;
+            switch (isFacingRightBuffer)
+            {
+            case 1:
+                isFacingRight = true;
+                isFacingRightBuffer = -1;
+                break;
+            case 0:
+                isFacingRight = false;
+                isFacingRightBuffer = -1;
+                break;
+            default:
+                break;
+            }
+        }
     }
     else
     {
@@ -195,9 +215,13 @@ void PlayerController::HandleInput(const float deltaTime)
             return;
         }
 
-        if (attackController.CanMove())
+        if (attackController.CanMove() || attackController.IsInRecovery())
         {
             isFacingRight = false;
+        }
+        else
+        {
+            isFacingRightBuffer = 0;
         }
 
         velX = -currSpeedX;
@@ -210,9 +234,13 @@ void PlayerController::HandleInput(const float deltaTime)
             return;
         }
 
-        if (attackController.CanMove())
+        if (attackController.CanMove() || attackController.IsInRecovery())
         {
             isFacingRight = true;
+        }
+        else
+        {
+            isFacingRightBuffer = 1;
         }
 
         velX = currSpeedX;
@@ -228,6 +256,15 @@ void PlayerController::HandleInput(const float deltaTime)
         else
         {
             velX = velX + (0 - velX) * airResistance * deltaTime;
+
+            if (velX > walkSpeed)
+            {
+                velX = walkSpeed;
+            }
+            else if (velX < -walkSpeed)
+            {
+                velX = -walkSpeed;
+            }
 
             if (fabs(velX) < 0.1f)
             {
@@ -248,6 +285,15 @@ void PlayerController::HandleInput(const float deltaTime)
 
     if (input.dash.IsEdge())
     {
+        if (attackController.IsAttacking())
+        {
+            return;
+        }
+
+        if (attackController.IsInRecovery())
+        {
+            attackController.CancelCombo();
+        }
         Dash(normalDashSpeed, normalDashDuration, true);
         normalStateMachine.ChangeState(PlayerNormalState::MOVE);
     }

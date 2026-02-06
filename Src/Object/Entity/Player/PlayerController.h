@@ -64,6 +64,7 @@ private:
     float airResistance;
     float normalGravity;
     bool isDamageable;
+    int8_t isFacingRightBuffer = -1; // 1 RIGHT 0 LEFT -1 UNDEFINED
 
     // dash
     float dashTimer;

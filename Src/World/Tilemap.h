@@ -4,7 +4,10 @@
 
 #ifndef HEW_TILEMAP_H
 #define HEW_TILEMAP_H
+#include <complex.h>
+
 #include "Tile.h"
+#include "Tileset.h"
 #include "../World/Camera.h"
 
 class Tilemap
@@ -19,7 +22,7 @@ public:
 
     // TILE ACCESS
     [[nodiscard]] Tile GetTile(int x, int y) const;
-    void SetTile(int x, int y, TileFlag flag, int tileID = -1) const;
+    void SetTile(int x, int y, TileFlag flag = TileFlag::COUNT, int tileID = -1) const;
 
     // WORLD COORD CONVERSION
     [[nodiscard]] Tile GetTileInWorld(float x, float y) const;
@@ -36,7 +39,8 @@ public:
     void Draw(const Camera& cam) const;
 
     // MAP LOADING
-    bool LoadFromArr(const unsigned char* data, int width, int height);
+    bool LoadFromArr(const std::vector<uint8_t>& data, int width, int height, Tileset& inTileset, int inTileSize);
+    static std::vector<uint8_t> ParseMapCSV(const std::string& filePath, int& mapWidth, int& mapHeight);
 
     // GETTERS
     [[nodiscard]] int GetWidthTiles() const { return widthTiles; }
@@ -47,6 +51,7 @@ public:
 
 private:
     Tile* tiles;
+    Tileset* tileset;
     int widthTiles;
     int heightTiles;
     int tileSize;

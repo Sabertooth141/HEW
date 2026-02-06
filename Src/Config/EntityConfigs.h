@@ -42,7 +42,7 @@ namespace config
         config.data[0].width = 60;
         config.data[0].height = 54;
         config.data[0].duration = 1;    // to be set by frame data IN SEC
-        config.data[0].recovery = 0.5f;
+        config.data[0].recovery = 0.3f;
 
         // attk 1
         config.data[1].damage = 20;
@@ -51,16 +51,16 @@ namespace config
         config.data[1].width = 80;
         config.data[1].height = 54;
         config.data[1].duration = 1;    // to be set by frame data IN SEC
-        config.data[1].recovery = 0.8f;
+        config.data[1].recovery = 0.2f;
 
         // attk 2
-        config.data[2].damage = 40;
         config.data[2].offsetX = 40;
         config.data[2].offsetY = 0;
         config.data[2].width = 60;
         config.data[2].height = 54;
         config.data[2].duration = 1;    // to be set by frame data IN SEC
-        config.data[2].recovery = 0.3f;
+        config.data[2].damage = 40;
+        config.data[2].recovery = 0.2f;
 
         return config;
     }
