@@ -4,7 +4,6 @@
 
 #ifndef HEW_PLAYERATTACKCONTROLLER_H
 #define HEW_PLAYERATTACKCONTROLLER_H
-#include <string>
 #include <vector>
 
 #include "PlayerStates.h"
@@ -13,21 +12,13 @@
 
 class PlayerController;
 
-struct PlayerCombatAnimPaths
-{
-    PlayerCombatState animationState;
-    std::string jsonPath;
-    std::string bmpPath;
-    int startFrame = 0;
-};
-
 class PlayerAttackController
 {
 public:
     PlayerAttackController() = default;
 
     void Initialize(const PlayerAttackConfig& config, PlayerController* controller);
-    void Update(float deltaTime, const Transform& playerTransform, bool isFacingRight);
+    void Update(float deltaTime, Transform& playerTransform, bool isFacingRight);
     void LoadAttackDuration();
 
     // returns true if can attack
@@ -64,8 +55,7 @@ private:
 	bool isInRecovery = false;
 
     // owner position
-    float ownerCenterX = 0;
-    float ownerCenterY = 0;
+    Transform* ownerTransform = nullptr;
     bool ownerFacingRight = true;
 };
 

@@ -18,7 +18,7 @@ PlayerController::PlayerController() : walkSpeed(0), normalDashSpeed(0), currDas
                                        currDashDuration(0),
                                        isDashing(false),
                                        snapshot(),
-                                       normalStateMachine(PlayerNormalState::DEFAULT), attackController(),
+                                       normalStateMachine(PlayerNormalState::DEFAULT),
                                        animatorPlaying(nullptr)
 {
 }

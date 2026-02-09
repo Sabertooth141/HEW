@@ -11,6 +11,7 @@
 #include "../Config/SystemConfigs.h"
 #include "../Lib/conioex_custom.h"
 #include "../Systems/EnemyManager.h"
+#include "../VFX/AttackVFXManager.h"
 
 #define TEST_MAP_WIDTH 100
 #define TEST_MAP_HEIGHT 50
@@ -20,6 +21,8 @@ int GameConfig::VIEW_HEIGHT = 300;
 int GameConfig::FONT_WIDTH = 2;
 int GameConfig::FONT_HEIGHT = 2;
 
+// ====================ANIM PATHS======================================
+// player
 std::vector<PlayerNormalAnimPaths> playerNormalAnimationPaths =
 {
     {
@@ -53,6 +56,8 @@ std::vector<PlayerCombatAnimPaths> playerCombatAnimationPaths =
     }
 };
 
+// enemy
+// mine
 std::vector<EnemyAnimPaths> mineAnimationPaths =
 {
     {
@@ -66,6 +71,37 @@ std::vector<EnemyAnimPaths> mineAnimationPaths =
         "../Assets/Enemy/Mine/MineAttk/MineAttk.bmp"
     }
 };
+
+// VFX
+std::vector<PlayerCombatAnimPaths> playerAttackVFXPaths =
+{
+    {
+        PlayerCombatState::ATTK0,
+        "../Assets/Player/PlayerAttk/AttkVFX/PlayerCharacterAttk0Effect.json",
+        "../Assets/Player/PlayerAttk/AttkVFX/PlayerCharacterAttk0Effect.bmp"
+    },
+    {
+        PlayerCombatState::ATTK1,
+        "../Assets/Player/PlayerAttk/AttkVFX/PlayerCharacterAttk1Effect.json",
+        "../Assets/Player/PlayerAttk/AttkVFX/PlayerCharacterAttk1Effect.bmp"
+    },
+    {
+        PlayerCombatState::ATTK2,
+        "../Assets/Player/PlayerAttk/AttkVFX/PlayerCharacterAttk2Effect.json",
+        "../Assets/Player/PlayerAttk/AttkVFX/PlayerCharacterAttk2Effect.bmp"
+    }
+};
+
+std::vector<EnemyAnimPaths> enemyAttackVFXPaths =
+{
+    {
+        EnemyState::ATTK,
+        "../Assets/Enemy/Mine/AttkVFX/MineAttkVFX.json",
+        "../Assets/Enemy/Mine/AttkVFX/MineAttkVFX.bmp"
+    }
+};
+
+// ========================================================================
 
 Game::Game()
 = default;
@@ -87,6 +123,17 @@ bool Game::Initialize()
     int mapWidth, mapHeight;
     std::vector<uint8_t> mapData = tileMap.ParseMapCSV("../Assets/Maps/MapCsv/TestMap.csv", mapWidth, mapHeight);
     tileMap.LoadFromArr(mapData, mapWidth, mapHeight, tileset, TILE_SIZE);
+
+    // init vfxmanager
+    for (const auto& effect : playerAttackVFXPaths)
+    {
+        AttackVFXManager::Instance().InitAnimation(effect);
+    }
+
+    for (const auto& effect : enemyAttackVFXPaths)
+    {
+        AttackVFXManager::Instance().InitAnimation(effect);
+    }
 
     // TODO: TEMP
     const float playerStartX = mapWidth / 2 * TILE_SIZE;
@@ -140,7 +187,8 @@ bool Game::Initialize()
     TimeManager::Instance().Initialize(timeManagerCfg);
 
     // camera
-    cam.Initialize(static_cast<float>(GameConfig::VIEW_WIDTH) / 2, static_cast<float>(GameConfig::VIEW_HEIGHT) / 2, GameConfig::VIEW_WIDTH,
+    cam.Initialize(static_cast<float>(GameConfig::VIEW_WIDTH) / 2, static_cast<float>(GameConfig::VIEW_HEIGHT) / 2,
+                   GameConfig::VIEW_WIDTH,
                    GameConfig::VIEW_HEIGHT);
     cam.SetBounds(0, 0, static_cast<float>(tileMap.GetWidthPixels()), static_cast<float>(tileMap.GetHeightPixels()));
     cam.SetPosition(playerController.GetCenterPosition().x, playerController.GetCenterPosition().y);
@@ -200,6 +248,8 @@ void Game::Update(const float deltaTime)
 
     playerController.Update(deltaTime, tileMap);
 
+    AttackVFXManager::Instance().Update(deltaTime);
+
     Vector2 camTarget{};
     camTarget.x = playerController.GetCenterPosition().x;
     camTarget.y = playerController.GetCenterPosition().y;
@@ -231,6 +281,8 @@ void Game::Draw()
 
         playerController.Draw(cam);
     }
+
+    AttackVFXManager::Instance().Draw(cam);
 
     WriteTextW(20, GameConfig::VIEW_HEIGHT - 30, L"テスト", 20);
 

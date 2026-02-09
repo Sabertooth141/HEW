@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <ranges>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -165,8 +166,10 @@ struct PlayerSnapshot
 struct AttkData
 {
     float damage;
-    float offsetX;
-    float offsetY;
+    float hitboxOffsetX;
+    float hitboxOffsetY;
+    float VFXOffsetX;
+    float VFXOffsetY;
     float width;
     float height;
     float duration;
@@ -188,5 +191,35 @@ struct PlayerAttackConfig
 };
 
 // ENEMY STRUCTS
+
+// ANIMATIONS
+
+struct PlayerCombatAnimPaths
+{
+    PlayerCombatState animationState;
+    std::string jsonPath;
+    std::string bmpPath;
+    int startFrame = 0;
+};
+
+struct EnemyAnimPaths
+{
+    EnemyState animationState;
+    std::string jsonPath;
+    std::string bmpPath;
+    int startFrame = 0;
+};
+
+// VFX
+struct SplashTrailEffect
+{
+    Animator* animator;
+    Transform transform;
+    const Transform* followTargetTransform = nullptr;
+    Vector2 offSet;
+    bool isLoop;
+    bool flipHorizontal;
+    bool attached = false;
+};
 
 #endif //HEW_STRUCTS_H

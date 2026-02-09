@@ -4,6 +4,7 @@
 
 #include "Mine.h"
 #include "../../../../Lib/conioex_custom.h"
+#include "../../../../VFX/AttackVFXManager.h"
 
 void Mine::Start()
 {
@@ -74,6 +75,7 @@ void Mine::HandleExplosion(const float deltaTime)
 
     if (currIndicatorRadius >= explosionRadius)
     {
+        AttackVFXManager::Instance().PlayAttackVFX(&transform, Vector2(0, 0), stateMachine.GetCurrentState(), false);
         if (CheckCircleRectCollision(transform.center.x, transform.center.y, explosionRadius, &target->transform))
         {
             target->TakeDamage(damage);
@@ -98,4 +100,3 @@ void Mine::SetTimeToExplode()
 
     timeToExplode = duration;
 }
-

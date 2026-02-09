@@ -37,8 +37,10 @@ namespace config
 
         // attk 0
         config.data[0].damage = 10;
-        config.data[0].offsetX = 30;
-        config.data[0].offsetY = 0;
+        config.data[0].hitboxOffsetX = 30;
+        config.data[0].hitboxOffsetY = 0;
+        config.data[0].VFXOffsetX = 30;
+        config.data[0].VFXOffsetY = -10;
         config.data[0].width = 60;
         config.data[0].height = 54;
         config.data[0].duration = 1;    // to be set by frame data IN SEC
@@ -46,16 +48,20 @@ namespace config
 
         // attk 1
         config.data[1].damage = 20;
-        config.data[1].offsetX = 50;
-        config.data[1].offsetY = 0;
-        config.data[1].width = 80;
+        config.data[1].hitboxOffsetX = 30;
+        config.data[1].hitboxOffsetY = 0;
+        config.data[1].VFXOffsetX = 50;
+        config.data[1].VFXOffsetY = 0;
+        config.data[1].width = 60;
         config.data[1].height = 54;
         config.data[1].duration = 1;    // to be set by frame data IN SEC
         config.data[1].recovery = 0.2f;
 
         // attk 2
-        config.data[2].offsetX = 40;
-        config.data[2].offsetY = 0;
+        config.data[2].hitboxOffsetX = 40;
+        config.data[2].hitboxOffsetY = 0;
+        config.data[2].VFXOffsetX = 50;
+        config.data[2].VFXOffsetY = 0;
         config.data[2].width = 60;
         config.data[2].height = 54;
         config.data[2].duration = 1;    // to be set by frame data IN SEC
@@ -101,7 +107,7 @@ namespace config
 
         config.moveSpeed = 200.0f;
 
-        config.explosionRadius = 100;
+        config.explosionRadius = 128;
         config.timeToExplode = 1.5;
 
         config.invicCooldown = 0.5;

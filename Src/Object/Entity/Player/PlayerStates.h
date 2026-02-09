@@ -12,6 +12,7 @@ enum class PlayerNormalState : uint8_t
     MOVE,
     JUMP,
     FALL,
+    HURT,
     DIE,
     DEFAULT
 };

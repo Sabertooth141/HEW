@@ -4,18 +4,11 @@
 
 #ifndef HEW_ENEMY_H
 #define HEW_ENEMY_H
-#include <string>
 
 #include "EnemyStates.h"
 #include "../Entity.h"
 
-struct EnemyAnimPaths
-{
-    EnemyState animationState;
-    std::string jsonPath;
-    std::string bmpPath;
-    int startFrame = 0;
-};
+struct EnemyAnimPaths;
 
 class Enemy : public Entity
 {

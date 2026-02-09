@@ -158,4 +158,64 @@ struct EnemyAnimators
     }
 };
 
+struct AttackVFXAnimators
+{
+    std::unordered_map<PlayerCombatState, std::unique_ptr<Animator>> playerAnimators;
+    std::unordered_map<EnemyState, std::unique_ptr<Animator>> enemyAnimators;
+
+    bool AddAnimator(const PlayerCombatState animationName, std::unique_ptr<Animator> animator)
+    {
+        if (animator == nullptr)
+        {
+            return false;
+        }
+
+        if (playerAnimators.contains(animationName))
+        {
+            return false;
+        }
+
+        playerAnimators[animationName] = std::move(animator);
+
+        return true;
+    }
+
+    bool AddAnimator(const EnemyState animationName, std::unique_ptr<Animator> animator)
+    {
+        if (animator == nullptr)
+        {
+            return false;
+        }
+
+        if (enemyAnimators.contains(animationName))
+        {
+            return false;
+        }
+
+        enemyAnimators[animationName] = std::move(animator);
+
+        return true;
+    }
+
+    Animator* GetAnimator(const PlayerCombatState animationName)
+    {
+        auto it = playerAnimators.find(animationName);
+        if (it != playerAnimators.end())
+        {
+            return it->second.get();
+        }
+        return nullptr;
+    }
+
+    Animator* GetAnimator(const EnemyState animationName)
+    {
+        auto it = enemyAnimators.find(animationName);
+        if (it != enemyAnimators.end())
+        {
+            return it->second.get();
+        }
+        return nullptr;
+    }
+};
+
 #endif //HEW_ANIMATOR_H

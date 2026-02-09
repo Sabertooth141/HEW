@@ -8,7 +8,6 @@
 
 #include "../Config/Structs.h"
 
-
 class TimeManager
 {
 public:

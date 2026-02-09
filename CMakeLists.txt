@@ -60,4 +60,7 @@ add_executable(HEW
         Src/Lib/conioex_custom.h
         Src/Object/Entity/Enemy/EnemyStates.h
         Src/Object/Entity/Enemy/EnemyStates.h
-        Src/VFX/AttackVFXManager.h)
+        Src/VFX/AttackVFXManager.h
+        Src/VFX/AttackVFXManager.cpp
+        Src/Core/AnimationPaths.h
+        Src/Core/AnimationPaths.h)

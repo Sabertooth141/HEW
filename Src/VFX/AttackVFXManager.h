@@ -5,6 +5,10 @@
 #ifndef HEW_ATTACKVFXMANAGER_H
 #define HEW_ATTACKVFXMANAGER_H
 
+#include "../Animation/Animator.h"
+#include "../Config/Structs.h"
+
+class Camera;
 enum class EnemyState : unsigned char;
 enum class PlayerCombatState : unsigned char;
 class Animator;
@@ -12,13 +16,28 @@ class Animator;
 class AttackVFXManager
 {
 public:
-	AttackVFXManager() = default;
+    static AttackVFXManager& Instance()
+    {
+        static AttackVFXManager instance;
+        return instance;
+    }
 
-	PlayAttackVFX(float inX, float inY, PlayerCombatState playerState);
-	PlayAttackVFX(float inX, float inY, EnemyState enemyState);
+    AttackVFXManager() = default;
+
+    AttackVFXManager& operator=(const AttackVFXManager&) = delete;
+
+    void Update(float deltaTime);
+    void Draw(const Camera& camera);
+
+    void PlayAttackVFX(const Transform* playTransform, Vector2 offset, PlayerCombatState playerState, bool flipHorizontal, bool attached = false);
+    void PlayAttackVFX(const Transform* playTransform, Vector2 offset, EnemyState enemyState, bool flipHorizontal, bool attached = false);
+    void InitAnimation(const PlayerCombatAnimPaths& path);
+    void InitAnimation(const EnemyAnimPaths& path);
+
 private:
-	Animator* vfxAnimator;
+    AttackVFXAnimators vfxAnimators{};
 
+    std::vector<SplashTrailEffect> playingEffect{};
 };
 
 

@@ -6,6 +6,7 @@
 
 #include "../../../Systems/EnemyManager.h"
 #include "PlayerController.h"
+#include "../../../VFX/AttackVFXManager.h"
 
 void PlayerAttackController::Initialize(const PlayerAttackConfig& config, PlayerController* controller)
 {
@@ -14,13 +15,12 @@ void PlayerAttackController::Initialize(const PlayerAttackConfig& config, Player
     playerController = controller;
 }
 
-void PlayerAttackController::Update(const float deltaTime, const Transform& playerTransform,
+void PlayerAttackController::Update(const float deltaTime, Transform& playerTransform,
                                     const bool isFacingRight)
 {
     HandleAttackCollisions();
 
-    ownerCenterX = playerTransform.center.x;
-    ownerCenterY = playerTransform.center.y;
+    ownerTransform = &playerTransform;
     ownerFacingRight = isFacingRight;
 
     combatStateMachine.Update(deltaTime);
@@ -34,7 +34,7 @@ void PlayerAttackController::Update(const float deltaTime, const Transform& play
     }
 
     const AttkData& data = GetAttackData(currentState);
-    hitbox.Update(deltaTime, ownerCenterX, ownerCenterY);
+    hitbox.Update(deltaTime, ownerTransform->center.x, ownerTransform->center.y);
 
     // attack
     if (comboTimer <= data.duration)
@@ -51,19 +51,19 @@ void PlayerAttackController::Update(const float deltaTime, const Transform& play
             hitbox.isActive = false;
         }
 
-    	isInRecovery = true;
+        isInRecovery = true;
         if (comboInputBuffer && comboTimer >= data.duration)
         {
             comboInputBuffer = false;
 
-        	isInRecovery = false;
+            isInRecovery = false;
             AdvanceCombo(currentState, data);
         }
     }
     // complete attack
     else if (comboTimer > data.duration + data.recovery)
     {
-    	isInRecovery = false;
+        isInRecovery = false;
         EndAttack();
     }
 }
@@ -146,12 +146,12 @@ void PlayerAttackController::LoadAttackDuration()
         if (sheet != nullptr)
         {
             float duration = 0;
-        	for (int frame = 0; frame < sheet->frames.size() - 1; frame++)
-        	{
-				duration += sheet->frames[frame].duration;
-        	}
+            for (int frame = 0; frame < sheet->frames.size() - 1; frame++)
+            {
+                duration += sheet->frames[frame].duration;
+            }
             attackData[i].duration = duration;
-			attackData[i].recovery = sheet->frames[sheet->frames.size() - 1].duration;
+            attackData[i].recovery = sheet->frames[sheet->frames.size() - 1].duration;
         }
     }
 }
@@ -176,18 +176,32 @@ void PlayerAttackController::StartAttack(const PlayerCombatState combatState)
     const AttkData& data = GetAttackData(combatState);
 
     float hitboxOffsetX;
-
+    float vfxOffsetX;
 
     if (ownerFacingRight)
     {
-        hitboxOffsetX = data.offsetX;
+        hitboxOffsetX = data.hitboxOffsetX;
+        vfxOffsetX = data.VFXOffsetX;
     }
     else
     {
-        hitboxOffsetX = -data.offsetX;
+        hitboxOffsetX = -data.hitboxOffsetX;
+        vfxOffsetX = -data.VFXOffsetX;
     }
 
-    hitbox.Activate(ownerCenterX, ownerCenterY, hitboxOffsetX, data.offsetY, data.width, data.height, data.duration);
+    if (GetCurrState() == PlayerCombatState::ATTK2)
+    {
+        AttackVFXManager::Instance().PlayAttackVFX(ownerTransform, Vector2(vfxOffsetX, data.VFXOffsetY),
+                                               GetCurrState(), !ownerFacingRight, true);
+    }
+    else
+    {
+        AttackVFXManager::Instance().PlayAttackVFX(ownerTransform, Vector2(vfxOffsetX, data.VFXOffsetY),
+                                                   GetCurrState(), !ownerFacingRight);
+    }
+
+    hitbox.Activate(ownerTransform->center.x, ownerTransform->center.y, hitboxOffsetX, data.hitboxOffsetY, data.width,
+                    data.height, data.duration);
 }
 
 void PlayerAttackController::EndAttack()
