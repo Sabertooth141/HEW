@@ -33,7 +33,7 @@ public:
 
     void Initialize(const PlayerConfig& config, const PlayerAttackConfig& attackConfig);
     void Start() override;
-    void Update(float deltaTime, const Tilemap& tileMap) override;
+    void Update(float deltaTime, Tilemap& tileMap) override;
     void Draw(const Camera& cam) override;
     void Die() override;
     void InitAnimation(const PlayerNormalAnimPaths& path);
@@ -46,7 +46,7 @@ public:
     [[nodiscard]] const PlayerAttackController& GetAttackController() const { return attackController; }
 
 protected:
-    void HandleMovement(float deltaTime, const Tilemap& tileMap) override;
+    void HandleMovement(float deltaTime, Tilemap& tileMap) override;
     void ApplyPhysics(float deltaTime) override;
 
 private:

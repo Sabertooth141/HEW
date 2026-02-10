@@ -24,7 +24,7 @@ void Object::Start()
 {
 }
 
-void Object::Update(float deltaTime, const Tilemap& tileMap)
+void Object::Update(const float deltaTime, Tilemap& tileMap)
 {
 }
 

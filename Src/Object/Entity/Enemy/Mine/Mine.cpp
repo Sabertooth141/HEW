@@ -23,9 +23,19 @@ void Mine::Initialize(const MineConfig& config)
     canExplode = true;
 }
 
-void Mine::Update(const float deltaTime, const Tilemap& tileMap)
+void Mine::Update(const float deltaTime, Tilemap& tileMap)
 {
     Enemy::Update(deltaTime, tileMap);
+
+    if (attackCooldownTimer > 0)
+    {
+        attackCooldownTimer -= deltaTime;
+    }
+    else
+    {
+        attackCooldownTimer = 0;
+        canAttack = true;
+    }
 
     HandleExplosion(deltaTime);
 }
@@ -43,19 +53,24 @@ void Mine::Draw(const Camera& cam)
     Enemy::Draw(cam);
 }
 
-void Mine::HandleMovement(const float deltaTime, const Tilemap& tileMap)
+void Mine::HandleMovement(const float deltaTime, Tilemap& tileMap)
 {
     Enemy::HandleMovement(deltaTime, tileMap);
 }
 
 void Mine::HandleAttack(Entity* inTarget)
 {
+    if (!canAttack)
+    {
+        return;
+    }
+
     Enemy::HandleAttack(inTarget);
 
     isExploding = true;
 }
 
-bool Mine::DetectTarget(const float deltaTime)
+bool Mine::CanStartAttack(const float deltaTime)
 {
     if (CheckCollision(&target->transform) && canExplode)
     {
@@ -75,7 +90,7 @@ void Mine::HandleExplosion(const float deltaTime)
 
     if (currIndicatorRadius >= explosionRadius)
     {
-        AttackVFXManager::Instance().PlayAttackVFX(&transform, Vector2(0, 0), stateMachine.GetCurrentState(), false);
+        AttackVFXManager::Instance().PlayAttackVFX(&transform, Vector2(0, 0), EnemyVFXType::MINE, false);
         if (CheckCircleRectCollision(transform.center.x, transform.center.y, explosionRadius, &target->transform))
         {
             target->TakeDamage(damage);
@@ -85,6 +100,8 @@ void Mine::HandleExplosion(const float deltaTime)
         elapsedTime = 0;
         isExploding = false;
         stateMachine.ChangeState(EnemyState::IDLE);
+        canAttack = false;
+        attackCooldownTimer = attackCooldown;
     }
 }
 

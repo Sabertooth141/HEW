@@ -18,7 +18,7 @@ public:
 
     virtual void Initialize(const ObjectConfig& config);
     virtual void Start();
-    virtual void Update(float deltaTime, const Tilemap& tileMap);
+    virtual void Update(float deltaTime, Tilemap& tileMap);
     virtual void Draw(const Camera& cam);
 
     // OBJECT HELPER FUNCTIONS

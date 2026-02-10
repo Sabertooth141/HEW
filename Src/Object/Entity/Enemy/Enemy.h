@@ -7,8 +7,7 @@
 
 #include "EnemyStates.h"
 #include "../Entity.h"
-
-struct EnemyAnimPaths;
+#include "../../../Config/Structs.h"
 
 class Enemy : public Entity
 {
@@ -17,25 +16,36 @@ public:
 
     void Initialize(const EnemyConfig& config);
     void Start() override;
-    void Update(float deltaTime, const Tilemap& tileMap) override;
+    void Update(float deltaTime, Tilemap& tileMap) override;
     void Draw(const Camera& cam) override;
     void TakeDamage(float inDamage) override;
-    void InitAnimation(const EnemyAnimPaths& path);
+    void InitAnimation(const EnemyAnimPaths<EnemyState>& path);
 protected:
-    void HandleMovement(float deltaTime, const Tilemap& tilemap) override;
+    void HandleMovement(float deltaTime, Tilemap& tilemap) override;
     virtual void HandleAttack(Entity* inTarget);
     virtual void HandleAnimationUpdate(float deltaTime);
 
     void Die() override;
     // to be overridden by children
-    virtual bool DetectTarget(float deltaTime);
+    virtual bool CanStartPathfinding(float deltaTime);
+    virtual bool CanStartAttack(float deltaTime);
+
+    virtual void HandlePatrol (Tilemap& tilemap, float deltaTime);
+    virtual void PathfindToTarget(float deltaTime);
 
 protected:
     Entity* target;
     float attackCooldown;
+    float attackCooldownTimer;
+    bool canAttack;
+
     float moveSpeed;
     float damage;
 
+    float attackDistance;
+    float detectionDistance;
+
+    bool isInvic;
     float invicCD;
     float invicTimer;
 

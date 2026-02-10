@@ -63,4 +63,6 @@ add_executable(HEW
         Src/VFX/AttackVFXManager.h
         Src/VFX/AttackVFXManager.cpp
         Src/Core/AnimationPaths.h
-        Src/Core/AnimationPaths.h)
+        Src/Core/AnimationPaths.h
+        Src/Object/Entity/Enemy/UGV/UGV.cpp
+        Src/Object/Entity/Enemy/UGV/UGV.h)

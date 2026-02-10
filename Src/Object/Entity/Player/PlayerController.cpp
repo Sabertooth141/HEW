@@ -49,7 +49,7 @@ void PlayerController::Start()
     animatorPlaying->Play();
 }
 
-void PlayerController::Update(const float deltaTime, const Tilemap& tileMap)
+void PlayerController::Update(const float deltaTime, Tilemap& tileMap)
 {
     HandleInput(deltaTime);
     attackController.Update(deltaTime, transform, isFacingRight);
@@ -83,15 +83,15 @@ void PlayerController::Draw(const Camera& cam)
     int screenY = cam.WorldToScreenY(holoSnapshot.y);
     DrawRect(screenX, screenY, screenX + transform.size.x, screenY + transform.size.y, RED, false);
 
-    Hitbox& hitbox = attackController.GetHitBox();
-    if (hitbox.isActive)
-    {
-        screenX = cam.WorldToScreenX(hitbox.transform.topLeft.x);
-        screenY = cam.WorldToScreenY(hitbox.transform.topLeft.y);
-
-        DrawRect(screenX, screenY, screenX + hitbox.transform.size.x, screenY + hitbox.transform.size.y, LIGHTRED,
-                 false);
-    }
+    // Hitbox& hitbox = attackController.GetHitBox();
+    // if (hitbox.isActive)
+    // {
+    //     screenX = cam.WorldToScreenX(hitbox.transform.topLeft.x);
+    //     screenY = cam.WorldToScreenY(hitbox.transform.topLeft.y);
+    //
+    //     DrawRect(screenX, screenY, screenX + hitbox.transform.size.x, screenY + hitbox.transform.size.y, LIGHTRED,
+    //              false);
+    // }
 }
 
 void PlayerController::Die()
@@ -138,7 +138,7 @@ SpriteSheet* PlayerController::GetSpriteSheetFromAnimator(const PlayerCombatStat
     return resAnimator->GetSpriteSheet();
 }
 
-void PlayerController::HandleMovement(const float deltaTime, const Tilemap& tileMap)
+void PlayerController::HandleMovement(const float deltaTime, Tilemap& tileMap)
 {
     if (!isDashing)
     {

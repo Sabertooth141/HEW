@@ -40,6 +40,18 @@ struct Transform
         topLeft.y = topLeftY;
     }
 
+    /**
+     * checks distance between point and self center point
+     * @param position
+     * @param distance
+     * @return
+     */
+    bool CheckDistance(const Vector2 position, const float distance) const
+    {
+        float distanceToCompare = (position.x - topLeft.x) * (position.x - topLeft.x) + (position.y - topLeft.y) * (position.y - topLeft.y);
+        return distanceToCompare < distance * distance;
+    }
+
     static Vector2 ToTopLeft(const Vector2 position, const Vector2 size)
     {
         return Vector2(position.x - size.x / 2, position.y - size.y / 2);
@@ -108,6 +120,9 @@ struct EnemyConfig : EntityConfig
     float moveSpeed;
     float attackCooldown;
 
+    float attackDistance;
+    float detectionDistance;
+
     float invicCooldown;
 };
 
@@ -115,6 +130,11 @@ struct MineConfig : EnemyConfig
 {
     float timeToExplode;
     float explosionRadius;
+};
+
+struct UGVConfig : EnemyConfig
+{
+    float knockBackForce;
 };
 
 // INPUT CONFIGS
@@ -202,9 +222,12 @@ struct PlayerCombatAnimPaths
     int startFrame = 0;
 };
 
+template <typename T>
+concept IsAllowedEnemyVFXType = std::is_same_v<T, EnemyVFXType> || std::is_same_v<T, EnemyState>;
+template <IsAllowedEnemyVFXType T>
 struct EnemyAnimPaths
 {
-    EnemyState animationState;
+    T animationName;
     std::string jsonPath;
     std::string bmpPath;
     int startFrame = 0;

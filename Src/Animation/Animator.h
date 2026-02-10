@@ -12,6 +12,7 @@
 #include "../Object/Entity/Enemy/EnemyStates.h"
 #include "../Object/Entity/Player/PlayerStates.h"
 
+enum class EnemyVFXType : unsigned char;
 enum class PlayerCombatState : uint8_t;
 enum class PlayerNormalState : uint8_t;
 class Camera;
@@ -161,7 +162,7 @@ struct EnemyAnimators
 struct AttackVFXAnimators
 {
     std::unordered_map<PlayerCombatState, std::unique_ptr<Animator>> playerAnimators;
-    std::unordered_map<EnemyState, std::unique_ptr<Animator>> enemyAnimators;
+    std::unordered_map<EnemyVFXType, std::unique_ptr<Animator>> enemyAnimators;
 
     bool AddAnimator(const PlayerCombatState animationName, std::unique_ptr<Animator> animator)
     {
@@ -180,7 +181,7 @@ struct AttackVFXAnimators
         return true;
     }
 
-    bool AddAnimator(const EnemyState animationName, std::unique_ptr<Animator> animator)
+    bool AddAnimator(const EnemyVFXType animationName, std::unique_ptr<Animator> animator)
     {
         if (animator == nullptr)
         {
@@ -207,7 +208,7 @@ struct AttackVFXAnimators
         return nullptr;
     }
 
-    Animator* GetAnimator(const EnemyState animationName)
+    Animator* GetAnimator(const EnemyVFXType animationName)
     {
         auto it = enemyAnimators.find(animationName);
         if (it != enemyAnimators.end())

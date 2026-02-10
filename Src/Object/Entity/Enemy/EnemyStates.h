@@ -9,7 +9,8 @@
 enum class EnemyState : uint8_t
 {
     IDLE = 0,
-    MOVE,
+    PATROL,
+    PATHFIND,
     ATTK,
     HURT,
     DEAD,

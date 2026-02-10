@@ -7,7 +7,11 @@
 #include "../../../Lib/conioex_custom.h"
 #include "../../../Systems/EnemyManager.h"
 
-Enemy::Enemy() : target(nullptr), attackCooldown(0), moveSpeed(0), damage(0), invicCD(0),
+Enemy::Enemy() : target(nullptr), attackCooldown(0), attackCooldownTimer(0), canAttack(true), moveSpeed(0), damage(0),
+                 attackDistance(0),
+                 detectionDistance(0),
+                 isInvic(false),
+                 invicCD(0),
                  invicTimer(0),
                  stateMachine(EnemyState::DEFAULT)
 {
@@ -21,6 +25,8 @@ void Enemy::Initialize(const EnemyConfig& config)
     attackCooldown = config.attackCooldown;
     moveSpeed = config.moveSpeed;
     invicCD = config.invicCooldown;
+    attackDistance = config.attackDistance;
+    detectionDistance = config.detectionDistance;
 }
 
 void Enemy::Start()
@@ -31,28 +37,47 @@ void Enemy::Start()
     currSpeedX = moveSpeed;
 }
 
-void Enemy::Update(const float deltaTime, const Tilemap& tileMap)
+void Enemy::Update(const float deltaTime, Tilemap& tileMap)
 {
     Entity::Update(deltaTime, tileMap);
 
     HandleAnimationUpdate(deltaTime);
 
-    if (DetectTarget(deltaTime))
+    if (isInvic)
     {
-        HandleAttack(target);
-    }
-
-    if (stateMachine.GetCurrentState() == EnemyState::HURT)
-    {
-        color = YELLOW;
         invicTimer += deltaTime;
 
         if (invicTimer >= invicCD)
         {
-            color = GREEN;
             invicTimer = 0;
-            stateMachine.ChangeState(stateMachine.GetPreviousState());
+            isInvic = false;
         }
+    }
+
+    if (CanStartAttack(deltaTime))
+    {
+        HandleAttack(target);
+    }
+
+    if (stateMachine.GetCurrentState() != EnemyState::ATTK)
+    {
+        if (CanStartPathfinding(deltaTime))
+        {
+            stateMachine.ChangeState(EnemyState::PATHFIND);
+        }
+        else
+        {
+            stateMachine.ChangeState(EnemyState::PATROL);
+        }
+    }
+
+    if (velX > 0)
+    {
+        isFacingRight = true;
+    }
+    else
+    {
+        isFacingRight = false;
     }
 }
 
@@ -65,55 +90,51 @@ void Enemy::Draw(const Camera& cam)
 
     if (animatorPlaying != nullptr)
     {
-        animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, !isFacingRight);
+        animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, isFacingRight);
     }
 }
 
-void Enemy::HandleMovement(const float deltaTime, const Tilemap& tilemap)
+void Enemy::HandleMovement(const float deltaTime, Tilemap& tilemap)
 {
-    if (stateMachine.GetCurrentState() == EnemyState::ATTK)
-    {
-        return;
-    }
-
-    if (stateMachine.GetCurrentState() == EnemyState::HURT)
+    if (stateMachine.GetCurrentState() != EnemyState::PATROL && stateMachine.GetCurrentState() != EnemyState::PATHFIND)
     {
         return;
     }
 
     Entity::HandleMovement(deltaTime, tilemap);
 
-    // FOR TESTING PURPOSES
-    stateMachine.ChangeState(EnemyState::MOVE);
-    velX = currSpeedX;
-
-    const float newX = transform.topLeft.x + velX * deltaTime;
-
-    if (CheckCollisionX(tilemap, newX))
+    if (stateMachine.GetCurrentState() == EnemyState::PATROL)
     {
-        currSpeedX = -currSpeedX;
+        HandlePatrol(tilemap, deltaTime);
+    }
+
+    if (stateMachine.GetCurrentState() == EnemyState::PATHFIND)
+    {
+        PathfindToTarget(deltaTime);
     }
 }
 
 void Enemy::TakeDamage(const float inDamage)
 {
-    if (stateMachine.GetCurrentState() == EnemyState::HURT)
+    if (isInvic)
     {
         return;
     }
 
+    isInvic = true;
     Entity::TakeDamage(inDamage);
+    DebugPrintf("ENEMY TAKING DAMAGE\n");
 
     stateMachine.ChangeState(EnemyState::HURT);
 }
 
-void Enemy::InitAnimation(const EnemyAnimPaths& path)
+void Enemy::InitAnimation(const EnemyAnimPaths<EnemyState>& path)
 {
     std::unique_ptr<Animator> animator = std::make_unique<Animator>();
     animator->LoadSpriteSheet(path.jsonPath.c_str(), path.bmpPath.c_str());
     animator->SetLoopStartFrame(path.startFrame);
 
-    animators.AddAnimator(path.animationState, std::move(animator));
+    animators.AddAnimator(path.animationName, std::move(animator));
 }
 
 void Enemy::HandleAttack(Entity* inTarget)
@@ -148,7 +169,7 @@ void Enemy::HandleAnimationUpdate(const float deltaTime)
     animatorPlaying = animators.GetAnimator(stateMachine.GetCurrentState());
     if (animatorPlaying == nullptr)
     {
-        animatorPlaying = animators.GetAnimator(EnemyState::MOVE);
+        animatorPlaying = animators.GetAnimator(EnemyState::PATROL);
     }
     animatorPlaying->Play();
     animatorPlaying->Update(deltaTime);
@@ -161,7 +182,53 @@ void Enemy::Die()
     EnemyManager::Instance().UnregisterEnemy(this);
 }
 
-bool Enemy::DetectTarget(const float deltaTime)
+bool Enemy::CanStartPathfinding(float deltaTime)
 {
-    return false;
+    if (target == nullptr)
+    {
+        return false;
+    }
+
+    return transform.CheckDistance(target->transform.center, detectionDistance);
+}
+
+bool Enemy::CanStartAttack(float deltaTime)
+{
+    if (target == nullptr)
+    {
+        return false;
+    }
+
+    return transform.CheckDistance(target->transform.center, attackDistance);
+}
+
+void Enemy::HandlePatrol(Tilemap& tilemap, const float deltaTime)
+{
+    velX = currSpeedX;
+
+    const float newX = transform.topLeft.x + velX * deltaTime;
+
+    if (CheckCollisionX(tilemap, newX))
+    {
+        currSpeedX = -currSpeedX;
+    }
+}
+
+void Enemy::PathfindToTarget(float deltaTime)
+{
+    if (target == nullptr)
+    {
+        return;
+    }
+
+    float targetX = target->transform.center.x;
+
+    if (targetX > transform.center.x)
+    {
+        velX = currSpeedX;
+    }
+    else
+    {
+        velX = -currSpeedX;
+    }
 }

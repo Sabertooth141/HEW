@@ -12,6 +12,8 @@
 #include "../Lib/conioex_custom.h"
 #include "../Systems/EnemyManager.h"
 #include "../VFX/AttackVFXManager.h"
+#include "../Object/Entity/Enemy/Mine/Mine.h"
+#include "../Object/Entity/Enemy/UGV/UGV.h"
 
 #define TEST_MAP_WIDTH 100
 #define TEST_MAP_HEIGHT 50
@@ -56,23 +58,8 @@ std::vector<PlayerCombatAnimPaths> playerCombatAnimationPaths =
     }
 };
 
-// enemy
-// mine
-std::vector<EnemyAnimPaths> mineAnimationPaths =
-{
-    {
-        EnemyState::MOVE,
-        "../Assets/Enemy/Mine/MineIdle/MineIdle.json",
-        "../Assets/Enemy/Mine/MineIdle/MineIdle.bmp"
-    },
-    {
-        EnemyState::ATTK,
-        "../Assets/Enemy/Mine/MineAttk/MineAttk.json",
-        "../Assets/Enemy/Mine/MineAttk/MineAttk.bmp"
-    }
-};
-
 // VFX
+// player
 std::vector<PlayerCombatAnimPaths> playerAttackVFXPaths =
 {
     {
@@ -92,10 +79,11 @@ std::vector<PlayerCombatAnimPaths> playerAttackVFXPaths =
     }
 };
 
-std::vector<EnemyAnimPaths> enemyAttackVFXPaths =
+// mine
+std::vector<EnemyAnimPaths<EnemyVFXType>> mineAttackVFXPaths =
 {
     {
-        EnemyState::ATTK,
+        EnemyVFXType::MINE,
         "../Assets/Enemy/Mine/AttkVFX/MineAttkVFX.json",
         "../Assets/Enemy/Mine/AttkVFX/MineAttkVFX.bmp"
     }
@@ -130,7 +118,7 @@ bool Game::Initialize()
         AttackVFXManager::Instance().InitAnimation(effect);
     }
 
-    for (const auto& effect : enemyAttackVFXPaths)
+    for (const auto& effect : mineAttackVFXPaths)
     {
         AttackVFXManager::Instance().InitAnimation(effect);
     }
@@ -156,28 +144,27 @@ bool Game::Initialize()
         playerController.InitAttackAnimation(animation);
     }
 
-    // TODO: TEMP
-    const float enemyStartX = playerStartX + 20;
-    const float enemyStartY = playerStartY;
-
-    // enemies
-    // EnemyConfig enemyCfg = config::Enemy();
-    // enemyCfg.x = enemyStartX;
-    // enemyCfg.y = enemyStartY;
-    // enemyCfg.targetTransform = &playerController.transform;
-    //
-    // EnemyManager::Instance().CreateEnemy(enemyCfg);
-
-    MineConfig mineCfg = config::Mine();
-    mineCfg.x = enemyStartX + 50;
-    mineCfg.y = enemyStartY;
-    mineCfg.target = &playerController;
-
-    Enemy* enemyPtr = EnemyManager::Instance().CreateEnemy<Mine, MineConfig>(mineCfg);
-    for (const auto& animation : mineAnimationPaths)
+    for (int x = 0; x < mapWidth; x++)
     {
-        enemyPtr->InitAnimation(animation);
+        for (int y = 0 ; y < mapHeight; y++)
+        {
+            if (tileMap.GetTile(x, y).GetTileID() == 23)
+            {
+                MineConfig mineCfg = config::Mine();
+                mineCfg.x = tileMap.TileToWorldX(x);
+                mineCfg.y = tileMap.TileToWorldY(y);
+                mineCfg.target = &playerController;
+
+                EnemyManager::Instance().CreateEnemy<Mine, MineConfig>(mineCfg);
+            }
+        }
     }
+    // UGVConfig ugvCfg = config::UGV();
+    // ugvCfg.x = enemyStartX;
+    // ugvCfg.y = enemyStartY + 100;
+    // ugvCfg.target = &playerController;
+    //
+    // EnemyManager::Instance().CreateEnemy<UGV, UGVConfig>(ugvCfg);
 
     // subsystems
     const VFXConfig vfxCfg = sysCfg::VFXCfg();
@@ -276,7 +263,6 @@ void Game::Draw()
 
     if (TimeManager::Instance().IsTimeStopped())
     {
-        DebugPrintf("time stopped\n");
         VFXManager::ApplyGrayScaleToFrameBuffer();
 
         playerController.Draw(cam);

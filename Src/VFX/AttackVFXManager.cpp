@@ -90,9 +90,10 @@ void AttackVFXManager::PlayAttackVFX(const Transform* playTransform,
     animatorToPlay->Play(effectToAdd.isLoop);
 }
 
-void AttackVFXManager::PlayAttackVFX(const Transform* playTransform, const Vector2 offset, const EnemyState enemyState, const bool flipHorizontal, const bool attached)
+void AttackVFXManager::PlayAttackVFX(const Transform* playTransform, Vector2 offset, EnemyVFXType enemyType, bool flipHorizontal, bool
+                                     attached)
 {
-    Animator* animatorToPlay = vfxAnimators.GetAnimator(enemyState);
+    Animator* animatorToPlay = vfxAnimators.GetAnimator(enemyType);
     if (animatorToPlay == nullptr)
     {
         return;
@@ -127,11 +128,11 @@ void AttackVFXManager::InitAnimation(const PlayerCombatAnimPaths& path)
     vfxAnimators.AddAnimator(path.animationState, std::move(animator));
 }
 
-void AttackVFXManager::InitAnimation(const EnemyAnimPaths& path)
+void AttackVFXManager::InitAnimation(const EnemyAnimPaths<EnemyVFXType>& path)
 {
     std::unique_ptr<Animator> animator = std::make_unique<Animator>();
     animator->LoadSpriteSheet(path.jsonPath.c_str(), path.bmpPath.c_str());
     animator->SetLoopStartFrame(path.startFrame);
 
-    vfxAnimators.AddAnimator(path.animationState, std::move(animator));
+    vfxAnimators.AddAnimator(path.animationName, std::move(animator));
 }

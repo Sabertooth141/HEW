@@ -66,7 +66,6 @@ float TimeManager::GetWorldDeltaTime(const float realDeltaTime) const
 
 void TimeManager::RecordPlayerSnapshot(const PlayerSnapshot& snapshot)
 {
-    DebugPrintf("%d", rewindIndex);
     rewindBuffer[rewindIndex] = snapshot;
     rewindIndex = (rewindIndex + 1) % static_cast<int>(rewindBuffer.size());
 

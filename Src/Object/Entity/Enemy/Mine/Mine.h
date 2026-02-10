@@ -14,13 +14,13 @@ public:
 
     void Start() override;
     void Initialize(const MineConfig& config);
-    void Update(float deltaTime, const Tilemap& tileMap) override;
+    void Update(float deltaTime, Tilemap& tileMap) override;
     void Draw(const Camera& cam) override;
-    void HandleMovement(float deltaTime, const Tilemap& tileMap) override;
+    void HandleMovement(float deltaTime, Tilemap& tileMap) override;
     void HandleAttack(Entity* inTarget) override;
 
 protected:
-    bool DetectTarget(float deltaTime) override;
+    bool CanStartAttack(float deltaTime) override;
 private:
     void HandleExplosion(float deltaTime);
 

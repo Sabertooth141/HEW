@@ -7,7 +7,9 @@
 #include <memory>
 #include <vector>
 #include "../Object/Entity/Enemy/Enemy.h"
-#include "../Object/Entity/Enemy/Mine/Mine.h"
+
+class UGV;
+class Mine;
 
 struct EnemyManager
 {
@@ -19,22 +21,45 @@ struct EnemyManager
 
     std::vector<std::unique_ptr<Enemy>> activeEnemies;
 
-    template<typename T, typename ConfigT>
+    template <typename T, typename ConfigT>
     T* CreateEnemy(const ConfigT& config)
     {
         auto enemy = std::make_unique<T>();
         enemy->Initialize(config);
 
+        const auto& paths = [this]() -> const auto&
+        {
+            if constexpr (std::is_same_v<T, Mine>)
+            {
+                return mineAnimationPaths;
+            }
+            else if constexpr (std::is_same_v<T, UGV>)
+            {
+                return UGVAnimationPaths;
+            }
+            else
+            {
+                static_assert(false, "No animation path defined for enemy type");
+            }
+        }();
+
+        for (const auto& animation : paths)
+        {
+            enemy->InitAnimation(animation);
+        }
+
         activeEnemies.push_back(std::move(enemy));
+
         return static_cast<T*>(activeEnemies.back().get());
     }
 
     void UnregisterEnemy(Enemy* inEnemy)
     {
         std::erase_if(activeEnemies,
-            [inEnemy](const std::unique_ptr<Enemy>& e) {
-                return e.get() == inEnemy;
-            });
+                      [inEnemy](const std::unique_ptr<Enemy>& e)
+                      {
+                          return e.get() == inEnemy;
+                      });
     }
 
     [[nodiscard]] std::vector<Enemy*> GetActiveEnemies() const
@@ -47,6 +72,39 @@ struct EnemyManager
         }
         return res;
     }
+
+private:
+    // ANIMATIONS
+    // mine
+
+    std::vector<EnemyAnimPaths<EnemyState>> mineAnimationPaths =
+    {
+        {
+            EnemyState::PATROL,
+            "../Assets/Enemy/Mine/MineIdle/MineIdle.json",
+            "../Assets/Enemy/Mine/MineIdle/MineIdle.bmp"
+        },
+        {
+            EnemyState::ATTK,
+            "../Assets/Enemy/Mine/MineAttk/MineAttk.json",
+            "../Assets/Enemy/Mine/MineAttk/MineAttk.bmp"
+        }
+    };
+
+    // UGV
+    std::vector<EnemyAnimPaths<EnemyState>> UGVAnimationPaths =
+    {
+        {
+            EnemyState::PATROL,
+            "../Assets/Enemy/UGV/UGVIdle/UGVIdle.json",
+            "../Assets/Enemy/UGV/UGVIdle/UGVIdle.bmp"
+        },
+        {
+            EnemyState::PATHFIND,
+            "../Assets/Enemy/UGV/UGVIdle/UGVIdle.json",
+            "../Assets/Enemy/UGV/UGVIdle/UGVIdle.bmp"
+        }
+    };
 };
 
 #endif //HEW_ENEMYMANAGER_H

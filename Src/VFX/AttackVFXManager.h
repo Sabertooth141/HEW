@@ -13,6 +13,11 @@ enum class EnemyState : unsigned char;
 enum class PlayerCombatState : unsigned char;
 class Animator;
 
+enum class EnemyVFXType : unsigned char
+{
+    MINE,
+};
+
 class AttackVFXManager
 {
 public:
@@ -29,10 +34,12 @@ public:
     void Update(float deltaTime);
     void Draw(const Camera& camera);
 
-    void PlayAttackVFX(const Transform* playTransform, Vector2 offset, PlayerCombatState playerState, bool flipHorizontal, bool attached = false);
-    void PlayAttackVFX(const Transform* playTransform, Vector2 offset, EnemyState enemyState, bool flipHorizontal, bool attached = false);
+    void PlayAttackVFX(const Transform* playTransform, Vector2 offset, PlayerCombatState playerState,
+                       bool flipHorizontal, bool attached = false);
+    void PlayAttackVFX(const Transform* playTransform, Vector2 offset, EnemyVFXType enemyType, bool flipHorizontal,
+                       bool attached = false);
     void InitAnimation(const PlayerCombatAnimPaths& path);
-    void InitAnimation(const EnemyAnimPaths& path);
+    void InitAnimation(const EnemyAnimPaths<EnemyVFXType>& path);
 
 private:
     AttackVFXAnimators vfxAnimators{};

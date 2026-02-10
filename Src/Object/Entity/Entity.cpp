@@ -32,7 +32,7 @@ void Entity::Start()
     Object::Start();
 }
 
-void Entity::Update(const float deltaTime, const Tilemap& tileMap)
+void Entity::Update(const float deltaTime, Tilemap& tileMap)
 {
     Object::Update(deltaTime, tileMap);
     ApplyPhysics(deltaTime);
@@ -46,7 +46,7 @@ void Entity::Draw(const Camera& cam)
     Object::Draw(cam);
 }
 
-void Entity::HandleMovement(const float deltaTime, const Tilemap& tileMap)
+void Entity::HandleMovement(const float deltaTime, Tilemap& tileMap)
 {
     float newX = transform.topLeft.x + velX * deltaTime;
     float newY = transform.topLeft.y + velY * deltaTime;

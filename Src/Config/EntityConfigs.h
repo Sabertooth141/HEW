@@ -22,6 +22,7 @@ namespace config
         config.maxFallSpeed = 1000.0f;
         config.airResistance = 3.0f;
         config.dashDuration = 0.1f;
+        config.checkGroundOffset = 10;
 
         config.maxHp = 100;
 
@@ -58,11 +59,11 @@ namespace config
         config.data[1].recovery = 0.2f;
 
         // attk 2
-        config.data[2].hitboxOffsetX = 40;
+        config.data[2].hitboxOffsetX = 70;
         config.data[2].hitboxOffsetY = 0;
         config.data[2].VFXOffsetX = 50;
         config.data[2].VFXOffsetY = 0;
-        config.data[2].width = 60;
+        config.data[2].width = 150;
         config.data[2].height = 54;
         config.data[2].duration = 1;    // to be set by frame data IN SEC
         config.data[2].damage = 40;
@@ -102,6 +103,8 @@ namespace config
         config.maxFallSpeed = 1000.0f;
         config.checkGroundOffset = 2;
 
+        config.attackCooldown = 4;
+
         config.maxHp = 50;
         config.isFacingRight = true;
 
@@ -109,6 +112,32 @@ namespace config
 
         config.explosionRadius = 128;
         config.timeToExplode = 1.5;
+
+        config.invicCooldown = 0.5;
+
+        return config;
+    }
+
+    inline UGVConfig UGV()
+    {
+        UGVConfig config{};
+        config.width = 64;
+        config.height = 64;
+        config.color = GREEN;
+        config.gravity = 800.0f;
+        config.maxFallSpeed = 1000.0f;
+        config.checkGroundOffset = 30;
+
+        config.maxHp = 80;
+        config.isFacingRight = true;
+
+        config.knockBackForce = 200.0f;
+        config.attackCooldown = 5;
+
+        config.detectionDistance = 200.0f;
+        config.attackDistance = 20;
+
+        config.moveSpeed = 200.0f;
 
         config.invicCooldown = 0.5;
 

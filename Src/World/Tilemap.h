@@ -22,7 +22,7 @@ public:
 
     // TILE ACCESS
     [[nodiscard]] Tile GetTile(int x, int y) const;
-    void SetTile(int x, int y, TileFlag flag = TileFlag::COUNT, int tileID = -1) const;
+    void SetTile(int x, int y, TileFlag flag = TileFlag::COUNT, int tileID = -1);
 
     // WORLD COORD CONVERSION
     [[nodiscard]] Tile GetTileInWorld(float x, float y) const;
@@ -41,6 +41,7 @@ public:
     // MAP LOADING
     bool LoadFromArr(const std::vector<uint8_t>& data, int width, int height, Tileset& inTileset, int inTileSize);
     static std::vector<uint8_t> ParseMapCSV(const std::string& filePath, int& mapWidth, int& mapHeight);
+    std::vector<Tile> GetTileMap() const { return tiles; }
 
     // GETTERS
     [[nodiscard]] int GetWidthTiles() const { return widthTiles; }
@@ -50,7 +51,7 @@ public:
     [[nodiscard]] int GetHeightPixels() const { return heightTiles * tileSize; }
 
 private:
-    Tile* tiles;
+    std::vector<Tile> tiles;
     Tileset* tileset;
     int widthTiles;
     int heightTiles;

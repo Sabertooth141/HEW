@@ -10,7 +10,7 @@
 #include "Camera.h"
 #include "Tileset.h"
 
-Tilemap::Tilemap() : tiles(nullptr), tileset(nullptr), widthTiles(0), heightTiles(0), tileSize(16)
+Tilemap::Tilemap() : tileset(nullptr), widthTiles(0), heightTiles(0), tileSize(16)
 {
 }
 
@@ -31,7 +31,7 @@ bool Tilemap::Initialize(const int width, const int height, const int inTileSize
     this->tileSize = inTileSize;
 
     const int totalTiles = this->widthTiles * this->heightTiles;
-    this->tiles = new Tile[totalTiles];
+    tiles.assign(totalTiles, Tile(TileFlag::AIR));
 
     for (int i = 0; i < totalTiles; i++)
     {
@@ -43,12 +43,7 @@ bool Tilemap::Initialize(const int width, const int height, const int inTileSize
 
 void Tilemap::Shutdown()
 {
-    if (tiles != nullptr)
-    {
-        delete[] tiles;
-        tiles = nullptr;
-    }
-
+    tiles.clear();
     widthTiles = 0;
     heightTiles = 0;
 }
@@ -60,7 +55,7 @@ Tile Tilemap::GetTile(const int x, const int y) const
         return Tile(TileFlag::AIR);
     }
 
-    if (tiles == nullptr)
+    if (tiles.empty())
     {
         return Tile(TileFlag::AIR);
     }
@@ -68,14 +63,14 @@ Tile Tilemap::GetTile(const int x, const int y) const
     return tiles[GetIndex(x, y)];
 }
 
-void Tilemap::SetTile(const int x, const int y, const TileFlag flag, const int tileID) const
+void Tilemap::SetTile(const int x, const int y, const TileFlag flag, const int tileID)
 {
     if (!IsValidTile(x, y))
     {
         return;
     }
 
-    if (tiles == nullptr)
+    if (tiles.empty())
     {
         return;
     }
@@ -118,7 +113,7 @@ bool Tilemap::IsSolidAt(const float x, const float y) const
         return false;
     }
 
-    if (tiles == nullptr)
+    if (tiles.empty())
     {
         return false;
     }
@@ -136,7 +131,7 @@ bool Tilemap::IsPlatformAt(const float x, const float y) const
         return false;
     }
 
-    if (tiles == nullptr)
+    if (tiles.empty())
     {
         return false;
     }
@@ -146,7 +141,7 @@ bool Tilemap::IsPlatformAt(const float x, const float y) const
 
 void Tilemap::Draw(const Camera& cam) const
 {
-    if (tiles == nullptr)
+    if (tiles.empty())
     {
         return;
     }

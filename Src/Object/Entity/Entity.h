@@ -16,7 +16,7 @@ public:
 
     void Initialize(const EntityConfig& config);
     void Start() override;
-    void Update(float deltaTime, const Tilemap& tileMap) override;
+    void Update(float deltaTime, Tilemap& tileMap) override;
     void Draw(const Camera& cam) override;
 
     virtual void TakeDamage(float inDamage);
@@ -26,7 +26,7 @@ public:
     virtual bool IsFacingRight() { return isFacingRight; }
 
 protected:
-    virtual void HandleMovement(float deltaTime, const Tilemap& tileMap);
+    virtual void HandleMovement(float deltaTime, Tilemap& tileMap);
     virtual void ApplyPhysics(float deltaTime);
 
     virtual bool CheckCollisionX(const Tilemap& tilemap, float newX);
