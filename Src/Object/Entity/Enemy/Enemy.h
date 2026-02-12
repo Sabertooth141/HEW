@@ -17,7 +17,7 @@ public:
     void Initialize(const EnemyConfig& config);
     void Start() override;
     void Update(float deltaTime, Tilemap& tileMap) override;
-    void Draw(const Camera& cam) override;
+    void Draw(Camera& cam) override;
     void TakeDamage(float inDamage) override;
     void InitAnimation(const EnemyAnimPaths<EnemyState>& path);
 protected:
@@ -35,13 +35,14 @@ protected:
 
 protected:
     Entity* target;
-    float attackCooldown;
-    float attackCooldownTimer;
-    bool canAttack;
 
     float moveSpeed;
     float damage;
 
+    bool canAttack;
+    float attackCooldown;
+    float attackCooldownTimer;
+    bool isAttacking;
     float attackDistance;
     float detectionDistance;
 

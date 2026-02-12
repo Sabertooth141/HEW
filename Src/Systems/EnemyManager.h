@@ -99,6 +99,11 @@ private:
     std::vector<EnemyAnimPaths<EnemyState>> UGVAnimationPaths =
     {
         {
+            EnemyState::IDLE,
+            "../Assets/Enemy/UGV/UGVIdle/UGVIdle.json",
+            "../Assets/Enemy/UGV/UGVIdle/UGVIdle.bmp"
+        },
+        {
             EnemyState::PATROL,
             "../Assets/Enemy/UGV/UGVIdle/UGVIdle.json",
             "../Assets/Enemy/UGV/UGVIdle/UGVIdle.bmp"
@@ -107,6 +112,11 @@ private:
             EnemyState::PATHFIND,
             "../Assets/Enemy/UGV/UGVIdle/UGVIdle.json",
             "../Assets/Enemy/UGV/UGVIdle/UGVIdle.bmp"
+        },
+        {
+            EnemyState::ATTK,
+            "../Assets/Enemy/UGV/UGVAttk/UGVAttk.json",
+            "../Assets/Enemy/UGV/UGVAttk/UGVAttk.bmp"
         }
     };
 };

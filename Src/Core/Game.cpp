@@ -124,8 +124,8 @@ bool Game::Initialize()
     }
 
     // TODO: TEMP
-    const float playerStartX = mapWidth / 2 * TILE_SIZE;
-    const float playerStartY = mapHeight / 2 * TILE_SIZE + 40;
+    const float playerStartX = mapWidth / 2 * TILE_SIZE - 200;
+    const float playerStartY = mapHeight / 2 * TILE_SIZE + 300;
 
     // playerController
     PlayerConfig playerCfg = config::Player();
@@ -144,27 +144,37 @@ bool Game::Initialize()
         playerController.InitAttackAnimation(animation);
     }
 
-    for (int x = 0; x < mapWidth; x++)
-    {
-        for (int y = 0 ; y < mapHeight; y++)
-        {
-            if (tileMap.GetTile(x, y).GetTileID() == 23)
-            {
-                MineConfig mineCfg = config::Mine();
-                mineCfg.x = tileMap.TileToWorldX(x);
-                mineCfg.y = tileMap.TileToWorldY(y);
-                mineCfg.target = &playerController;
-
-                EnemyManager::Instance().CreateEnemy<Mine, MineConfig>(mineCfg);
-            }
-        }
-    }
-    // UGVConfig ugvCfg = config::UGV();
-    // ugvCfg.x = enemyStartX;
-    // ugvCfg.y = enemyStartY + 100;
-    // ugvCfg.target = &playerController;
+    // for (int x = 0; x < mapWidth; x++)
+    // {
+    //     for (int y = 0 ; y < mapHeight; y++)
+    //     {
+    //         if (tileMap.GetTile(x, y).GetTileID() == 23)
+    //         {
+    //             MineConfig mineCfg = config::Mine();
+    //             mineCfg.x = tileMap.TileToWorldX(x);
+    //             mineCfg.y = tileMap.TileToWorldY(y);
+    //             mineCfg.target = &playerController;
     //
-    // EnemyManager::Instance().CreateEnemy<UGV, UGVConfig>(ugvCfg);
+    //             EnemyManager::Instance().CreateEnemy<Mine, MineConfig>(mineCfg);
+    //         }
+    //     }
+    // }
+    //
+
+    // MineConfig mineCfg = config::Mine();
+    // mineCfg.x = playerStartX + 100;
+    // mineCfg.y = playerStartY;
+    // mineCfg.target = &playerController;
+    // mineCfg.maxHp = 10000;
+
+    // EnemyManager::Instance().CreateEnemy<Mine, MineConfig>(mineCfg);
+
+    UGVConfig ugvCfg = config::UGV();
+    ugvCfg.x = playerStartX;
+    ugvCfg.y = playerStartY;
+    ugvCfg.target = &playerController;
+
+    EnemyManager::Instance().CreateEnemy<UGV, UGVConfig>(ugvCfg);
 
     // subsystems
     const VFXConfig vfxCfg = sysCfg::VFXCfg();
@@ -174,11 +184,11 @@ bool Game::Initialize()
     TimeManager::Instance().Initialize(timeManagerCfg);
 
     // camera
-    cam.Initialize(static_cast<float>(GameConfig::VIEW_WIDTH) / 2, static_cast<float>(GameConfig::VIEW_HEIGHT) / 2,
+    Camera::Instance().Initialize(static_cast<float>(GameConfig::VIEW_WIDTH) / 2, static_cast<float>(GameConfig::VIEW_HEIGHT) / 2,
                    GameConfig::VIEW_WIDTH,
                    GameConfig::VIEW_HEIGHT);
-    cam.SetBounds(0, 0, static_cast<float>(tileMap.GetWidthPixels()), static_cast<float>(tileMap.GetHeightPixels()));
-    cam.SetPosition(playerController.GetCenterPosition().x, playerController.GetCenterPosition().y);
+    Camera::Instance().SetBounds(0, 0, static_cast<float>(tileMap.GetWidthPixels()), static_cast<float>(tileMap.GetHeightPixels()));
+    Camera::Instance().SetPosition(playerController.GetCenterPosition().x, playerController.GetCenterPosition().y);
 
     lastFrameTime = timeGetTime();
     isGameRunning = true;
@@ -223,6 +233,12 @@ void Game::Start()
 void Game::Update(const float deltaTime)
 {
     TimeManager::Instance().Update(deltaTime);
+    Camera::Instance().UpdateShake(deltaTime);
+
+    if (TimeManager::Instance().IsHitStopped())
+    {
+        return;
+    }
 
     // enemies / other objects will use this delta time
     const float worldDelta = TimeManager::Instance().GetWorldDeltaTime(deltaTime);
@@ -240,7 +256,7 @@ void Game::Update(const float deltaTime)
     Vector2 camTarget{};
     camTarget.x = playerController.GetCenterPosition().x;
     camTarget.y = playerController.GetCenterPosition().y;
-    cam.FollowTarget(camTarget, 0.1f);
+    Camera::Instance().FollowTarget(camTarget, 0.1f);
 }
 
 void Game::ShutDown()
@@ -252,23 +268,23 @@ void Game::ShutDown()
 void Game::Draw()
 {
     ClearScreen();
-    tileMap.Draw(cam);
+    tileMap.Draw(Camera::Instance());
 
-    playerController.Draw(cam);
+    playerController.Draw(Camera::Instance());
 
     for (const auto& e : EnemyManager::Instance().GetActiveEnemies())
     {
-        e->Draw(cam);
+        e->Draw(Camera::Instance());
     }
 
     if (TimeManager::Instance().IsTimeStopped())
     {
         VFXManager::ApplyGrayScaleToFrameBuffer();
 
-        playerController.Draw(cam);
+        playerController.Draw(Camera::Instance());
     }
 
-    AttackVFXManager::Instance().Draw(cam);
+    AttackVFXManager::Instance().Draw(Camera::Instance());
 
     WriteTextW(20, GameConfig::VIEW_HEIGHT - 30, L"テスト", 20);
 

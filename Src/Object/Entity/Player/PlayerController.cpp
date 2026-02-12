@@ -35,6 +35,8 @@ void PlayerController::Initialize(const PlayerConfig& config, const PlayerAttack
     normalDashDuration = config.dashDuration;
     normalDashSpeed = config.dashSpeed;
 
+    trailFadeDuration = config.trailFadeDuration;
+
     attackController.Initialize(attackConfig, this);
 }
 
@@ -51,23 +53,54 @@ void PlayerController::Start()
 
 void PlayerController::Update(const float deltaTime, Tilemap& tileMap)
 {
+    if (TimeManager::Instance().IsRewinding())
+    {
+        PlayerSnapshot rewind;
+        if (TimeManager::Instance().UpdateRewind(deltaTime, rewind))
+        {
+            transform.topLeft.x = rewind.x;
+            transform.topLeft.y = rewind.y;
+            transform.CalculateCenterPosition();
+            velX = rewind.velX;
+            velY = rewind.velY;
+            isFacingRight = rewind.isFacingRight;
+        }
+
+        return;
+    }
+
     HandleInput(deltaTime);
     attackController.Update(deltaTime, transform, isFacingRight);
     HandleAnimationUpdate(deltaTime);
 
     Entity::Update(deltaTime, tileMap);
 
+    if (!isKnockedBack && normalStateMachine.GetCurrState() == PlayerNormalState::KNOCKBACK)
+    {
+        normalStateMachine.ChangeState(PlayerNormalState::IDLE);
+    }
+
+    if (trailFadeTimer > 0)
+    {
+        trailFadeTimer -= deltaTime;
+    }
+
     snapshot.x = transform.topLeft.x;
     snapshot.y = transform.topLeft.y;
     snapshot.velX = velX;
     snapshot.velY = velY;
     snapshot.isFacingRight = isFacingRight;
+    snapshot.frame = animatorPlaying ? animatorPlaying->GetCurrentFrameBmp() : nullptr;
 
     TimeManager::Instance().RecordPlayerSnapshot(snapshot);
 }
 
-void PlayerController::Draw(const Camera& cam)
+void PlayerController::Draw(Camera& cam)
 {
+    DrawRewind(cam);
+
+    DrawTrail(cam);
+
     if (animatorPlaying != nullptr)
     {
         animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, !isFacingRight);
@@ -78,10 +111,10 @@ void PlayerController::Draw(const Camera& cam)
         return;
     }
 
-    const PlayerSnapshot holoSnapshot = TimeManager::Instance().GetPlayerSnapshot();
-    int screenX = cam.WorldToScreenX(holoSnapshot.x);
-    int screenY = cam.WorldToScreenY(holoSnapshot.y);
-    DrawRect(screenX, screenY, screenX + transform.size.x, screenY + transform.size.y, RED, false);
+    // const PlayerSnapshot holoSnapshot = TimeManager::Instance().GetPlayerSnapshot();
+    // int screenX = cam.WorldToScreenX(holoSnapshot.x);
+    // int screenY = cam.WorldToScreenY(holoSnapshot.y);
+    // DrawRect(screenX, screenY, screenX + transform.size.x, screenY + transform.size.y, RED, false);
 
     // Hitbox& hitbox = attackController.GetHitBox();
     // if (hitbox.isActive)
@@ -124,6 +157,7 @@ void PlayerController::Dash(const float dashVel, const float inDashDuration, con
 
     currDashSpeed = dashVel;
     isDashing = true;
+    isDrawTrail = true;
 }
 
 void PlayerController::TakeDamage(const float inDamage)
@@ -140,7 +174,34 @@ SpriteSheet* PlayerController::GetSpriteSheetFromAnimator(const PlayerCombatStat
 
 void PlayerController::HandleMovement(const float deltaTime, Tilemap& tileMap)
 {
-    if (!isDashing)
+    if (isGrounded && !isDashing && !isKnockedBack)
+    {
+        if (!isMovingInput)
+        {
+            normalStateMachine.ChangeState(PlayerNormalState::IDLE);
+            velX = 0;
+        }
+    }
+    else if (!isKnockedBack)
+    {
+        velX = velX + (0 - velX) * airResistance * deltaTime;
+
+        if (velX > walkSpeed)
+        {
+            velX = walkSpeed;
+        }
+        else if (velX < -walkSpeed)
+        {
+            velX = -walkSpeed;
+        }
+
+        if (fabs(velX) < 0.1f)
+        {
+            velX = 0;
+        }
+    }
+
+    if (!isDashing && !isKnockedBack)
     {
         if (!attackController.CanMove())
         {
@@ -164,7 +225,7 @@ void PlayerController::HandleMovement(const float deltaTime, Tilemap& tileMap)
             }
         }
     }
-    else
+    else if (isDashing)
     {
         currSpeedX = currDashSpeed;
         if (isFacingRight)
@@ -185,6 +246,8 @@ void PlayerController::HandleMovement(const float deltaTime, Tilemap& tileMap)
             isDamageable = true;
             dashTimer = 0;
             isDashing = false;
+            trailFadeTimer = trailFadeDuration;
+            isDrawTrail = false;
         }
     }
 
@@ -206,14 +269,35 @@ void PlayerController::ApplyPhysics(const float deltaTime)
     Entity::ApplyPhysics(deltaTime);
 }
 
+void PlayerController::TakeKnockback(const float knockBackForce, const bool knockBackDirection)
+{
+    if (!isDamageable)
+    {
+        return;
+    }
+
+    normalStateMachine.ChangeState(PlayerNormalState::KNOCKBACK);
+
+    Entity::TakeKnockback(knockBackForce, knockBackDirection);
+}
+
 void PlayerController::HandleInput(const float deltaTime)
 {
+    isMovingInput = false;
+
+    if (isKnockedBack)
+    {
+        return;
+    }
+
     if (input.moveLeft.IsPressed())
     {
         if (isDashing)
         {
             return;
         }
+
+        isMovingInput = true;
 
         if (attackController.CanMove() || attackController.IsInRecovery())
         {
@@ -234,6 +318,8 @@ void PlayerController::HandleInput(const float deltaTime)
             return;
         }
 
+        isMovingInput = true;
+
         if (attackController.CanMove() || attackController.IsInRecovery())
         {
             isFacingRight = true;
@@ -245,32 +331,6 @@ void PlayerController::HandleInput(const float deltaTime)
 
         velX = currSpeedX;
         normalStateMachine.ChangeState(PlayerNormalState::MOVE);
-    }
-    else
-    {
-        if (isGrounded && !isDashing)
-        {
-            normalStateMachine.ChangeState(PlayerNormalState::IDLE);
-            velX = 0;
-        }
-        else
-        {
-            velX = velX + (0 - velX) * airResistance * deltaTime;
-
-            if (velX > walkSpeed)
-            {
-                velX = walkSpeed;
-            }
-            else if (velX < -walkSpeed)
-            {
-                velX = -walkSpeed;
-            }
-
-            if (fabs(velX) < 0.1f)
-            {
-                velX = 0;
-            }
-        }
     }
 
     if (input.jump.IsEdge() && isGrounded)
@@ -323,17 +383,18 @@ void PlayerController::HandleInput(const float deltaTime)
 
 void PlayerController::HandleTimeRewind()
 {
-    PlayerSnapshot playerSnapshot{};
-    if (!TimeManager::Instance().GetPlayerSnapshot(playerSnapshot))
-    {
-        return;
-    }
-
-    transform.topLeft.x = playerSnapshot.x;
-    transform.topLeft.y = playerSnapshot.y;
-    velX = playerSnapshot.velX;
-    velY = playerSnapshot.velY;
-    isFacingRight = playerSnapshot.isFacingRight;
+    TimeManager::Instance().StartRewind();
+    // PlayerSnapshot playerSnapshot{};
+    // if (!TimeManager::Instance().GetPlayerSnapshot(playerSnapshot))
+    // {
+    //     return;
+    // }
+    //
+    // transform.topLeft.x = playerSnapshot.x;
+    // transform.topLeft.y = playerSnapshot.y;
+    // velX = playerSnapshot.velX;
+    // velY = playerSnapshot.velY;
+    // isFacingRight = playerSnapshot.isFacingRight;
 }
 
 void PlayerController::HandleAnimationUpdate(const float deltaTime)
@@ -393,5 +454,96 @@ void PlayerController::HandleAnimationUpdate(const float deltaTime)
         }
         animatorPlaying->Play(false);
         animatorPlaying->Update(deltaTime);
+    }
+}
+
+void PlayerController::DrawTrail(const Camera& cam) const
+{
+    if (isDrawTrail || trailFadeTimer > 0)
+    {
+        constexpr int trailCount = 3;
+        constexpr int framesBetween = 1;
+
+        const float fadeMult = isDashing ? 1.0f : trailFadeTimer / trailFadeDuration;
+
+        for (int i = 1; i <= trailCount; i++)
+        {
+            PlayerSnapshot trail;
+
+            if (!TimeManager::Instance().GetSnapshotAt(i * framesBetween, trail))
+            {
+                continue;
+            }
+
+            if (trail.frame == nullptr)
+            {
+                continue;
+            }
+
+            float t = 1.0f - (static_cast<float>(i) / trailCount);
+            BYTE brightness = static_cast<BYTE>(200 * t * fadeMult);
+            DebugPrintf("brightness = %d \n", brightness);
+            RGBQUAD trailColor = {brightness, static_cast<BYTE>(brightness * 0.5), 255, 0};
+
+            DrawTrailFromSnapshot(cam, trail, trailColor, fadeMult);
+        }
+    }
+}
+
+void PlayerController::DrawRewind(const Camera& cam) const
+{
+    // Draw rewind path preview
+    if (TimeManager::Instance().IsRewinding())
+    {
+        constexpr int previewCount = 30;
+        constexpr int framesBetween = 4;
+
+        for (int i = 1; i <= previewCount; i++)
+        {
+            PlayerSnapshot preview;
+            int readPos = /* current rewindReadHead */ i * framesBetween;
+
+            if (!TimeManager::Instance().GetSnapshotAt(readPos, preview))
+                continue;
+            if (preview.frame == nullptr)
+                continue;
+            float t = (static_cast<float>(i) / (previewCount / 3) );
+            BYTE brightness = static_cast<BYTE>(150 * t);
+            RGBQUAD color = {brightness, static_cast<BYTE>(brightness * 0.8f), static_cast<BYTE>(brightness * 0.3f), 0};
+
+
+            DrawTrailFromSnapshot(cam, preview, color, t);
+        }
+    }
+}
+
+void PlayerController::DrawTrailFromSnapshot(const Camera& cam, const PlayerSnapshot& snapshotToDraw,
+                                             const RGBQUAD& trailColor, const float fadeMult) const
+{
+    if (snapshotToDraw.frame == nullptr)
+    {
+        return;
+    }
+
+    const int screenX = cam.WorldToScreenX(snapshotToDraw.x);
+    const int screenY = cam.WorldToScreenY(snapshotToDraw.y);
+
+    if (!cam.IsVisible(snapshotToDraw.x, snapshotToDraw.y, snapshotToDraw.frame->width, snapshotToDraw.frame->height))
+    {
+        return;
+    }
+
+    auto buffer = reinterpret_cast<unsigned char*>(snapshotToDraw.frame->pixel);
+    for (int py = 0; py < snapshotToDraw.frame->height; py++)
+    {
+        for (int px = 0; px < snapshotToDraw.frame->width; px++)
+        {
+            if (*buffer != 0)
+            {
+                int drawX = !snapshotToDraw.isFacingRight ? (snapshotToDraw.frame->width - px - 1) + screenX : px + screenX;
+                DrawPixelDithered(drawX, py + screenY, trailColor, fadeMult);
+            }
+            buffer++;
+        }
     }
 }

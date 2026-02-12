@@ -68,7 +68,7 @@ namespace sysCfg
 
         // time rewind
         config.rewindCooldownMax = 2;
-        config.rewindMagnitude = 0.5;
+        config.rewindMagnitude = 0.7;
 
         return config;
     }

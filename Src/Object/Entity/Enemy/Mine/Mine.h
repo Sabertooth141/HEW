@@ -15,7 +15,7 @@ public:
     void Start() override;
     void Initialize(const MineConfig& config);
     void Update(float deltaTime, Tilemap& tileMap) override;
-    void Draw(const Camera& cam) override;
+    void Draw(Camera& cam) override;
     void HandleMovement(float deltaTime, Tilemap& tileMap) override;
     void HandleAttack(Entity* inTarget) override;
 

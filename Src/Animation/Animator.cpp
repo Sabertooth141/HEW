@@ -11,11 +11,11 @@ Animator::Animator() : spriteSheet(nullptr),
                        currFrame(0),
                        startFrame(0),
                        loopStartFrame(0),
-                       endFrame(0),
+                       endFrame(0), playStartOffset(0),
                        frameTimer(0),
                        isPlaying(false),
                        isPaused(false),
-                       isLoop(true),
+                       isLoop(true), pauseAfterPlay(false),
                        isDirectionForward(true)
 {
 }
@@ -42,7 +42,7 @@ bool Animator::LoadSpriteSheet(const char* jsonFile, const char* bmpFile)
     return spriteSheet != nullptr && !spriteSheet->frames.empty();
 }
 
-void Animator::Play(const bool loop)
+void Animator::Play(const bool loop, const bool inPauseAfterPlay, const float inPlayStartOffset)
 {
     if (spriteSheet == nullptr)
     {
@@ -62,6 +62,8 @@ void Animator::Play(const bool loop)
     isPlaying = true;
     isPaused = false;
     isLoop = loop;
+    playStartOffset = inPlayStartOffset;
+    pauseAfterPlay = inPauseAfterPlay;
 }
 
 void Animator::PlayFromFrame(const int inStartFrame, const int inEndFrame, const bool loop)
@@ -113,6 +115,12 @@ void Animator::Update(const float deltaTime)
 
     if (!isPlaying || isPaused)
     {
+        return;
+    }
+
+    if (playStartOffset > 0)
+    {
+        playStartOffset -= deltaTime;
         return;
     }
 
@@ -212,6 +220,23 @@ int Animator::GetFrameHeight() const
     return frame ? frame->h : 0;
 }
 
+Bmp* Animator::GetCurrentFrameBmp() const
+{
+    if (spriteSheet == nullptr || spriteSheet->frames.empty())
+    {
+        return nullptr;
+    }
+
+    const SpriteFrame* frame = GetCurrentFrame();
+
+    if (frame == nullptr)
+    {
+        return nullptr;
+    }
+
+    return frame->image;
+}
+
 void Animator::AdvanceFrame()
 {
     if (isDirectionForward)
@@ -226,6 +251,11 @@ void Animator::AdvanceFrame()
             else
             {
                 currFrame = endFrame;
+                if (pauseAfterPlay)
+                {
+                    isPaused = true;
+                    return;
+                }
                 isPlaying = false;
             }
         }
@@ -242,6 +272,11 @@ void Animator::AdvanceFrame()
             else
             {
                 currFrame = startFrame;
+                if (pauseAfterPlay)
+                {
+                    isPaused = true;
+                    return;
+                }
                 isPlaying = false;
             }
         }

@@ -14,6 +14,7 @@ enum class PlayerNormalState : uint8_t
     FALL,
     HURT,
     DIE,
+    KNOCKBACK,
     DEFAULT
 };
 

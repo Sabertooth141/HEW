@@ -8,16 +8,25 @@
 
 class UGV final : public Enemy
 {
-protected:
+public:
+    UGV() = default;
+
+    void Initialize(const UGVConfig& config);
     void Update(float deltaTime, Tilemap& tileMap) override;
+
+protected:
     void HandleAttack(Entity* inTarget) override;
+    void HandleAnimationUpdate(float deltaTime) override;
 
 private:
     void HandleAttackWindUp();
     void HandleAttackKnockBack();
 
 private:
+    float knockBackForce;
 
+    float attackWindUpTimer;
+    float attackWindUpDuration;
 };
 
 

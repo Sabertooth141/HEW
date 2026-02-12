@@ -99,6 +99,28 @@ void Camera::ClampToBounds()
     }
 }
 
+void Camera::TriggerScreenShake(const float intensity, const float duration)
+{
+    shakeIntensity = intensity;
+    shakeTimer = duration;
+}
+
+void Camera::UpdateShake(float deltaTime)
+{
+    if (shakeTimer <= 0)
+    {
+        shakeOffsetX = 0;
+        shakeOffsetY = 0;
+        return;
+    }
+
+    shakeTimer -= deltaTime;
+    float t = shakeTimer > 0 ? shakeTimer / shakeIntensity : 0;
+
+    shakeOffsetX = (rand() % 3 - 1) * shakeIntensity * t;
+    shakeOffsetY = (rand() % 3 - 1) * shakeIntensity * t;
+}
+
 float Camera::GetLeft() const
 {
     return x - static_cast<float>(viewW) / 2.0f;
@@ -121,12 +143,12 @@ float Camera::GetBottom() const
 
 int Camera::WorldToScreenX(const float worldX) const
 {
-    return static_cast<int>(worldX - GetLeft());
+    return static_cast<int>(worldX - GetLeft() + shakeOffsetX);
 }
 
 int Camera::WorldToScreenY(const float worldY) const
 {
-    return static_cast<int>(worldY - GetTop());
+    return static_cast<int>(worldY - GetTop() + shakeOffsetY);
 }
 
 float Camera::ScreenToWorldX(const int screenX) const

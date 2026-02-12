@@ -240,8 +240,7 @@ void PlayerAttackController::HandleAttackCollisions()
                                 enemy->GetSize().x, enemy->GetSize().y))
         {
             enemy->TakeDamage(GetCurrentDamage());
-            // hitbox.isActive = false;
-            // break;
+
         }
     }
 }

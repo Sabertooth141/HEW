@@ -13,6 +13,7 @@ enum class EnemyState : uint8_t
     PATHFIND,
     ATTK,
     HURT,
+    STAGGERED,
     DEAD,
     DEFAULT
 };

@@ -99,6 +99,8 @@ struct EntityConfig : ObjectConfig
     float currHp;
     float maxHp;
     bool isFacingRight;
+
+    float knockBackRecoveryTime;
 };
 
 struct PlayerConfig : EntityConfig
@@ -109,6 +111,8 @@ struct PlayerConfig : EntityConfig
     float timeStopDuration;
     float dashDuration;
     float airResistance;
+
+    float trailFadeDuration;
 };
 
 class Entity;
@@ -128,6 +132,8 @@ struct EnemyConfig : EntityConfig
 
 struct MineConfig : EnemyConfig
 {
+    float knockBackForce;
+
     float timeToExplode;
     float explosionRadius;
 };
@@ -135,6 +141,8 @@ struct MineConfig : EnemyConfig
 struct UGVConfig : EnemyConfig
 {
     float knockBackForce;
+
+    float attackWindupDuration;
 };
 
 // INPUT CONFIGS
@@ -181,6 +189,7 @@ struct PlayerSnapshot
     float x, y;
     float velX, velY;
     bool isFacingRight;
+    Bmp* frame = nullptr;
 };
 
 struct AttkData

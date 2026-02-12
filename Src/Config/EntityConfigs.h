@@ -24,10 +24,14 @@ namespace config
         config.dashDuration = 0.1f;
         config.checkGroundOffset = 10;
 
+        config.trailFadeDuration = 0.5;
+
         config.maxHp = 100;
 
         config.isFacingRight = true;
         config.timeStopDuration = 3.0f;
+
+        config.knockBackRecoveryTime = 1.2;
 
         return config;
     }
@@ -38,32 +42,32 @@ namespace config
 
         // attk 0
         config.data[0].damage = 10;
-        config.data[0].hitboxOffsetX = 30;
+        config.data[0].hitboxOffsetX = 40;
         config.data[0].hitboxOffsetY = 0;
         config.data[0].VFXOffsetX = 30;
         config.data[0].VFXOffsetY = -10;
-        config.data[0].width = 60;
+        config.data[0].width = 90;
         config.data[0].height = 54;
         config.data[0].duration = 1;    // to be set by frame data IN SEC
         config.data[0].recovery = 0.3f;
 
         // attk 1
         config.data[1].damage = 20;
-        config.data[1].hitboxOffsetX = 30;
+        config.data[1].hitboxOffsetX = 50;
         config.data[1].hitboxOffsetY = 0;
         config.data[1].VFXOffsetX = 50;
         config.data[1].VFXOffsetY = 0;
-        config.data[1].width = 60;
+        config.data[1].width = 90;
         config.data[1].height = 54;
         config.data[1].duration = 1;    // to be set by frame data IN SEC
         config.data[1].recovery = 0.2f;
 
         // attk 2
-        config.data[2].hitboxOffsetX = 70;
+        config.data[2].hitboxOffsetX = 40;
         config.data[2].hitboxOffsetY = 0;
         config.data[2].VFXOffsetX = 50;
         config.data[2].VFXOffsetY = 0;
-        config.data[2].width = 150;
+        config.data[2].width = 200;
         config.data[2].height = 54;
         config.data[2].duration = 1;    // to be set by frame data IN SEC
         config.data[2].damage = 40;
@@ -86,7 +90,6 @@ namespace config
         config.isFacingRight = true;
 
         config.moveSpeed = 200.0f;
-        config.attackCooldown = 2;
 
         config.invicCooldown = 0.5;
 
@@ -131,11 +134,12 @@ namespace config
         config.maxHp = 80;
         config.isFacingRight = true;
 
-        config.knockBackForce = 200.0f;
-        config.attackCooldown = 5;
+        config.attackWindupDuration = 2.0f;
+        config.knockBackForce = 1000.0f;
+        config.attackCooldown = 4;
 
         config.detectionDistance = 200.0f;
-        config.attackDistance = 20;
+        config.attackDistance = 100;
 
         config.moveSpeed = 200.0f;
 

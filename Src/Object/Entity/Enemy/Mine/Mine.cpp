@@ -40,7 +40,7 @@ void Mine::Update(const float deltaTime, Tilemap& tileMap)
     HandleExplosion(deltaTime);
 }
 
-void Mine::Draw(const Camera& cam)
+void Mine::Draw(Camera& cam)
 {
     if (isExploding)
     {

@@ -17,13 +17,20 @@ public:
     void Initialize(const EntityConfig& config);
     void Start() override;
     void Update(float deltaTime, Tilemap& tileMap) override;
-    void Draw(const Camera& cam) override;
+    void Draw(Camera& cam) override;
 
     virtual void TakeDamage(float inDamage);
     virtual void Die();
 
     virtual bool IsGrounded() { return isGrounded; }
     virtual bool IsFacingRight() { return isFacingRight; }
+
+    /**
+     *
+     * @param knockBackForce
+     * @param knockBackDirection true == right, false == left
+     */
+    virtual void TakeKnockback(float knockBackForce, bool knockBackDirection);
 
 protected:
     virtual void HandleMovement(float deltaTime, Tilemap& tileMap);
@@ -48,6 +55,11 @@ protected:
     bool isFacingRight{};
 
     float currSpeedX;
+
+    bool isKnockedBack = false;
+    bool knockedBackDirection = false;
+    float knockBackRecoveryDuration;
+    float knockBackRecoveryTimer;
 };
 
 

@@ -20,6 +20,7 @@ void Entity::Initialize(const EntityConfig& config)
     currHp = config.currHp;
     maxHp = config.maxHp;
     isFacingRight = config.isFacingRight;
+    knockBackRecoveryDuration = config.knockBackRecoveryTime;
 
     if (currHp == 0)
     {
@@ -39,15 +40,44 @@ void Entity::Update(const float deltaTime, Tilemap& tileMap)
     isGrounded = CheckGrounded(tileMap);
 
     HandleMovement(deltaTime, tileMap);
+
+    if (knockBackRecoveryTimer > 0)
+    {
+        knockBackRecoveryTimer -= deltaTime;
+    }
+    else
+    {
+        knockBackRecoveryTimer = 0;
+        isKnockedBack = false;
+    }
 }
 
-void Entity::Draw(const Camera& cam)
+void Entity::Draw(Camera& cam)
 {
     Object::Draw(cam);
 }
 
+void Entity::TakeKnockback(float knockBackForce, const bool knockBackDirection)
+{
+    if (isKnockedBack)
+    {
+        return;
+    }
+
+    knockBackForce = knockBackDirection ? knockBackForce : -knockBackForce;
+
+    velX = knockBackForce;
+    knockBackRecoveryTimer = knockBackRecoveryDuration;
+    isKnockedBack = true;
+}
+
 void Entity::HandleMovement(const float deltaTime, Tilemap& tileMap)
 {
+    if (isKnockedBack)
+    {
+        velX = velX + (0 - velX) * 8 * deltaTime;
+    }
+
     float newX = transform.topLeft.x + velX * deltaTime;
     float newY = transform.topLeft.y + velY * deltaTime;
 

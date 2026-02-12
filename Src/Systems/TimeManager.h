@@ -33,6 +33,14 @@ public:
     void RecordPlayerSnapshot(const PlayerSnapshot& snapshot);
     [[nodiscard]] bool GetPlayerSnapshot(PlayerSnapshot& outputSnapshot);
     [[nodiscard]] PlayerSnapshot GetPlayerSnapshot() const;
+    [[nodiscard]] bool GetSnapshotAt(int frameBack, PlayerSnapshot& outSnapshot) const;
+    bool StartRewind();
+    bool UpdateRewind(float deltaTime, PlayerSnapshot& outSnapshot);
+    [[nodiscard]] bool IsRewinding() const { return isRewinding; };
+
+    // hit stop
+    void TriggerHitStop(float duration);
+    [[nodiscard]] bool IsHitStopped() const { return hitStopActive; }
 
 private:
     // time stop
@@ -48,10 +56,22 @@ private:
     int rewindIndex = 0;
     int snapshotsCnt = 0;
 
+    int bufferHead = 0;
+
     float rewindCooldownTimer = 0;
     float rewindCooldownMax{};
 
     float rewindMagnitude = 0;
+
+    bool isRewinding = false;
+    float rewindPlayBackSpeed = 1.0f;
+    float rewindAccumulator = 0;
+    int rewindReadHead = 0;
+    int rewindFramesLeft = 0;
+
+    // hit stop
+    float hitStopTimer = 0;
+    bool hitStopActive = false;
 };
 
 

@@ -28,7 +28,7 @@ void Object::Update(const float deltaTime, Tilemap& tileMap)
 {
 }
 
-void Object::Draw(const Camera& cam)
+void Object::Draw(Camera& cam)
 {
     if (!cam.IsVisible(transform.topLeft.x, transform.topLeft.y, transform.size.x, transform.size.y))
     {

@@ -26,7 +26,7 @@ public:
     bool LoadSpriteSheet(const char* jsonFile, const char* bmpFile);
 
     // Animation
-    void Play(bool loop = true);
+    void Play(bool loop = true, bool inPauseAfterPlay = false, float inPlayStartOffset = 0);
     void PlayFromFrame(int inStartFrame, int inEndFrame, bool loop = true);
     void Stop();
     void Pause();
@@ -48,6 +48,8 @@ public:
     [[nodiscard]] int GetFrameWidth() const;
     [[nodiscard]] int GetFrameHeight() const;
 
+    [[nodiscard]] Bmp* GetCurrentFrameBmp() const;
+
 private:
     void AdvanceFrame();
 
@@ -59,10 +61,13 @@ private:
     int loopStartFrame;
     int endFrame;
 
+    float playStartOffset;
+
     float frameTimer;
     bool isPlaying;
     bool isPaused;
     bool isLoop;
+    bool pauseAfterPlay;
 
     bool isDirectionForward;
 };

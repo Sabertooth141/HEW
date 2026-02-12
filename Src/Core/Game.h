@@ -53,7 +53,6 @@ private:
 private:
     bool isGameRunning = false;
 
-    Camera cam{};
     Tilemap tileMap{};
     Tileset tileset{};
     PlayerController playerController{};

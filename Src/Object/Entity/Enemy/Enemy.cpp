@@ -6,8 +6,10 @@
 
 #include "../../../Lib/conioex_custom.h"
 #include "../../../Systems/EnemyManager.h"
+#include "../../../Systems/TimeManager.h"
 
-Enemy::Enemy() : target(nullptr), attackCooldown(0), attackCooldownTimer(0), canAttack(true), moveSpeed(0), damage(0),
+Enemy::Enemy() : target(nullptr), attackCooldown(0), attackCooldownTimer(0), isAttacking(false), canAttack(true),
+                 moveSpeed(0), damage(0),
                  attackDistance(0),
                  detectionDistance(0),
                  isInvic(false),
@@ -61,6 +63,12 @@ void Enemy::Update(const float deltaTime, Tilemap& tileMap)
 
     if (stateMachine.GetCurrentState() != EnemyState::ATTK)
     {
+        if (!canAttack || isAttacking)
+        {
+            stateMachine.ChangeState(EnemyState::IDLE);
+            return;
+        }
+
         if (CanStartPathfinding(deltaTime))
         {
             stateMachine.ChangeState(EnemyState::PATHFIND);
@@ -71,17 +79,17 @@ void Enemy::Update(const float deltaTime, Tilemap& tileMap)
         }
     }
 
-    if (velX > 0)
+    if (velX > 0.f)
     {
         isFacingRight = true;
     }
-    else
+    else if (velX < 0.f)
     {
         isFacingRight = false;
     }
 }
 
-void Enemy::Draw(const Camera& cam)
+void Enemy::Draw(Camera& cam)
 {
     if (!cam.IsVisible(transform.topLeft.x, transform.topLeft.y, transform.size.x, transform.size.y))
     {
@@ -101,8 +109,6 @@ void Enemy::HandleMovement(const float deltaTime, Tilemap& tilemap)
         return;
     }
 
-    Entity::HandleMovement(deltaTime, tilemap);
-
     if (stateMachine.GetCurrentState() == EnemyState::PATROL)
     {
         HandlePatrol(tilemap, deltaTime);
@@ -112,6 +118,8 @@ void Enemy::HandleMovement(const float deltaTime, Tilemap& tilemap)
     {
         PathfindToTarget(deltaTime);
     }
+
+    Entity::HandleMovement(deltaTime, tilemap);
 }
 
 void Enemy::TakeDamage(const float inDamage)
@@ -123,6 +131,10 @@ void Enemy::TakeDamage(const float inDamage)
 
     isInvic = true;
     Entity::TakeDamage(inDamage);
+
+    TimeManager::Instance().TriggerHitStop(inDamage * 0.003);
+    Camera::Instance().TriggerScreenShake(1, inDamage * 0.01);
+
     DebugPrintf("ENEMY TAKING DAMAGE\n");
 
     stateMachine.ChangeState(EnemyState::HURT);
@@ -155,7 +167,7 @@ void Enemy::HandleAttack(Entity* inTarget)
 void Enemy::HandleAnimationUpdate(const float deltaTime)
 {
     if (animatorPlaying != nullptr && animatorPlaying == animators.GetAnimator(
-    stateMachine.GetCurrentState()))
+        stateMachine.GetCurrentState()))
     {
         animatorPlaying->Update(deltaTime);
         return;
@@ -199,6 +211,11 @@ bool Enemy::CanStartAttack(float deltaTime)
         return false;
     }
 
+    if (!canAttack)
+    {
+        return false;
+    }
+
     return transform.CheckDistance(target->transform.center, attackDistance);
 }
 
@@ -221,7 +238,16 @@ void Enemy::PathfindToTarget(float deltaTime)
         return;
     }
 
-    float targetX = target->transform.center.x;
+    const float targetX = target->transform.center.x;
+    const float diff = targetX - transform.center.x;
+
+    const float deadZone = attackDistance * 0.5f;
+
+    if (std::abs(diff) < deadZone)
+    {
+        velX = 0;
+        return;
+    }
 
     if (targetX > transform.center.x)
     {
