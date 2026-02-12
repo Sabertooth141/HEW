@@ -11,6 +11,10 @@
 class UGV;
 class Mine;
 
+// Helper template to make static_assert depend on template parameter
+template<typename>
+constexpr bool always_false_v = false;
+
 struct EnemyManager
 {
     static EnemyManager& Instance()
@@ -39,7 +43,7 @@ struct EnemyManager
             }
             else
             {
-                static_assert(false, "No animation path defined for enemy type");
+                static_assert(always_false_v<T>, "No animation path defined for enemy type");
             }
         }();
 
