@@ -14,6 +14,7 @@
 #include "../../VFX/AttackVFXManager.h"
 #include "../../Object/Entity/Enemy/UGV/UGV.h"
 #include "../Game.h"
+#include "../../Systems/GameManager.h"
 
 #define TEST_MAP_WIDTH 100
 #define TEST_MAP_HEIGHT 50
@@ -130,6 +131,8 @@ bool GameScene::Initialize()
         playerController.InitAttackAnimation(animation);
     }
 
+    GameManager::Instance().RegisterPlayer(playerController);
+
     // for (int x = 0; x < mapWidth; x++)
     // {
     //     for (int y = 0 ; y < mapHeight; y++)
@@ -219,6 +222,8 @@ void GameScene::Update(const float deltaTime)
     camTarget.x = playerController.GetCenterPosition().x;
     camTarget.y = playerController.GetCenterPosition().y;
     Camera::Instance().FollowTarget(camTarget, 0.1f);
+
+    TrackPlayerStatus();
 }
 
 void GameScene::Shutdown()
@@ -247,7 +252,13 @@ void GameScene::Draw()
 
     AttackVFXManager::Instance().Draw(Camera::Instance());
 
-    WriteTextW(20, GameConfig::VIEW_HEIGHT - 30, L"テスト", 20);
+    Vector2 playerTopLeft = playerController.transform.topLeft;
+    Vector2 playerCenter = playerController.transform.center;
+
+    char posBuf[128];
+    sprintf_s(posBuf, "Player Coords TOP LEFT| X: %f, Y %f\n"
+                      "CENTER| X: %f, Y %f", playerTopLeft.x, playerTopLeft.y, playerCenter.x, playerCenter.y);
+    WriteText(20, 60, posBuf, 10);
 
     PrintFrameBuffer();
     FlipScreen();
@@ -270,4 +281,13 @@ void GameScene::LoadTileset(const char* filePath)
     tileset.LoadTileset(tilesetImage, 32, 32);
 
     DebugPrintf("Tiles extracted: %d\n", static_cast<int>(tileset.tiles.size()));
+}
+
+void GameScene::TrackPlayerStatus()
+{
+    if (!GameManager::Instance().GetActivePlayer())
+    {
+        GameManager::Instance().SetIsVictory(false);
+        RequestTransition(SceneID::GAMEOVER);
+    }
 }

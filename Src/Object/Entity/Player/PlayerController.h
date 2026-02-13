@@ -92,6 +92,7 @@ private:
     // animations
     PlayerAnimators playerAnimators;
     Animator* animatorPlaying;
+    PlayerSnapshot rewindSnapshot;
 };
 
 

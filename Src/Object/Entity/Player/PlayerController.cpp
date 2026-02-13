@@ -9,6 +9,7 @@
 #include "../../../Game/Scenes/GameScene.h"
 #include "../../../Systems/TimeManager.h"
 #include "../../../Lib/conioex_custom.h"
+#include "../../../Systems/GameManager.h"
 
 PlayerController::PlayerController() : walkSpeed(0), normalDashSpeed(0), currDashSpeed(0),
                                        jumpForce(0),
@@ -64,6 +65,7 @@ void PlayerController::Update(const float deltaTime, Tilemap& tileMap)
             velX = rewind.velX;
             velY = rewind.velY;
             isFacingRight = rewind.isFacingRight;
+            rewindSnapshot = rewind;
         }
 
         return;
@@ -97,18 +99,30 @@ void PlayerController::Update(const float deltaTime, Tilemap& tileMap)
 
 void PlayerController::Draw(Camera& cam)
 {
-    DrawRewind(cam);
-
     DrawTrail(cam);
+
+    if (TimeManager::Instance().IsRewinding())
+    {
+        DrawRewind(cam);
+        if (rewindSnapshot.frame != nullptr)
+        {
+            int screenX = cam.WorldToScreenX(transform.topLeft.x);
+            int screenY = cam.WorldToScreenY(transform.topLeft.y);
+            if (rewindSnapshot.isFacingRight)
+            {
+                DrawBmp(screenX, screenY, rewindSnapshot.frame);
+            }
+            else
+            {
+                DrawBmp(screenX, screenY, rewindSnapshot.frame, BMP_HINV);
+            }
+        }
+        return;
+    }
 
     if (animatorPlaying != nullptr)
     {
         animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, !isFacingRight);
-    }
-
-    if (!cam.IsVisible(transform.topLeft.x, transform.topLeft.y, transform.size.x, transform.size.y))
-    {
-        return;
     }
 
     // const PlayerSnapshot holoSnapshot = TimeManager::Instance().GetPlayerSnapshot();
@@ -116,20 +130,22 @@ void PlayerController::Draw(Camera& cam)
     // int screenY = cam.WorldToScreenY(holoSnapshot.y);
     // DrawRect(screenX, screenY, screenX + transform.size.x, screenY + transform.size.y, RED, false);
 
-    // Hitbox& hitbox = attackController.GetHitBox();
-    // if (hitbox.isActive)
-    // {
-    //     screenX = cam.WorldToScreenX(hitbox.transform.topLeft.x);
-    //     screenY = cam.WorldToScreenY(hitbox.transform.topLeft.y);
-    //
-    //     DrawRect(screenX, screenY, screenX + hitbox.transform.size.x, screenY + hitbox.transform.size.y, LIGHTRED,
-    //              false);
-    // }
+    Hitbox& hitbox = attackController.GetHitBox();
+    if (hitbox.isActive)
+    {
+        int screenX = cam.WorldToScreenX(hitbox.transform.topLeft.x);
+        int screenY = cam.WorldToScreenY(hitbox.transform.topLeft.y);
+
+        DrawRect(screenX, screenY, screenX + hitbox.transform.size.x, screenY + hitbox.transform.size.y, LIGHTRED,
+                 false);
+    }
 }
 
 void PlayerController::Die()
 {
     Entity::Die();
+
+    GameManager::Instance().UnregisterPlayer();
 }
 
 void PlayerController::InitAnimation(const PlayerNormalAnimPaths& path)
@@ -162,7 +178,6 @@ void PlayerController::Dash(const float dashVel, const float inDashDuration, con
 
 void PlayerController::TakeDamage(const float inDamage)
 {
-    DebugPrintf("DAMAGE\n");
     Entity::TakeDamage(inDamage);
 }
 
@@ -507,10 +522,9 @@ void PlayerController::DrawRewind(const Camera& cam) const
                 continue;
             if (preview.frame == nullptr)
                 continue;
-            float t = (static_cast<float>(i) / (previewCount / 3) );
+            float t = (static_cast<float>(i) / (previewCount / 3));
             BYTE brightness = static_cast<BYTE>(150 * t);
             RGBQUAD color = {brightness, static_cast<BYTE>(brightness * 0.8f), static_cast<BYTE>(brightness * 0.3f), 0};
-
 
             DrawTrailFromSnapshot(cam, preview, color, t);
         }
@@ -540,7 +554,9 @@ void PlayerController::DrawTrailFromSnapshot(const Camera& cam, const PlayerSnap
         {
             if (*buffer != 0)
             {
-                int drawX = !snapshotToDraw.isFacingRight ? (snapshotToDraw.frame->width - px - 1) + screenX : px + screenX;
+                int drawX = !snapshotToDraw.isFacingRight
+                                ? (snapshotToDraw.frame->width - px - 1) + screenX
+                                : px + screenX;
                 DrawPixelDithered(drawX, py + screenY, trailColor, fadeMult);
             }
             buffer++;

@@ -58,4 +58,7 @@ add_executable(HEW
         Src/Game/Game.h
         Src/Game/Game.cpp
         Src/Game/Scenes/TitleScene.cpp
-        Src/Game/Scenes/TitleScene.h)
+        Src/Game/Scenes/TitleScene.h
+        Src/Game/Scenes/EndScene.cpp
+        Src/Game/Scenes/EndScene.h
+        Src/Systems/GameManager.h)

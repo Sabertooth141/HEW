@@ -4,6 +4,7 @@
 
 #ifndef HEW_TITLESCENE_H
 #define HEW_TITLESCENE_H
+
 #include "../Scene.h"
 #include "../../Config/Structs.h"
 
@@ -12,13 +13,6 @@ enum class TitleStates : uint8_t
     TITLE,
     TUTORIAL,
     DEFAULT
-};
-
-struct TitleText
-{
-    Transform transform;
-    const wchar_t* text;
-    int fontSize;
 };
 
 class TitleScene final : public Scene
@@ -31,13 +25,26 @@ public:
     void Shutdown() override;
 
 private:
-    void HandleInput();
+    void HandleOptionInput();
+    void HandleTutorialInput();
 
-    int CalculateTextWidth(const wchar_t* text, int fontSize);
+    void InitTitleAndOptions();
+    void DrawTitleAndOptions() const;
+
+    void InitTutorial();
+    void DrawTutorial();
+
+    void GoToGame();
+    void GoToTutorial();
+    void EndGame();
 
 private:
     std::vector<TitleText> titleOptions;
     TitleText title{};
+    TitleStates currTitleState = TitleStates::DEFAULT;
+
+    TitleText tutorialTitle{};
+    TitleText tutorialText{};
 
     int viewWidth = 0;
     int viewHeight = 0;

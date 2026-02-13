@@ -26,14 +26,17 @@ public:
     virtual void Shutdown() = 0;
 
     [[nodiscard]] SceneID GetNextScene() const { return nextScene; }
-    [[nodiscard]] bool CanTransit() const { return nextScene != SceneID::DEFAULT;}
+    [[nodiscard]] bool CanTransit() const { return nextScene != SceneID::DEFAULT; }
+    [[nodiscard]] bool IsSceneRunning() const { return isSceneRunning; }
 
 protected:
     void RequestTransition(const SceneID inNextScene) { nextScene = inNextScene; }
 
+protected:
+    bool isSceneRunning = true;
+
 private:
     SceneID nextScene = SceneID::DEFAULT;
-
 };
 
 

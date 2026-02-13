@@ -53,21 +53,21 @@ namespace config
 
         // attk 1
         config.data[1].damage = 20;
-        config.data[1].hitboxOffsetX = 50;
+        config.data[1].hitboxOffsetX = 40;
         config.data[1].hitboxOffsetY = 0;
         config.data[1].VFXOffsetX = 50;
         config.data[1].VFXOffsetY = 0;
-        config.data[1].width = 90;
+        config.data[1].width = 70;
         config.data[1].height = 54;
         config.data[1].duration = 1;    // to be set by frame data IN SEC
         config.data[1].recovery = 0.2f;
 
         // attk 2
-        config.data[2].hitboxOffsetX = 40;
+        config.data[2].hitboxOffsetX = 60;
         config.data[2].hitboxOffsetY = 0;
         config.data[2].VFXOffsetX = 50;
         config.data[2].VFXOffsetY = 0;
-        config.data[2].width = 200;
+        config.data[2].width = 160;
         config.data[2].height = 54;
         config.data[2].duration = 1;    // to be set by frame data IN SEC
         config.data[2].damage = 40;
@@ -91,7 +91,7 @@ namespace config
 
         config.moveSpeed = 200.0f;
 
-        config.invicCooldown = 0.5;
+        config.invicCooldown = 0.75;
 
         return config;
     }
@@ -107,6 +107,7 @@ namespace config
         config.checkGroundOffset = 2;
 
         config.attackCooldown = 4;
+        config.damage = 40;
 
         config.maxHp = 50;
         config.isFacingRight = true;
@@ -116,7 +117,7 @@ namespace config
         config.explosionRadius = 128;
         config.timeToExplode = 1.5;
 
-        config.invicCooldown = 0.5;
+        config.invicCooldown = 0.75;
 
         return config;
     }
@@ -137,13 +138,14 @@ namespace config
         config.attackWindupDuration = 2.0f;
         config.knockBackForce = 1000.0f;
         config.attackCooldown = 4;
+        config.damage = 20;
 
         config.detectionDistance = 200.0f;
         config.attackDistance = 100;
 
         config.moveSpeed = 200.0f;
 
-        config.invicCooldown = 0.5;
+        config.invicCooldown = 0.75;
 
         return config;
     }

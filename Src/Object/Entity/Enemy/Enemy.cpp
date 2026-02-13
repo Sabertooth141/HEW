@@ -29,6 +29,7 @@ void Enemy::Initialize(const EnemyConfig& config)
     invicCD = config.invicCooldown;
     attackDistance = config.attackDistance;
     detectionDistance = config.detectionDistance;
+    damage = config.damage;
 }
 
 void Enemy::Start()
@@ -251,10 +252,10 @@ void Enemy::PathfindToTarget(float deltaTime)
 
     if (targetX > transform.center.x)
     {
-        velX = currSpeedX;
+        velX = moveSpeed;
     }
     else
     {
-        velX = -currSpeedX;
+        velX = -moveSpeed;
     }
 }

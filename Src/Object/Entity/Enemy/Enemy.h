@@ -20,6 +20,8 @@ public:
     void Draw(Camera& cam) override;
     void TakeDamage(float inDamage) override;
     void InitAnimation(const EnemyAnimPaths<EnemyState>& path);
+    Entity* GetTarget() const { return target; }
+
 protected:
     void HandleMovement(float deltaTime, Tilemap& tilemap) override;
     virtual void HandleAttack(Entity* inTarget);

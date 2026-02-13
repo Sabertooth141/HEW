@@ -50,6 +50,8 @@ void Entity::Update(const float deltaTime, Tilemap& tileMap)
         knockBackRecoveryTimer = 0;
         isKnockedBack = false;
     }
+
+    transform.CalculateCenterPosition();
 }
 
 void Entity::Draw(Camera& cam)

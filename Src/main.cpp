@@ -81,13 +81,17 @@ int main()
             lastFrameTime = currTime;
             GetKeyAll();
 
+            sceneManager.Update(deltaTime);
+
             if (ChkKeyEdge(PK_ESC))
             {
                 gameRunning = false;
-                break;
             }
 
-            sceneManager.Update(deltaTime);
+            if (!sceneManager.GetScene()->IsSceneRunning())
+            {
+                gameRunning = false;
+            }
         }
         else
         {

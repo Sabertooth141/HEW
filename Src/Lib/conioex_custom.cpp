@@ -101,3 +101,21 @@ void DebugPrintf(const char* format, ...)
     va_end(args);
     OutputDebugStringA(buffer);
 }
+
+int CalculateTextWidth(const wchar_t* text, const int fontSize)
+{
+    int width = 0;
+    for (int i = 0; text[i] != L'\0'; i++)
+    {
+        if (text[i] > 0x7F)
+        {
+            width += fontSize;
+        }
+        else
+        {
+            width += fontSize / 2;
+        }
+    }
+
+    return width;
+}

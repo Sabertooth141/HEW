@@ -26,8 +26,8 @@ public:
     void Draw() override;
 
 private:
-    void HandleGlobalInput();
     void LoadTileset(const char* filePath);
+    void TrackPlayerStatus();
 
     // vars
 private:

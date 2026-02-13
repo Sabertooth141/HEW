@@ -15,9 +15,10 @@ public:
     void SetScene(SceneID id);
     void Update(float deltaTime);
     bool HasScene() const { return currentScene != nullptr; }
+    Scene* GetScene() const { return currentScene.get(); }
 
 private:
-    std::unique_ptr<Scene> CreateScene(SceneID id);
+    static std::unique_ptr<Scene> CreateScene(SceneID id);
     std::unique_ptr<Scene> currentScene;
 };
 

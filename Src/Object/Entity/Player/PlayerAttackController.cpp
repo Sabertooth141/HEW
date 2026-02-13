@@ -201,7 +201,7 @@ void PlayerAttackController::StartAttack(const PlayerCombatState combatState)
     }
 
     hitbox.Activate(ownerTransform->center.x, ownerTransform->center.y, hitboxOffsetX, data.hitboxOffsetY, data.width,
-                    data.height, data.duration);
+                    data.height, data.duration - data.recovery);
 }
 
 void PlayerAttackController::EndAttack()

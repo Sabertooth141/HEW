@@ -4,6 +4,7 @@
 
 #include "../Game/SceneManager.h"
 
+#include "Scenes/EndScene.h"
 #include "Scenes/GameScene.h"
 #include "Scenes/TitleScene.h"
 
@@ -50,6 +51,10 @@ std::unique_ptr<Scene> SceneManager::CreateScene(const SceneID id)
     case SceneID::TITLE:
         {
             return std::make_unique<TitleScene>();
+        }
+    case SceneID::GAMEOVER:
+        {
+            return std::make_unique<EndScene>();
         }
     default:
         {

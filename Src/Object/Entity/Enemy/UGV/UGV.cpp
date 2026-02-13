@@ -124,7 +124,7 @@ void UGV::HandleAttackKnockBack()
         return;
     }
 
-    if (std::abs(target->transform.center.y - transform.center.y) > 10)
+    if (std::abs(target->transform.center.y - transform.center.y) > attackDistance)
     {
         isAttacking = false;
         canAttack = false;
@@ -140,6 +140,7 @@ void UGV::HandleAttackKnockBack()
     {
         target->TakeKnockback(knockBackForce, false);
     }
+    target->TakeDamage(damage);
 
     attackCooldownTimer = attackCooldown;
     isAttacking = false;

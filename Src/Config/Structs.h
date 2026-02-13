@@ -13,6 +13,7 @@
 
 #include "../Lib/conioex.h"
 #include "../Animation/Animator.h"
+#include <functional>
 
 // MISC
 struct Vector2
@@ -126,6 +127,7 @@ struct EnemyConfig : EntityConfig
 
     float attackDistance;
     float detectionDistance;
+    float damage;
 
     float invicCooldown;
 };
@@ -252,6 +254,15 @@ struct SplashTrailEffect
     bool isLoop;
     bool flipHorizontal;
     bool attached = false;
+};
+
+// MENU
+struct TitleText
+{
+    Transform transform;
+    const wchar_t* text;
+    int fontSize;
+    std::function<void()> onSelected;
 };
 
 #endif //HEW_STRUCTS_H

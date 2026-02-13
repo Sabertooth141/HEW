@@ -25,4 +25,6 @@ void Swap(T& _a, T& _b) { T tmp = _a; _a = _b; _b = tmp; }
 
 void DebugPrintf(const char* format, ...);
 
+int CalculateTextWidth(const wchar_t* text, int fontSize);
+
 #endif //HEW_CONIOEX_CUSTOM_H
