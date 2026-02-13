@@ -2,26 +2,21 @@
 // Created by saber on 1/14/2026.
 //
 
-#include "Game.h"
+#include "GameScene.h"
 
 #include <format>
 
-#include "../Animation/SpriteSheetLoader.h"
-#include "../Config/EntityConfigs.h"
-#include "../Config/SystemConfigs.h"
-#include "../Lib/conioex_custom.h"
-#include "../Systems/EnemyManager.h"
-#include "../VFX/AttackVFXManager.h"
-#include "../Object/Entity/Enemy/Mine/Mine.h"
-#include "../Object/Entity/Enemy/UGV/UGV.h"
+#include "../../Animation/SpriteSheetLoader.h"
+#include "../../Config/EntityConfigs.h"
+#include "../../Config/SystemConfigs.h"
+#include "../../Lib/conioex_custom.h"
+#include "../../Systems/EnemyManager.h"
+#include "../../VFX/AttackVFXManager.h"
+#include "../../Object/Entity/Enemy/UGV/UGV.h"
+#include "../Game.h"
 
 #define TEST_MAP_WIDTH 100
 #define TEST_MAP_HEIGHT 50
-
-int GameConfig::VIEW_WIDTH = 500;
-int GameConfig::VIEW_HEIGHT = 300;
-int GameConfig::FONT_WIDTH = 2;
-int GameConfig::FONT_HEIGHT = 2;
 
 // ====================ANIM PATHS======================================
 // player
@@ -91,20 +86,11 @@ std::vector<EnemyAnimPaths<EnemyVFXType>> mineAttackVFXPaths =
 
 // ========================================================================
 
-Game::Game()
+GameScene::GameScene()
 = default;
 
-bool Game::Initialize()
+bool GameScene::Initialize()
 {
-    InitConioEx(GameConfig::VIEW_WIDTH, GameConfig::VIEW_HEIGHT, GameConfig::FONT_WIDTH, GameConfig::FONT_HEIGHT, true);
-    SetCursorType(NOCURSOR);
-
-    char title[128];
-    sprintf_s(title, "HEW PROTOTYPE - %dx%d (Font: %dx%d)",
-              GameConfig::VIEW_WIDTH, GameConfig::VIEW_HEIGHT,
-              GameConfig::FONT_WIDTH, GameConfig::FONT_HEIGHT);
-    SetCaption(title);
-
     // init tileMap
     LoadTileset("../Assets/Tileset/SceneTileset/Tileset.bmp");
 
@@ -196,41 +182,17 @@ bool Game::Initialize()
     return true;
 }
 
-void Game::Start()
+void GameScene::Start()
 {
     for (auto& e : EnemyManager::Instance().GetActiveEnemies())
     {
         e->Start();
     }
+
     playerController.Start();
-
-    vfxManager.SetNormalPal(SpriteSheetLoader::GetGamePalColor());
-    while (isGameRunning)
-    {
-        const DWORD currTime = timeGetTime();
-        float deltaTime = static_cast<float>(currTime - lastFrameTime) / 1000.0f;
-
-        if (deltaTime > FRAME_TIME * 2)
-        {
-            deltaTime = FRAME_TIME * 2;
-        }
-
-        if (deltaTime >= FRAME_TIME)
-        {
-            lastFrameTime = currTime;
-            GetKeyAll();
-            HandleGlobalInput();
-            Update(deltaTime);
-            Draw();
-        }
-        else
-        {
-            Sleep(1);
-        }
-    }
 }
 
-void Game::Update(const float deltaTime)
+void GameScene::Update(const float deltaTime)
 {
     TimeManager::Instance().Update(deltaTime);
     Camera::Instance().UpdateShake(deltaTime);
@@ -259,13 +221,12 @@ void Game::Update(const float deltaTime)
     Camera::Instance().FollowTarget(camTarget, 0.1f);
 }
 
-void Game::ShutDown()
+void GameScene::Shutdown()
 {
     tileMap.Shutdown();
-    EndConioEx();
 }
 
-void Game::Draw()
+void GameScene::Draw()
 {
     ClearScreen();
     tileMap.Draw(Camera::Instance());
@@ -292,15 +253,7 @@ void Game::Draw()
     FlipScreen();
 }
 
-void Game::HandleGlobalInput()
-{
-    if (globalInputConfig.quitGame.IsEdge())
-    {
-        isGameRunning = false;
-    }
-}
-
-void Game::LoadTileset(const char* filePath)
+void GameScene::LoadTileset(const char* filePath)
 {
     Bmp* tilesetImage = LoadBmp(filePath);
 
@@ -316,20 +269,5 @@ void Game::LoadTileset(const char* filePath)
 
     tileset.LoadTileset(tilesetImage, 32, 32);
 
-    DebugPrintf("Tiles extracted: %d\n", (int)tileset.tiles.size());
-}
-
-int main()
-{
-    CheckConsoleCompatibility();
-
-    Game game;
-    if (!game.Initialize())
-    {
-        return -1;
-    }
-    game.Start();
-    game.ShutDown();
-
-    return 0;
+    DebugPrintf("Tiles extracted: %d\n", static_cast<int>(tileset.tiles.size()));
 }

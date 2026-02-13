@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include "../../../Core/Game.h"
+#include "../../../Game/Scenes/GameScene.h"
 #include "../../../Systems/TimeManager.h"
 #include "../../../Lib/conioex_custom.h"
 

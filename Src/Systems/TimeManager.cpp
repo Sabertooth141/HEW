@@ -4,8 +4,8 @@
 
 #include "TimeManager.h"
 
-#include "../Core/Game.h"
-#include "../Lib/conioex_custom.h"
+#include "../Game/Scenes/GameScene.h"
+#include "../Game/Game.h"
 
 TimeManager::TimeManager()
 = default;

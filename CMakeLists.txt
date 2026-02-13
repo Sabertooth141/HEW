@@ -4,65 +4,58 @@ project(HEW)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(HEW
-        src/lib/conioex.h
-        src/lib/conioex.cpp
-        src/Object/Entity/Player/PlayerController.cpp
-        src/Object/Entity/Player/PlayerController.h
-        src/Object/Entity/Player/PlayerController.h
-        src/Object/Entity/Entity.cpp
-        src/Object/Entity/Entity.h
-        src/Object/Entity/Entity.h
-        src/core/Game.cpp
-        src/core/Game.h
-        src/World/Tile.h
-        src/World/Camera.cpp
-        src/World/Camera.h
-        src/World/Camera.h
-        src/World/Tilemap.cpp
-        src/World/Tilemap.h
-        src/Object/Object.cpp
-        src/Object/Object.h
-        src/Config/EntityConfigs.h
-        src/Config/EntityConfigs.h
-        src/Systems/TimeManager.cpp
-        src/Systems/TimeManager.h
-        src/Systems/TimeManager.h
-        src/Config/SystemConfigs.h
+        Src/lib/conioex.h
+        Src/lib/conioex.cpp
+        Src/Object/Entity/Player/PlayerController.cpp
+        Src/Object/Entity/Player/PlayerController.h
+        Src/Object/Entity/Entity.cpp
+        Src/Object/Entity/Entity.h
+        Src/Game/Scenes/GameScene.cpp
+        Src/Game/Scenes/GameScene.h
+        Src/World/Tile.h
+        Src/World/Camera.cpp
+        Src/World/Camera.h
+        Src/World/Tilemap.cpp
+        Src/World/Tilemap.h
+        Src/Object/Object.cpp
+        Src/Object/Object.h
+        Src/Config/EntityConfigs.h
+        Src/Systems/TimeManager.cpp
+        Src/Systems/TimeManager.h
+        Src/Config/SystemConfigs.h
         Src/VFX/VFXManager.cpp
         Src/VFX/VFXManager.h
         Src/Object/Entity/Enemy/Enemy.cpp
         Src/Object/Entity/Enemy/Enemy.h
         Src/Config/Structs.h
-        Src/Config/Structs.h
-        Src/Util/HitBox.h
         Src/Util/HitBox.h
         Src/Systems/EnemyManager.h
         Src/World/TileSet.h
         Src/World/TileSet.h
         Src/Animation/SpriteFrame.h
-        Src/Animation/SpriteFrame.h
         Src/Animation/SpriteSheetLoader.cpp
         Src/Animation/SpriteSheetLoader.h
-        Src/Animation/SpriteSheetLoader.h
         Src/Animation/Animator.cpp
-        Src/Animation/Animator.h
         Src/Animation/Animator.h
         Src/Object/Entity/Player/PlayerAttackController.cpp
         Src/Object/Entity/Player/PlayerAttackController.h
         Src/Object/Entity/Player/PlayerStates.h
         Src/Util/Physics.h
-        Src/Util/Physics.h
         Src/Object/Entity/Enemy/Mine/Mine.cpp
         Src/Object/Entity/Enemy/Mine/Mine.h
-        Src/Object/Entity/Enemy/Mine/Mine.h
         Src/Lib/conioex_custom.cpp
-        Src/Lib/conioex_custom.h
         Src/Lib/conioex_custom.h
         Src/Object/Entity/Enemy/EnemyStates.h
         Src/Object/Entity/Enemy/EnemyStates.h
         Src/VFX/AttackVFXManager.h
         Src/VFX/AttackVFXManager.cpp
-        Src/Core/AnimationPaths.h
-        Src/Core/AnimationPaths.h
         Src/Object/Entity/Enemy/UGV/UGV.cpp
-        Src/Object/Entity/Enemy/UGV/UGV.h)
+        Src/Object/Entity/Enemy/UGV/UGV.h
+        Src/Game/SceneManager.cpp
+        Src/Game/SceneManager.h
+        Src/Game/Scene.h
+        Src/main.cpp
+        Src/Game/Game.h
+        Src/Game/Game.cpp
+        Src/Game/Scenes/TitleScene.cpp
+        Src/Game/Scenes/TitleScene.h)
