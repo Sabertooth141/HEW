@@ -12,7 +12,7 @@ bool TitleScene::Initialize()
     viewWidth = GameConfig::VIEW_WIDTH;
     viewHeight = GameConfig::VIEW_HEIGHT;
 
-    return true;
+	return true;
 }
 
 void TitleScene::Update(float deltaTime)
@@ -173,25 +173,32 @@ void TitleScene::InitTitleAndOptions()
 
 void TitleScene::DrawTitleAndOptions() const
 {
-    WriteTextW(static_cast<int>(title.transform.topLeft.x), static_cast<int>(title.transform.topLeft.y), title.text,
-               title.fontSize);
+	// Get font cell size (2 for Font 2x2)
+	// You could expose this from conioex or hardcode it
 
-    for (int i = 0; i < titleOptions.size(); i++)
-    {
-        Vector2 optionPos = titleOptions[i].transform.topLeft;
-        D2D1::ColorF optionColor = D2D1::ColorF(0, 0, 0, 0);
-        if (i == selectedOptionIndex)
-        {
-            optionColor = D2D1::ColorF::Red;
-        }
-        else
-        {
-            optionColor = D2D1::ColorF::White;
-        }
+	WriteTextW(
+		static_cast<int>(title.transform.topLeft.x),
+		static_cast<int>(title.transform.topLeft.y),
+		title.text,
+		title.fontSize  // 40/2 = 20 → actual DWrite size = 2×20 = 40
+	);
 
-        WriteTextW(optionPos.x, optionPos.y, titleOptions[i].text, titleOptions[i].fontSize, optionColor,
-                   D2D1::ColorF(0, 0, 0, 0));
-    }
+	for (int i = 0; i < titleOptions.size(); i++)
+	{
+		Vector2 optionPos = titleOptions[i].transform.topLeft;
+		D2D1::ColorF optionColor = (i == selectedOptionIndex)
+			? D2D1::ColorF(D2D1::ColorF::Red)
+			: D2D1::ColorF(D2D1::ColorF::White);
+
+		WriteTextW(
+			static_cast<int>(optionPos.x),
+			static_cast<int>(optionPos.y),
+			titleOptions[i].text,
+			titleOptions[i].fontSize,  // 14/2 = 7
+			optionColor,
+			D2D1::ColorF(0, 0, 0, 0)
+		);
+	}
 }
 
 void TitleScene::InitTutorial()

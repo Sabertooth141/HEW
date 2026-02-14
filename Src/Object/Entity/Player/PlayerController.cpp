@@ -542,7 +542,7 @@ void PlayerController::DrawRewind(const Camera& cam) const
         bool isAttackFrame = TimeManager::Instance().HasAttackFrame() &&
             std::abs(readPos - TimeManager::Instance().GetBestAttackFrame().snapshotIndex) <= 1;
 
-        float t = 1 - (static_cast<float>(i) / (previewCount / 3));
+        float t = 1 - (static_cast<float>(i) / (previewCount));
         BYTE brightness;
         RGBQUAD color;
 
