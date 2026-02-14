@@ -2,9 +2,13 @@
 // Created by saber on 2/13/2026.
 //
 
+#include <windows.h>
+#include <psapi.h>
+
 #include "Game/Game.h"
 #include "Game/SceneManager.h"
 #include "Game/Scenes/GameScene.h"
+#include "Lib/conioex_custom.h"
 
 inline bool IsLegacyConsoleHost()
 {

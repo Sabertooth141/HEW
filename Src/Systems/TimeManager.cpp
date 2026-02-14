@@ -4,6 +4,7 @@
 
 #include "TimeManager.h"
 
+#include "EnemyManager.h"
 #include "../Game/Scenes/GameScene.h"
 #include "../Game/Game.h"
 
@@ -33,6 +34,7 @@ void TimeManager::ActivateTimeStop(const float duration)
 void TimeManager::DeactivateTimeStop()
 {
     isTimeStopped = false;
+    isRewindAttk = false;
     timeStopDurationTimer = 0;
     timeStopCooldownTimer = timeStopCooldownMax;
 }
@@ -50,7 +52,7 @@ void TimeManager::Update(const float deltaTime)
         return;
     }
 
-    if (isRewinding)
+    if (isRewinding || isRewindAttk)
     {
         return;
     }
@@ -119,7 +121,7 @@ PlayerSnapshot TimeManager::GetPlayerSnapshot() const
 {
     if (snapshotsCnt == 0)
     {
-        return{};
+        return {};
     }
 
     const int oldestIndex = snapshotsCnt < rewindBuffer.size() ? 0 : rewindIndex;
@@ -133,7 +135,8 @@ bool TimeManager::GetSnapshotAt(const int frameBack, PlayerSnapshot& outSnapshot
         return false;
     }
 
-    const int index = (bufferHead - frameBack + snapshotsCnt) % snapshotsCnt;
+    const int bufferSize = static_cast<int>(rewindBuffer.size());
+    const int index = ((bufferHead - 1 - frameBack) % bufferSize + bufferSize) % bufferSize;
     outSnapshot = rewindBuffer[index];
     return true;
 }
@@ -151,9 +154,12 @@ bool TimeManager::StartRewind()
     }
 
     isRewinding = true;
+    isTimeStopped = true;
     rewindAccumulator = 0;
     rewindReadHead = 0;
-    rewindFramesLeft = snapshotsCnt;
+    rewindMaxFrames = snapshotsCnt;
+
+    FindAttackFrames();
 
     return true;
 }
@@ -167,27 +173,74 @@ bool TimeManager::UpdateRewind(float deltaTime, PlayerSnapshot& outSnapshot)
 
     rewindAccumulator += rewindPlayBackSpeed;
 
-    while (rewindAccumulator >= 1 && rewindFramesLeft > 0)
+    while (rewindAccumulator >= 1 && rewindReadHead < rewindMaxFrames - 1)
     {
         rewindReadHead += 1;
-        rewindFramesLeft -= 1;
         rewindAccumulator -= 1;
     }
 
-    if (!GetSnapshotAt(rewindReadHead, outSnapshot))
+    return GetSnapshotAt(rewindReadHead, outSnapshot);
+}
+
+void TimeManager::EndRewind(bool& outDoAttack, RewindAttackFrame& outTarget)
+{
+    isRewinding = false;
+    rewindCooldownTimer = rewindCooldownMax;
+
+    bufferHead = 0;
+    rewindIndex = 0;
+    snapshotsCnt = 0;
+
+    if (hasAttackFrame)
     {
-        isRewinding = false;
-        rewindCooldownTimer = rewindCooldownMax;
-        return false;
+        if (std::abs(rewindReadHead - bestAttackFrame.snapshotIndex) <= rewindAttackTolerance)
+        {
+            outDoAttack = true;
+            outTarget = bestAttackFrame;
+            isRewindAttk = true;
+            return;
+        }
     }
 
-    if (rewindFramesLeft <= 0)
-    {
-        isRewinding = false;
-        rewindCooldownTimer = rewindCooldownMax;
-    }
+    isRewindAttk = false;
+    isTimeStopped = false;
+    outDoAttack = false;
+}
 
-    return true;
+void TimeManager::FindAttackFrames()
+{
+    hasAttackFrame = false;
+    float bestDist = 9999.0f;
+
+    std::vector<Enemy*> enemies = EnemyManager::Instance().GetActiveEnemies();
+
+    for (int i = 0; i < rewindMaxFrames; i++)
+    {
+        PlayerSnapshot playerSnap;
+        if (!GetSnapshotAt(i, playerSnap))
+        {
+            continue;
+        }
+
+        for (auto& enemy : enemies)
+        {
+            if (!enemy->IsAlive())
+            {
+                continue;
+            }
+
+            float distance = Transform::GetDistance(playerSnap.transform.center, enemy->transform.center);
+
+            if (distance < rewindAttackRange && distance < bestDist)
+            {
+                bestDist = distance;
+                bestAttackFrame.snapshotIndex = i;
+                bestAttackFrame.distToEnemy = distance;
+                bestAttackFrame.targetEnemy = enemy;
+                hasAttackFrame = true;
+            }
+        }
+    }
 }
 
 void TimeManager::TriggerHitStop(const float duration)

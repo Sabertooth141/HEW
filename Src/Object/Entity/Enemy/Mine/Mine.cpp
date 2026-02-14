@@ -23,9 +23,9 @@ void Mine::Initialize(const MineConfig& config)
     canExplode = true;
 }
 
-void Mine::Update(const float deltaTime, Tilemap& tileMap)
+void Mine::Update(const float deltaTime, const float trueDeltaTime, Tilemap& tileMap)
 {
-    Enemy::Update(deltaTime, tileMap);
+    Enemy::Update(deltaTime, trueDeltaTime, tileMap);
 
     if (attackCooldownTimer > 0)
     {

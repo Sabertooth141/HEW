@@ -14,7 +14,7 @@ Enemy::Enemy() : target(nullptr), attackCooldown(0), attackCooldownTimer(0), isA
                  detectionDistance(0),
                  isInvic(false),
                  invicCD(0),
-                 invicTimer(0),
+                 invicTimer(0), isAlive(true),
                  stateMachine(EnemyState::DEFAULT)
 {
 }
@@ -38,9 +38,10 @@ void Enemy::Start()
 
     stateMachine.ChangeState(EnemyState::IDLE);
     currSpeedX = moveSpeed;
+    isAlive = true;
 }
 
-void Enemy::Update(const float deltaTime, Tilemap& tileMap)
+void Enemy::Update(const float deltaTime, const float trueDeltaTime, Tilemap& tileMap)
 {
     Entity::Update(deltaTime, tileMap);
 
@@ -48,7 +49,7 @@ void Enemy::Update(const float deltaTime, Tilemap& tileMap)
 
     if (isInvic)
     {
-        invicTimer += deltaTime;
+        invicTimer += trueDeltaTime;
 
         if (invicTimer >= invicCD)
         {
@@ -192,6 +193,7 @@ void Enemy::Die()
 {
     Entity::Die();
 
+    isAlive = false;
     EnemyManager::Instance().UnregisterEnemy(this);
 }
 

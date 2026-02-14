@@ -11,6 +11,7 @@
 #include "../../../Animation/Animator.h"
 #include "PlayerStates.h"
 #include "../Entity.h"
+#include "../../../Systems/TimeManager.h"
 
 #define SPEED_WHEN_ATTK 10
 #define GRAV_WHEN_ATTK 20
@@ -40,7 +41,10 @@ public:
     void InitAttackAnimation(const PlayerCombatAnimPaths& path);
     void Dash(float dashVel, float inDashDuration, bool isInvic);
     void TakeDamage(float inDamage) override;
+    void SetDamageable(bool inDamageable);
 
+    void SetIsFacingRight(const bool inFacingRight) { isFacingRight = inFacingRight; }
+    void SetVelocityX(const float vx) { velX = vx; }
     SpriteSheet* GetSpriteSheetFromAnimator(PlayerCombatState attkState);
     [[nodiscard]] PlayerStateMachine<PlayerNormalState> GetMoveStateMachine() const { return normalStateMachine; }
     [[nodiscard]] const PlayerAttackController& GetAttackController() const { return attackController; }
@@ -52,10 +56,10 @@ protected:
 
 private:
     void HandleInput(float deltaTime);
-    void HandleTimeRewind();
     void HandleAnimationUpdate(float deltaTime);
     void DrawTrail(const Camera& cam) const;
     void DrawRewind(const Camera& cam) const;
+    void TriggerRewindAttack(TimeManager::RewindAttackFrame target);
 
     void DrawTrailFromSnapshot(const Camera& cam, const PlayerSnapshot& snapshotToDraw, const RGBQUAD& trailColor, float fadeMult) const;
 
@@ -73,6 +77,8 @@ private:
 
     float trailFadeTimer = 0;
     float trailFadeDuration = 0;
+
+    float rewindAttackDamage = 60;
 
     bool isMovingInput = false;
     bool isDrawTrail = false;

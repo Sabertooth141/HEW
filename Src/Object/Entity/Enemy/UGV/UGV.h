@@ -12,7 +12,7 @@ public:
     UGV() = default;
 
     void Initialize(const UGVConfig& config);
-    void Update(float deltaTime, Tilemap& tileMap) override;
+    void Update(float deltaTime, float trueDeltaTime, Tilemap& tileMap) override;
 
 protected:
     void HandleAttack(Entity* inTarget) override;

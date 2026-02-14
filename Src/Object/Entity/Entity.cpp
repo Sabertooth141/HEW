@@ -133,7 +133,7 @@ void Entity::HandleMovement(const float deltaTime, Tilemap& tileMap)
         velY = 0;
     }
 
-    transform.CalculateCenterPosition();
+    // transform.CalculateCenterPosition();
     isGrounded = CheckGrounded(tileMap);
 }
 

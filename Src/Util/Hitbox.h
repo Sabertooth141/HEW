@@ -43,6 +43,11 @@ struct Hitbox
 
         transform.CalculateTopLeftPosition();
 
+        if (lifeTime == -1)
+        {
+            return;
+        }
+
         timer += deltaTime;
         if (timer > lifeTime)
         {

@@ -61,4 +61,5 @@ add_executable(HEW
         Src/Game/Scenes/TitleScene.h
         Src/Game/Scenes/EndScene.cpp
         Src/Game/Scenes/EndScene.h
-        Src/Systems/GameManager.h)
+        Src/Systems/GameManager.h
+        Src/Util/MapTriggers.h)

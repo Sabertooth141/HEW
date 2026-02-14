@@ -38,7 +38,7 @@ namespace config
 
     inline PlayerAttackConfig PlayerAttack()
     {
-        PlayerAttackConfig config(3);
+        PlayerAttackConfig config(4);
 
         // attk 0
         config.data[0].damage = 10;
@@ -72,6 +72,17 @@ namespace config
         config.data[2].duration = 1;    // to be set by frame data IN SEC
         config.data[2].damage = 40;
         config.data[2].recovery = 0.2f;
+
+        // rewind attk
+        config.data[3].hitboxOffsetX = 60;
+        config.data[3].hitboxOffsetY = 0;
+        config.data[3].VFXOffsetX = 50;
+        config.data[3].VFXOffsetY = 0;
+        config.data[3].width = 160;
+        config.data[3].height = 54;
+        config.data[3].duration = 1;    // to be set by frame data IN SEC
+        config.data[3].damage = 80;
+        config.data[3].recovery = 0.2f;
 
         return config;
     }
@@ -132,7 +143,7 @@ namespace config
         config.maxFallSpeed = 1000.0f;
         config.checkGroundOffset = 30;
 
-        config.maxHp = 80;
+        config.maxHp = 8000;
         config.isFacingRight = true;
 
         config.attackWindupDuration = 2.0f;
@@ -145,7 +156,7 @@ namespace config
 
         config.moveSpeed = 200.0f;
 
-        config.invicCooldown = 0.75;
+        config.invicCooldown = 0.5;
 
         return config;
     }

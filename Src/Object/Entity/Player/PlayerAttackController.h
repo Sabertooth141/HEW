@@ -25,6 +25,8 @@ public:
     bool TryAttack();
     void CancelCombo();
 
+    void StartRewindAttack(const Entity* targetEnemy);
+
     [[nodiscard]] Hitbox& GetHitBox() { return hitbox; }
     [[nodiscard]] const Hitbox& GetHitBox() const { return hitbox; }
     [[nodiscard]] PlayerCombatState GetCurrState() const { return combatStateMachine.GetCurrState(); }
@@ -32,6 +34,7 @@ public:
 	[[nodiscard]] bool IsInRecovery() const { return isInRecovery; }
     [[nodiscard]] bool CanMove() const;
     [[nodiscard]] float GetCurrentDamage() const;
+    [[nodiscard]] bool IsRewindMoving() const { return rewindMoving; }
 private:
     void StartAttack(PlayerCombatState combatState);
     void EndAttack();
@@ -53,6 +56,14 @@ private:
     bool comboInputBuffer = false;
     bool hasHit = false;
 	bool isInRecovery = false;
+    float rewindAttackDashStart = 0;
+    float rewindAttackXOffset = 100;
+
+    bool rewindAttackDashed = false;
+
+    Vector2 rewindMoveTarget;
+    bool rewindMoving = false;
+    float rewindMoveSpeed = 1500;
 
     // owner position
     Transform* ownerTransform = nullptr;

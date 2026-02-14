@@ -30,6 +30,10 @@ public:
     void TriggerScreenShake(float intensity, float duration);
     void UpdateShake(float deltaTime);
 
+    void SetLetterbox(const float amount) { targetLetterbox = amount; }
+    void UpdateLetterbox(float deltaTime);
+    [[nodiscard]] int GetLetterboxHeight() const { return static_cast<int>(viewH * letterboxMagnitude * 0.5f); }
+
     [[nodiscard]] float GetLeft() const;
     [[nodiscard]] float GetRight() const;
     [[nodiscard]] float GetTop() const;
@@ -59,6 +63,11 @@ private:
     float shakeOffsetY = 0;
     float shakeTimer = 0;
     float shakeIntensity = 0;
+
+    bool isLetterboxed = false;
+    float letterboxMagnitude = 0;
+    float targetLetterbox = 0;
+    float letterboxSpeed = 5;
 
     Vector2* followTarget;
 };

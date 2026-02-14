@@ -6,6 +6,7 @@
 
 #include "../../../Systems/EnemyManager.h"
 #include "PlayerController.h"
+#include "../../../Lib/conioex_custom.h"
 #include "../../../VFX/AttackVFXManager.h"
 
 void PlayerAttackController::Initialize(const PlayerAttackConfig& config, PlayerController* controller)
@@ -21,7 +22,10 @@ void PlayerAttackController::Update(const float deltaTime, Transform& playerTran
     HandleAttackCollisions();
 
     ownerTransform = &playerTransform;
-    ownerFacingRight = isFacingRight;
+    if (combatStateMachine.GetCurrState() != PlayerCombatState::REWIND_ATTK)
+    {
+        ownerFacingRight = isFacingRight;
+    }
 
     combatStateMachine.Update(deltaTime);
     comboTimer += deltaTime;
@@ -31,6 +35,53 @@ void PlayerAttackController::Update(const float deltaTime, Transform& playerTran
     if (currentState == PlayerCombatState::DEFAULT)
     {
         return;
+    }
+
+    if (currentState == PlayerCombatState::REWIND_ATTK)
+    {
+        if (rewindMoving)
+        {
+            float dx = rewindMoveTarget.x - ownerTransform->center.x;
+
+            float frameMove = rewindMoveSpeed * deltaTime;
+
+            if (std::abs(dx) <= frameMove || comboTimer >= rewindAttackDashStart)
+            {
+                rewindMoving = false;
+                playerController->SetVelocityX(0);
+            }
+            else
+            {
+                float direction;
+                if (dx > 0)
+                {
+                    direction = 1;
+                }
+                else
+                {
+                    direction = -1;
+                }
+
+                playerController->SetVelocityX(direction * rewindMoveSpeed);
+            }
+        }
+        if (comboTimer >= rewindAttackDashStart && !rewindAttackDashed)
+        {
+            rewindAttackDashed = true;
+            const AttkData& data = GetAttackData(PlayerCombatState::REWIND_ATTK);
+
+            float hitboxOffsetX = ownerFacingRight ? data.hitboxOffsetX : -data.hitboxOffsetX;
+            float vfxOffsetX = ownerFacingRight ? data.VFXOffsetX : -data.VFXOffsetX;
+
+            AttackVFXManager::Instance().PlayAttackVFX(
+                ownerTransform, Vector2(vfxOffsetX, data.VFXOffsetY),
+                PlayerCombatState::ATTK2, !ownerFacingRight, true);
+            hitbox.Activate(ownerTransform->center.x, ownerTransform->center.y,
+                            hitboxOffsetX, data.hitboxOffsetY,
+                            data.width, data.height, data.duration - data.recovery);
+
+            playerController->Dash(2000, 0.1, true);
+        }
     }
 
     const AttkData& data = GetAttackData(currentState);
@@ -79,6 +130,11 @@ bool PlayerAttackController::TryAttack()
         return true;
     }
 
+    if (currState == PlayerCombatState::REWIND_ATTK)
+    {
+        return false;
+    }
+
     // if currently attacking && comboable - buffer combo
     if (currState == PlayerCombatState::ATTK0 || currState == PlayerCombatState::ATTK1)
     {
@@ -98,6 +154,47 @@ void PlayerAttackController::CancelCombo()
     comboTimer = 0;
     hasHit = false;
     isInRecovery = false;
+}
+
+void PlayerAttackController::StartRewindAttack(const Entity* targetEnemy)
+{
+    if (targetEnemy == nullptr)
+    {
+        return;
+    }
+
+    float enemyCenterX = targetEnemy->transform.center.x;
+    float playerCenterX = ownerTransform->center.x;
+
+    float leftPos = enemyCenterX - rewindAttackXOffset;
+    float rightPos = enemyCenterX + rewindAttackXOffset;
+
+    float distToLeft = std::abs(playerCenterX - leftPos);
+    float distToRight = std::abs(playerCenterX - rightPos);
+
+    if (distToLeft < distToRight)
+    {
+        rewindMoveTarget.x = leftPos;
+        ownerFacingRight = true;
+    }
+    else
+    {
+        rewindMoveTarget.x = rightPos;
+        ownerFacingRight = false;
+    }
+
+    playerController->SetIsFacingRight(ownerFacingRight);
+    rewindMoveTarget.y = ownerTransform->center.y;
+    rewindMoving = true;
+
+    combatStateMachine.ChangeState(PlayerCombatState::REWIND_ATTK);
+    comboTimer = 0;
+    comboTimer = 0;
+    comboInputBuffer = false;
+    hasHit = false;
+
+    Camera::Instance().SetLetterbox(0.3);
+    playerController->SetDamageable(false);
 }
 
 bool PlayerAttackController::IsAttacking() const
@@ -149,11 +246,18 @@ void PlayerAttackController::LoadAttackDuration()
             for (int frame = 0; frame < sheet->frames.size() - 1; frame++)
             {
                 duration += sheet->frames[frame].duration;
+
+                if (i == 3 && frame < 4)
+                {
+                    rewindAttackDashStart += sheet->frames[frame].duration;
+                }
             }
             attackData[i].duration = duration;
             attackData[i].recovery = sheet->frames[sheet->frames.size() - 1].duration;
         }
     }
+
+    DebugPrintf("%f", rewindAttackDashStart);
 }
 
 void PlayerAttackController::StartAttack(const PlayerCombatState combatState)
@@ -192,7 +296,7 @@ void PlayerAttackController::StartAttack(const PlayerCombatState combatState)
     if (GetCurrState() == PlayerCombatState::ATTK2)
     {
         AttackVFXManager::Instance().PlayAttackVFX(ownerTransform, Vector2(vfxOffsetX, data.VFXOffsetY),
-                                               GetCurrState(), !ownerFacingRight, true);
+                                                   GetCurrState(), !ownerFacingRight, true);
     }
     else
     {
@@ -210,6 +314,14 @@ void PlayerAttackController::EndAttack()
     comboInputBuffer = false;
     comboTimer = 0;
     hasHit = false;
+    playerController->SetDamageable(true);
+    if (combatStateMachine.GetCurrState() == PlayerCombatState::REWIND_ATTK)
+    {
+        rewindMoving = false;
+        TimeManager::Instance().DeactivateTimeStop();
+        Camera::Instance().SetLetterbox(0);
+    }
+    rewindAttackDashed = false;
     combatStateMachine.ChangeState(PlayerCombatState::DEFAULT);
 }
 
@@ -240,7 +352,6 @@ void PlayerAttackController::HandleAttackCollisions()
                                 enemy->GetSize().x, enemy->GetSize().y))
         {
             enemy->TakeDamage(GetCurrentDamage());
-
         }
     }
 }
@@ -254,6 +365,9 @@ const AttkData& PlayerAttackController::GetAttackData(const PlayerCombatState cu
     case PlayerCombatState::ATTK1:
         return attackData[1];
     case PlayerCombatState::ATTK2:
+        return attackData[2];
+    case PlayerCombatState::REWIND_ATTK:
+        return attackData[3];
     default:
         return attackData[2];
     }

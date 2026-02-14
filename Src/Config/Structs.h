@@ -53,6 +53,13 @@ struct Transform
         return distanceToCompare < distance * distance;
     }
 
+    static float GetDistance(const Vector2 position1, const Vector2 position2)
+    {
+        const float dx = position1.x - position2.x;
+        const float dy = position1.y - position2.y;
+        return std::sqrt(dx * dx + dy * dy);
+    }
+
     static Vector2 ToTopLeft(const Vector2 position, const Vector2 size)
     {
         return Vector2(position.x - size.x / 2, position.y - size.y / 2);
@@ -177,19 +184,17 @@ struct InputConfig
     KeyBinding moveRight = {PK_RIGHT, PK_D};
     KeyBinding jump = {PK_SP, PK_W};
     KeyBinding attack = {PK_J};
-    KeyBinding dash = {PK_SHIFT};
 
     // time skills
     KeyBinding timeStop = {PK_K};
-    KeyBinding timeRewind = {PK_L};
+    KeyBinding timeRewind = {PK_SHIFT};
 };
 
 // PLAYER STRUCTS
 
 struct PlayerSnapshot
 {
-    float x, y;
-    float velX, velY;
+    Transform transform;
     bool isFacingRight;
     Bmp* frame = nullptr;
 };

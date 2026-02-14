@@ -121,6 +121,11 @@ void Camera::UpdateShake(float deltaTime)
     shakeOffsetY = (rand() % 3 - 1) * shakeIntensity * t;
 }
 
+void Camera::UpdateLetterbox(const float deltaTime)
+{
+    letterboxMagnitude += (targetLetterbox - letterboxMagnitude) * letterboxSpeed * deltaTime;
+}
+
 float Camera::GetLeft() const
 {
     return x - static_cast<float>(viewW) / 2.0f;

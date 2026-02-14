@@ -14,13 +14,24 @@ void UGV::Initialize(const UGVConfig& config)
     knockBackForce = config.knockBackForce;
 }
 
-void UGV::Update(const float deltaTime, Tilemap& tileMap)
+void UGV::Update(const float deltaTime, const float trueDeltaTime, Tilemap& tileMap)
 {
-    Enemy::Update(deltaTime, tileMap);
+    Enemy::Update(deltaTime, trueDeltaTime, tileMap);
 
     if (attackWindUpTimer > 0)
     {
         attackWindUpTimer -= deltaTime;
+        if (deltaTime != 0)
+        {
+            if (target->transform.center.x > transform.center.x)
+            {
+                isFacingRight = true;
+            }
+            else
+            {
+                isFacingRight = false;
+            }
+        }
     }
     else if (isAttacking && attackWindUpTimer <= 0)
     {

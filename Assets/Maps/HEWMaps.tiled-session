@@ -13,20 +13,20 @@
             "scaleInEditor": 1
         },
         "TestMap.tmx": {
-            "scale": 0.5,
+            "scale": 0.75,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 280,
-                "y": 779
+                "x": 406.66666666666663,
+                "y": 895.3333333333333
             }
         }
     },
     "last.exportedFilePath": "C:/Users/saber/CLionProjects/HAL/HEW/Assets/Maps/MapCsv",
     "last.imagePath": "C:/Users/saber/CLionProjects/HAL/HEW/Assets/Tileset/SceneTileset",
-    "map.height": 40,
+    "map.height": 20,
     "map.lastUsedExportFilter": "CSV files (*.csv)",
     "map.lastUsedFormat": "tmx",
-    "map.width": 60,
+    "map.width": 120,
     "openFiles": [
         "SceneTileset.tsx",
         "TestMap.tmx"

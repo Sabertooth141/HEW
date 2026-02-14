@@ -16,11 +16,13 @@ public:
 
     void Initialize(const EnemyConfig& config);
     void Start() override;
-    void Update(float deltaTime, Tilemap& tileMap) override;
+    virtual void Update(float deltaTime, float trueDeltaTime, Tilemap& tileMap);
     void Draw(Camera& cam) override;
     void TakeDamage(float inDamage) override;
     void InitAnimation(const EnemyAnimPaths<EnemyState>& path);
     Entity* GetTarget() const { return target; }
+
+    [[nodiscard]] bool IsAlive() const { return isAlive; }
 
 protected:
     void HandleMovement(float deltaTime, Tilemap& tilemap) override;
@@ -51,6 +53,8 @@ protected:
     bool isInvic;
     float invicCD;
     float invicTimer;
+
+    bool isAlive;
 
     Animator* animatorPlaying = nullptr;
     EnemyAnimators animators;

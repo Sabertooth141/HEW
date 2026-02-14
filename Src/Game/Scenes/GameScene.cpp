@@ -51,6 +51,11 @@ std::vector<PlayerCombatAnimPaths> playerCombatAnimationPaths =
         PlayerCombatState::ATTK2,
         "../Assets/Player/PlayerAttk/PlayerCharacterAttk2.json",
         "../Assets/Player/PlayerAttk/PlayerCharacterAttk2.bmp"
+    },
+    {
+        PlayerCombatState::REWIND_ATTK,
+        "../Assets/Player/PlayerAttk/PlayerCharacterRewindAttk.json",
+        "../Assets/Player/PlayerAttk/PlayerCharacterRewindAttk.bmp"
     }
 };
 
@@ -73,6 +78,7 @@ std::vector<PlayerCombatAnimPaths> playerAttackVFXPaths =
         "../Assets/Player/PlayerAttk/AttkVFX/PlayerCharacterAttk2Effect.json",
         "../Assets/Player/PlayerAttk/AttkVFX/PlayerCharacterAttk2Effect.bmp"
     }
+
 };
 
 // mine
@@ -96,7 +102,7 @@ bool GameScene::Initialize()
     LoadTileset("../Assets/Tileset/SceneTileset/Tileset.bmp");
 
     int mapWidth, mapHeight;
-    std::vector<uint8_t> mapData = tileMap.ParseMapCSV("../Assets/Maps/MapCsv/TestMap.csv", mapWidth, mapHeight);
+    std::vector<uint8_t> mapData = tileMap.ParseMapCSV("../Assets/Maps/MapCsv/Scene1.csv", mapWidth, mapHeight);
     tileMap.LoadFromArr(mapData, mapWidth, mapHeight, tileset, TILE_SIZE);
 
     // init vfxmanager
@@ -111,8 +117,8 @@ bool GameScene::Initialize()
     }
 
     // TODO: TEMP
-    const float playerStartX = mapWidth / 2 * TILE_SIZE - 200;
-    const float playerStartY = mapHeight / 2 * TILE_SIZE + 300;
+    const float playerStartX = 128;
+    const float playerStartY = 440;
 
     // playerController
     PlayerConfig playerCfg = config::Player();
@@ -173,10 +179,12 @@ bool GameScene::Initialize()
     TimeManager::Instance().Initialize(timeManagerCfg);
 
     // camera
-    Camera::Instance().Initialize(static_cast<float>(GameConfig::VIEW_WIDTH) / 2, static_cast<float>(GameConfig::VIEW_HEIGHT) / 2,
-                   GameConfig::VIEW_WIDTH,
-                   GameConfig::VIEW_HEIGHT);
-    Camera::Instance().SetBounds(0, 0, static_cast<float>(tileMap.GetWidthPixels()), static_cast<float>(tileMap.GetHeightPixels()));
+    Camera::Instance().Initialize(static_cast<float>(GameConfig::VIEW_WIDTH) / 2,
+                                  static_cast<float>(GameConfig::VIEW_HEIGHT) / 2,
+                                  GameConfig::VIEW_WIDTH,
+                                  GameConfig::VIEW_HEIGHT);
+    Camera::Instance().SetBounds(0, 0, static_cast<float>(tileMap.GetWidthPixels()),
+                                 static_cast<float>(tileMap.GetHeightPixels()));
     Camera::Instance().SetPosition(playerController.GetCenterPosition().x, playerController.GetCenterPosition().y);
 
     lastFrameTime = timeGetTime();
@@ -199,6 +207,7 @@ void GameScene::Update(const float deltaTime)
 {
     TimeManager::Instance().Update(deltaTime);
     Camera::Instance().UpdateShake(deltaTime);
+    Camera::Instance().UpdateLetterbox(deltaTime);
 
     if (TimeManager::Instance().IsHitStopped())
     {
@@ -211,7 +220,7 @@ void GameScene::Update(const float deltaTime)
 
     for (const auto& e : EnemyManager::Instance().GetActiveEnemies())
     {
-        e->Update(worldDelta, tileMap);
+        e->Update(worldDelta, deltaTime, tileMap);
     }
 
     playerController.Update(deltaTime, tileMap);
@@ -257,8 +266,15 @@ void GameScene::Draw()
 
     char posBuf[128];
     sprintf_s(posBuf, "Player Coords TOP LEFT| X: %f, Y %f\n"
-                      "CENTER| X: %f, Y %f", playerTopLeft.x, playerTopLeft.y, playerCenter.x, playerCenter.y);
+              "CENTER| X: %f, Y %f", playerTopLeft.x, playerTopLeft.y, playerCenter.x, playerCenter.y);
     WriteText(20, 60, posBuf, 10);
+
+    int barH = Camera::Instance().GetLetterboxHeight();
+    if (barH > 0)
+    {
+        DrawRect(0, 0, GameConfig::VIEW_WIDTH, barH, BLACK, true);                  // top bar
+        DrawRect(0, GameConfig::VIEW_HEIGHT - barH, GameConfig::VIEW_WIDTH, GameConfig::VIEW_HEIGHT, BLACK, true);      // bottom bar
+    }
 
     PrintFrameBuffer();
     FlipScreen();

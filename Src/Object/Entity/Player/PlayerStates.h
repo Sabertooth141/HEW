@@ -23,6 +23,7 @@ enum class PlayerCombatState : uint8_t
     ATTK0 = 0,
     ATTK1,
     ATTK2,
+    REWIND_ATTK,
     ATTK_RECOVERY,
     DEFAULT
 };
