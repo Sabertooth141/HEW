@@ -137,6 +137,8 @@ struct EnemyConfig : EntityConfig
     float damage;
 
     float invicCooldown;
+
+    int spawnGroupID;
 };
 
 struct MineConfig : EnemyConfig

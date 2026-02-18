@@ -7,6 +7,7 @@
 #include "../../../Lib/conioex_custom.h"
 #include "../../../Systems/EnemyManager.h"
 #include "../../../Systems/TimeManager.h"
+#include "../../../VFX/AttackVFXManager.h"
 
 Enemy::Enemy() : target(nullptr), attackCooldown(0), attackCooldownTimer(0), isAttacking(false), canAttack(true),
                  moveSpeed(0), damage(0),
@@ -30,6 +31,7 @@ void Enemy::Initialize(const EnemyConfig& config)
     attackDistance = config.attackDistance;
     detectionDistance = config.detectionDistance;
     damage = config.damage;
+    spawnGroupID = config.spawnGroupID;
 }
 
 void Enemy::Start()
@@ -106,9 +108,30 @@ void Enemy::Draw(Camera& cam)
 
 void Enemy::HandleMovement(const float deltaTime, Tilemap& tilemap)
 {
-    if (stateMachine.GetCurrentState() != EnemyState::PATROL && stateMachine.GetCurrentState() != EnemyState::PATHFIND)
+    if (stateMachine.GetCurrentState() != EnemyState::PATROL &&
+        stateMachine.GetCurrentState() != EnemyState::PATHFIND &&
+        stateMachine.GetCurrentState() != EnemyState::IDLE)
     {
         return;
+    }
+
+    if (isAttacking)
+    {
+        velX = 0;
+        return;
+    }
+
+    if (stateMachine.GetCurrentState() != EnemyState::ATTK &&
+        stateMachine.GetCurrentState() != EnemyState::HURT)
+    {
+        if (velX > 0.f)
+        {
+            isFacingRight = true;
+        }
+        else if (velX < 0.f)
+        {
+            isFacingRight = false;
+        }
     }
 
     if (stateMachine.GetCurrentState() == EnemyState::PATROL)
@@ -133,6 +156,8 @@ void Enemy::TakeDamage(const float inDamage)
 
     isInvic = true;
     Entity::TakeDamage(inDamage);
+
+    AttackVFXManager::Instance().PlayAttackVFX(&transform, {0, 0}, EnemyVFXType::HIT, false);
 
     TimeManager::Instance().TriggerHitStop(inDamage * 0.003);
     Camera::Instance().TriggerScreenShake(1, inDamage * 0.01);

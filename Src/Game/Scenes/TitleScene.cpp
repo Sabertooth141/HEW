@@ -11,8 +11,9 @@ bool TitleScene::Initialize()
 {
     viewWidth = GameConfig::VIEW_WIDTH;
     viewHeight = GameConfig::VIEW_HEIGHT;
+    tutorialPage = 0;
 
-	return true;
+    return true;
 }
 
 void TitleScene::Update(float deltaTime)
@@ -98,6 +99,31 @@ void TitleScene::HandleTutorialInput()
     if (ChkKeyEdge(PK_BS))
     {
         currTitleState = TitleStates::TITLE;
+        tutorialPage = 0;
+    }
+
+    if (ChkKeyEdge(PK_LEFT))
+    {
+        if (tutorialPage > 0)
+        {
+            tutorialPage -= 1;
+        }
+    }
+
+    if (ChkKeyEdge(PK_RIGHT))
+    {
+        if (tutorialPage < totalTutorialPage - 1)
+        {
+            tutorialPage += 1;
+        }
+    }
+
+    if (tutorialPage == totalTutorialPage - 1)
+    {
+        if (ChkKeyEdge(PK_ENTER))
+        {
+            GoToGame();
+        }
     }
 }
 
@@ -130,7 +156,10 @@ void TitleScene::InitTitleAndOptions()
         case 0:
             {
                 optionString = L"スタート";
-                option.onSelected = [this] { GoToGame(); };
+                option.onSelected = [this]
+                {
+                    GoToTutorial();
+                };
                 break;
             }
         case 1:
@@ -173,32 +202,29 @@ void TitleScene::InitTitleAndOptions()
 
 void TitleScene::DrawTitleAndOptions() const
 {
-	// Get font cell size (2 for Font 2x2)
-	// You could expose this from conioex or hardcode it
+    WriteTextW(
+        static_cast<int>(title.transform.topLeft.x),
+        static_cast<int>(title.transform.topLeft.y),
+        title.text,
+        title.fontSize
+    );
 
-	WriteTextW(
-		static_cast<int>(title.transform.topLeft.x),
-		static_cast<int>(title.transform.topLeft.y),
-		title.text,
-		title.fontSize  // 40/2 = 20 → actual DWrite size = 2×20 = 40
-	);
+    for (int i = 0; i < titleOptions.size(); i++)
+    {
+        Vector2 optionPos = titleOptions[i].transform.topLeft;
+        D2D1::ColorF optionColor = (i == selectedOptionIndex)
+                                       ? D2D1::ColorF(D2D1::ColorF::Red)
+                                       : D2D1::ColorF(D2D1::ColorF::White);
 
-	for (int i = 0; i < titleOptions.size(); i++)
-	{
-		Vector2 optionPos = titleOptions[i].transform.topLeft;
-		D2D1::ColorF optionColor = (i == selectedOptionIndex)
-			? D2D1::ColorF(D2D1::ColorF::Red)
-			: D2D1::ColorF(D2D1::ColorF::White);
-
-		WriteTextW(
-			static_cast<int>(optionPos.x),
-			static_cast<int>(optionPos.y),
-			titleOptions[i].text,
-			titleOptions[i].fontSize,  // 14/2 = 7
-			optionColor,
-			D2D1::ColorF(0, 0, 0, 0)
-		);
-	}
+        WriteTextW(
+            static_cast<int>(optionPos.x),
+            static_cast<int>(optionPos.y),
+            titleOptions[i].text,
+            titleOptions[i].fontSize,
+            optionColor,
+            D2D1::ColorF(0, 0, 0, 0)
+        );
+    }
 }
 
 void TitleScene::InitTutorial()
@@ -215,38 +241,41 @@ void TitleScene::InitTutorial()
     titleTransform.topLeft = Transform::ToTopLeft(titlePos, titleTransform.size);
     titleTransform.CalculateCenterPosition();
 
-    tutorialTitle.text = titleString;
-    tutorialTitle.fontSize = titleSize;
-    tutorialTitle.transform = titleTransform;
+    {
+        Bmp* tutorial = LoadBmp("../Assets/TutorialAssets/Tutorial1.bmp");
+        BmpImage tutorialImage{};
+        tutorialImage.image = tutorial;
+        tutorialImage.transform.center.x = static_cast<float>(viewWidth) / 2;
+        tutorialImage.transform.center.y = static_cast<float>(viewHeight) / 2;
+        tutorialImage.transform.size.x = tutorial->width;
+        tutorialImage.transform.size.y = tutorial->height;
+        tutorialImage.transform.CalculateTopLeftPosition();
 
-    const wchar_t* tutorialString = L"A, D - 左右移動\n"
-        "W, Space - ジャンプ\n"
-        "Shift - ダッシュ\n"
-        "K - 時間停止\n"
-        "L - 時間戻り\n\n\n\n"
-        "Backspace - タイトル画面へ";
-    constexpr int tutorialSize = 12;
-    Transform tutorialTransform{};
-    tutorialTransform.size.x = static_cast<float>(CalculateTextWidth(tutorialString, tutorialSize));
-    tutorialTransform.size.y = tutorialSize;
+        tutorialImages.push_back(tutorialImage);
 
-    Vector2 tutorialPos{};
-    tutorialPos.x = static_cast<float>(viewWidth) / 2;
-    tutorialPos.y = static_cast<float>(viewHeight) / 2 + 20;
-    tutorialTransform.topLeft = Transform::ToTopLeft(tutorialPos, titleTransform.size);
-    tutorialTransform.CalculateCenterPosition();
+        tutorial = LoadBmp("../Assets/TutorialAssets/Tutorial2.bmp");
+        tutorialImage.image = tutorial;
 
-    tutorialText.text = tutorialString;
-    tutorialText.fontSize = tutorialSize;
-    tutorialText.transform = tutorialTransform;
+        tutorialImages.push_back(tutorialImage);
+
+        tutorial = LoadBmp("../Assets/TutorialAssets/Tutorial3.bmp");
+        tutorialImage.image = tutorial;
+
+        tutorialImages.push_back(tutorialImage);
+
+        tutorial = LoadBmp("../Assets/TutorialAssets/Tutorial4.bmp");
+        tutorialImage.image = tutorial;
+
+        tutorialImages.push_back(tutorialImage);
+    }
+
+    totalTutorialPage = tutorialImages.size();
 }
 
-void TitleScene::DrawTutorial()
+void TitleScene::DrawTutorial() const
 {
-    WriteTextW(tutorialTitle.transform.topLeft.x, tutorialTitle.transform.topLeft.y, tutorialTitle.text,
-               tutorialTitle.fontSize);
-    WriteTextW(tutorialText.transform.topLeft.x, tutorialText.transform.topLeft.y, tutorialText.text,
-               tutorialText.fontSize);
+    DrawBmp(tutorialImages[tutorialPage].transform.topLeft.x, tutorialImages[tutorialPage].transform.topLeft.y,
+            tutorialImages[tutorialPage].image);
 }
 
 void TitleScene::GoToGame()

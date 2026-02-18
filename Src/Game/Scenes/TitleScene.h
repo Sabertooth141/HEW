@@ -12,7 +12,14 @@ enum class TitleStates : uint8_t
 {
     TITLE,
     TUTORIAL,
+    START_TUTORIAL,
     DEFAULT
+};
+
+struct BmpImage
+{
+    Bmp* image;
+    Transform transform;
 };
 
 class TitleScene final : public Scene
@@ -32,7 +39,7 @@ private:
     void DrawTitleAndOptions() const;
 
     void InitTutorial();
-    void DrawTutorial();
+    void DrawTutorial() const;
 
     void GoToGame();
     void GoToTutorial();
@@ -43,12 +50,14 @@ private:
     TitleText title{};
     TitleStates currTitleState = TitleStates::DEFAULT;
 
-    TitleText tutorialTitle{};
-    TitleText tutorialText{};
+    std::vector<BmpImage> tutorialImages{};
 
     int viewWidth = 0;
     int viewHeight = 0;
     int selectedOptionIndex = 0;
+
+    int tutorialPage = 0;
+    int totalTutorialPage = 1;
 };
 
 

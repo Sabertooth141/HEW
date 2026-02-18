@@ -23,6 +23,7 @@ public:
     Entity* GetTarget() const { return target; }
 
     [[nodiscard]] bool IsAlive() const { return isAlive; }
+    [[nodiscard]] int GetSpawnGroupID() const { return spawnGroupID; }
 
 protected:
     void HandleMovement(float deltaTime, Tilemap& tilemap) override;
@@ -60,6 +61,7 @@ protected:
     EnemyAnimators animators;
 
     EnemyStateMachine stateMachine;
+    int spawnGroupID;
 };
 
 

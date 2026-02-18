@@ -15,6 +15,14 @@ class Mine;
 template<typename>
 constexpr bool always_false_v = false;
 
+enum class EnemyType : uint8_t
+{
+    MINE = 0,
+    UGV,
+    UAV,
+    DEFAULT
+};
+
 struct EnemyManager
 {
     static EnemyManager& Instance()
@@ -52,6 +60,8 @@ struct EnemyManager
             enemy->InitAnimation(animation);
         }
 
+        enemy->Start();
+
         activeEnemies.push_back(std::move(enemy));
 
         return static_cast<T*>(activeEnemies.back().get());
@@ -75,6 +85,25 @@ struct EnemyManager
             res.push_back(e.get());
         }
         return res;
+    }
+
+    void Reset()
+    {
+        activeEnemies.clear();
+    }
+
+    [[nodiscard]] int CountAliveInGroup(const int groupID) const
+    {
+        int count = 0;
+        for (const auto& e : activeEnemies)
+        {
+            if (e->GetSpawnGroupID() == groupID)
+            {
+                count += 1;
+            }
+        }
+
+        return count;
     }
 
 private:

@@ -70,6 +70,7 @@ void Entity::TakeKnockback(float knockBackForce, const bool knockBackDirection)
 
     velX = knockBackForce;
     knockBackRecoveryTimer = knockBackRecoveryDuration;
+    isFacingRight = !knockBackDirection;
     isKnockedBack = true;
 }
 

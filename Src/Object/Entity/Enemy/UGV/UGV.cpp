@@ -21,7 +21,7 @@ void UGV::Update(const float deltaTime, const float trueDeltaTime, Tilemap& tile
     if (attackWindUpTimer > 0)
     {
         attackWindUpTimer -= deltaTime;
-        if (deltaTime != 0)
+        if (deltaTime > 0)
         {
             if (target->transform.center.x > transform.center.x)
             {
@@ -92,7 +92,7 @@ void UGV::HandleAnimationUpdate(const float deltaTime)
 
     if (stateMachine.GetCurrentState() == EnemyState::ATTK)
     {
-        animatorPlaying->Play(false, true);
+        animatorPlaying->Play(false);
         return;
     }
 
@@ -121,6 +121,7 @@ void UGV::HandleAttackWindUp()
 
     attackWindUpTimer = attackWindUpDuration;
     isAttacking = true;
+    velX = 0;
 }
 
 void UGV::HandleAttackKnockBack()

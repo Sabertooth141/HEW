@@ -15,6 +15,7 @@
 #include "../../Object/Entity/Enemy/UGV/UGV.h"
 #include "../Game.h"
 #include "../../Systems/GameManager.h"
+#include "../../Util/TriggerManager.h"
 
 #define TEST_MAP_WIDTH 100
 #define TEST_MAP_HEIGHT 50
@@ -32,6 +33,11 @@ std::vector<PlayerNormalAnimPaths> playerNormalAnimationPaths =
         PlayerNormalState::IDLE,
         "../Assets/Player/PlayerIdle/PlayerCharacterIdle.json",
         "../Assets/Player/PlayerIdle/PlayerCharacterIdle.bmp"
+    },
+    {
+        PlayerNormalState::KNOCKBACK,
+        "../Assets/Player/PlayerKnockedBack/PlayerCharacterKnockedBack.json",
+        "../Assets/Player/PlayerKnockedBack/PlayerCharacterKnockedBack.bmp"
     }
 };
 
@@ -81,13 +87,23 @@ std::vector<PlayerCombatAnimPaths> playerAttackVFXPaths =
 
 };
 
-// mine
-std::vector<EnemyAnimPaths<EnemyVFXType>> mineAttackVFXPaths =
+// enemy attack vfx
+std::vector<EnemyAnimPaths<EnemyVFXType>> enemyAttackVFXPaths =
 {
     {
         EnemyVFXType::MINE,
         "../Assets/Enemy/Mine/AttkVFX/MineAttkVFX.json",
         "../Assets/Enemy/Mine/AttkVFX/MineAttkVFX.bmp"
+    }
+};
+
+// enemy hit vfx
+std::vector<EnemyAnimPaths<EnemyVFXType>> enemyHitVFXPaths =
+{
+    {
+        EnemyVFXType::HIT,
+        "../Assets/Enemy/EnemyHitEffect/EnemyHitEffect.json",
+        "../Assets/Enemy/EnemyHitEffect/EnemyHitEffect.bmp"
     }
 };
 
@@ -103,7 +119,11 @@ bool GameScene::Initialize()
 
     int mapWidth, mapHeight;
     std::vector<uint8_t> mapData = tileMap.ParseMapCSV("../Assets/Maps/MapCsv/Scene1.csv", mapWidth, mapHeight);
+
+    TriggerManager::Instance().ScanAndBuildTriggers(mapData, mapWidth, mapHeight, TILE_SIZE);
+
     tileMap.LoadFromArr(mapData, mapWidth, mapHeight, tileset, TILE_SIZE);
+    TriggerManager::Instance().SetTileMap(&tileMap);
 
     // init vfxmanager
     for (const auto& effect : playerAttackVFXPaths)
@@ -111,7 +131,12 @@ bool GameScene::Initialize()
         AttackVFXManager::Instance().InitAnimation(effect);
     }
 
-    for (const auto& effect : mineAttackVFXPaths)
+    for (const auto& effect : enemyAttackVFXPaths)
+    {
+        AttackVFXManager::Instance().InitAnimation(effect);
+    }
+
+    for (const auto& effect : enemyHitVFXPaths)
     {
         AttackVFXManager::Instance().InitAnimation(effect);
     }
@@ -164,12 +189,12 @@ bool GameScene::Initialize()
 
     // EnemyManager::Instance().CreateEnemy<Mine, MineConfig>(mineCfg);
 
-    UGVConfig ugvCfg = config::UGV();
-    ugvCfg.x = playerStartX;
-    ugvCfg.y = playerStartY;
-    ugvCfg.target = &playerController;
-
-    EnemyManager::Instance().CreateEnemy<UGV, UGVConfig>(ugvCfg);
+    // UGVConfig ugvCfg = config::UGV();
+    // ugvCfg.x = playerStartX;
+    // ugvCfg.y = playerStartY;
+    // ugvCfg.target = &playerController;
+    //
+    // EnemyManager::Instance().CreateEnemy<UGV, UGVConfig>(ugvCfg);
 
     // subsystems
     const VFXConfig vfxCfg = sysCfg::VFXCfg();
@@ -225,6 +250,7 @@ void GameScene::Update(const float deltaTime)
 
     playerController.Update(deltaTime, tileMap);
 
+    TriggerManager::Instance().Update(playerController, deltaTime);
     AttackVFXManager::Instance().Update(deltaTime);
 
     Vector2 camTarget{};
@@ -238,12 +264,16 @@ void GameScene::Update(const float deltaTime)
 void GameScene::Shutdown()
 {
     tileMap.Shutdown();
+    EnemyManager::Instance().Reset();
+    TriggerManager::Instance().Clear();
 }
 
 void GameScene::Draw()
 {
     ClearScreen();
     tileMap.Draw(Camera::Instance());
+
+    // TriggerManager::Instance().DebugDraw(Camera::Instance());
 
     playerController.Draw(Camera::Instance());
 
@@ -259,21 +289,22 @@ void GameScene::Draw()
         playerController.Draw(Camera::Instance());
     }
 
-    AttackVFXManager::Instance().Draw(Camera::Instance());
-
     Vector2 playerTopLeft = playerController.transform.topLeft;
     Vector2 playerCenter = playerController.transform.center;
 
-    char posBuf[128];
-    sprintf_s(posBuf, "Player Coords TOP LEFT| X: %f, Y %f\n"
-              "CENTER| X: %f, Y %f", playerTopLeft.x, playerTopLeft.y, playerCenter.x, playerCenter.y);
-    WriteText(20, 60, posBuf, 10);
+    // char posBuf[128];
+    // sprintf_s(posBuf, "Player Coords TOP LEFT| X: %f, Y %f\n"
+    //           "CENTER| X: %f, Y %f", playerTopLeft.x, playerTopLeft.y, playerCenter.x, playerCenter.y);
+    // WriteText(20, 60, posBuf, 10);
+
+    AttackVFXManager::Instance().Draw(Camera::Instance());
 
     int barH = Camera::Instance().GetLetterboxHeight();
     if (barH > 0)
     {
-        DrawRect(0, 0, GameConfig::VIEW_WIDTH, barH, BLACK, true);                  // top bar
-        DrawRect(0, GameConfig::VIEW_HEIGHT - barH, GameConfig::VIEW_WIDTH, GameConfig::VIEW_HEIGHT, BLACK, true);      // bottom bar
+        DrawRect(0, 0, GameConfig::VIEW_WIDTH, barH, BLACK, true); // top bar
+        DrawRect(0, GameConfig::VIEW_HEIGHT - barH, GameConfig::VIEW_WIDTH, GameConfig::VIEW_HEIGHT, BLACK,
+                 true); // bottom bar
     }
 
     PrintFrameBuffer();
@@ -304,6 +335,11 @@ void GameScene::TrackPlayerStatus()
     if (!GameManager::Instance().GetActivePlayer())
     {
         GameManager::Instance().SetIsVictory(false);
+        RequestTransition(SceneID::GAMEOVER);
+    }
+
+    if (GameManager::Instance().GetIsVictory())
+    {
         RequestTransition(SceneID::GAMEOVER);
     }
 }

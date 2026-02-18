@@ -79,7 +79,7 @@ void TimeManager::Update(const float deltaTime)
 
 float TimeManager::GetWorldDeltaTime(const float realDeltaTime) const
 {
-    return isTimeStopped ? realDeltaTime * 0.01f : realDeltaTime;
+    return isTimeStopped ? realDeltaTime * 0 : realDeltaTime;
 }
 
 void TimeManager::RecordPlayerSnapshot(const PlayerSnapshot& snapshot)

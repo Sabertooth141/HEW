@@ -16,6 +16,9 @@ class Animator;
 enum class EnemyVFXType : unsigned char
 {
     MINE,
+    UGV,
+    HIT,
+    DEFAULT
 };
 
 class AttackVFXManager

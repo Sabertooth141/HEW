@@ -140,15 +140,15 @@ void PlayerController::Draw(Camera& cam)
     // int screenY = cam.WorldToScreenY(holoSnapshot.y);
     // DrawRect(screenX, screenY, screenX + transform.size.x, screenY + transform.size.y, RED, false);
 
-    Hitbox& hitbox = attackController.GetHitBox();
-    if (hitbox.isActive)
-    {
-        int screenX = cam.WorldToScreenX(hitbox.transform.topLeft.x);
-        int screenY = cam.WorldToScreenY(hitbox.transform.topLeft.y);
-
-        DrawRect(screenX, screenY, screenX + hitbox.transform.size.x, screenY + hitbox.transform.size.y, LIGHTRED,
-                 false);
-    }
+    // Hitbox& hitbox = attackController.GetHitBox();
+    // if (hitbox.isActive)
+    // {
+    //     int screenX = cam.WorldToScreenX(hitbox.transform.topLeft.x);
+    //     int screenY = cam.WorldToScreenY(hitbox.transform.topLeft.y);
+    //
+    //     DrawRect(screenX, screenY, screenX + hitbox.transform.size.x, screenY + hitbox.transform.size.y, LIGHTRED,
+    //              false);
+    // }
 }
 
 void PlayerController::Die()

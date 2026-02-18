@@ -569,7 +569,7 @@ void FlipScreen(void)
 	//££££££££££££££££
 	if (hr == D2DERR_RECREATE_TARGET)
 	{
-		// GPU device lost \ recreate render target
+		// GPU device lost ? recreate render target
 		EndD2D();
 		InitD2D(g_ScreenBufferSize.X, g_ScreenBufferSize.Y);
 	} else
@@ -2696,7 +2696,7 @@ inline void pixel_copy24(const unsigned char *in_buf, int xx, int yy, int, bool 
 {
 	if ((xx >= 0) && (yy >= 0) && (yy < g_ScreenBufferSize.Y) && (xx < g_ScreenBufferSize.X))
 	{
-		// Read only 3 bytes (B, G, R) \ avoid out-of-bounds read on 24bpp data
+		// Read only 3 bytes (B, G, R) ? avoid out-of-bounds read on 24bpp data
 		DWORD rgb = in_buf[0] | (in_buf[1] << 8) | (in_buf[2] << 16);
 		//‰æ–Ê“à‚Å‚ ‚é
 		if ((!_tr) || (rgb != 0))

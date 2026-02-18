@@ -12,6 +12,7 @@ class EndScene final : public Scene
 {
 public:
     bool Initialize() override;
+    void HandleOptionInput();
     void Update(float deltaTime) override;
     void Start() override;
     void Draw() override;

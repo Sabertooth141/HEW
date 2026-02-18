@@ -15,8 +15,40 @@ bool EndScene::Initialize()
     return true;
 }
 
+void EndScene::HandleOptionInput()
+{
+    if (endSceneOptions.empty())
+    {
+        return;
+    }
+
+    if (ChkKeyEdge(PK_UP))
+    {
+        selectedOptionIndex -= 1;
+        if (selectedOptionIndex < 0)
+        {
+            selectedOptionIndex = 0;
+        }
+    }
+
+    if (ChkKeyEdge(PK_DOWN))
+    {
+        selectedOptionIndex += 1;
+        if (selectedOptionIndex >= endSceneOptions.size())
+        {
+            selectedOptionIndex = endSceneOptions.size() - 1;
+        }
+    }
+
+    if (ChkKeyEdge(PK_ENTER))
+    {
+        endSceneOptions[selectedOptionIndex].onSelected();
+    }
+}
+
 void EndScene::Update(float deltaTime)
 {
+    HandleOptionInput();
 }
 
 void EndScene::Start()
@@ -106,18 +138,45 @@ void EndScene::Start()
 
 void EndScene::Draw()
 {
+    ClearScreen();
+    WriteTextW(
+        static_cast<int>(endSceneTitle.transform.topLeft.x),
+        static_cast<int>(endSceneTitle.transform.topLeft.y),
+        endSceneTitle.text,
+        endSceneTitle.fontSize
+    );
+
+    for (int i = 0; i < endSceneOptions.size(); i++)
+    {
+        Vector2 optionPos = endSceneOptions[i].transform.topLeft;
+        D2D1::ColorF optionColor = i == selectedOptionIndex
+                                       ? D2D1::ColorF(D2D1::ColorF::Red)
+                                       : D2D1::ColorF(D2D1::ColorF::White);
+
+        WriteTextW(
+            static_cast<int>(optionPos.x),
+            static_cast<int>(optionPos.y),
+            endSceneOptions[i].text,
+            endSceneOptions[i].fontSize,
+            optionColor,
+            D2D1::ColorF(0, 0, 0, 0)
+        );
+    }
+    PrintFrameBuffer();
+    FlipScreen();
 }
 
 void EndScene::Shutdown()
 {
+    GameManager::Instance().SetIsVictory(false);
 }
 
 void EndScene::QuitGame()
 {
-    return;
+    isSceneRunning = false;
 }
 
 void EndScene::GoToMenu()
 {
-    return;
+    RequestTransition(SceneID::TITLE);
 }
