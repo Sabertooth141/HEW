@@ -314,6 +314,7 @@ void PlayerAttackController::EndAttack()
     comboInputBuffer = false;
     comboTimer = 0;
     hasHit = false;
+    isInRecovery = false;
     playerController->SetDamageable(true);
     if (combatStateMachine.GetCurrState() == PlayerCombatState::REWIND_ATTK)
     {

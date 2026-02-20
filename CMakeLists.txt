@@ -64,4 +64,8 @@ add_executable(HEW
         Src/Systems/GameManager.h
         Src/Util/MapTriggers.h
         Src/Util/TriggerManager.cpp
-        Src/Util/TriggerManager.h)
+        Src/Util/TriggerManager.h
+        Src/Config/Input.cpp
+        Src/Config/Input.h
+        Src/Util/UIManager.cpp
+        Src/Util/UIManager.h)

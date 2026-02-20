@@ -12,6 +12,7 @@
 #include "PlayerStates.h"
 #include "../Entity.h"
 #include "../../../Systems/TimeManager.h"
+#include "../../../Config/Input.h"
 
 #define SPEED_WHEN_ATTK 10
 #define GRAV_WHEN_ATTK 20
@@ -34,7 +35,7 @@ public:
 
     void Initialize(const PlayerConfig& config, const PlayerAttackConfig& attackConfig);
     void Start() override;
-    void Update(float deltaTime, Tilemap& tileMap) override;
+    void Update(float deltaTime, float trueDeltaTime, Tilemap& tileMap) override;
     void Draw(Camera& cam) override;
     void Die() override;
     void InitAnimation(const PlayerNormalAnimPaths& path);
@@ -61,7 +62,8 @@ private:
     void DrawRewind(const Camera& cam) const;
     void TriggerRewindAttack(TimeManager::RewindAttackFrame target);
 
-    void DrawTrailFromSnapshot(const Camera& cam, const PlayerSnapshot& snapshotToDraw, const RGBQUAD& trailColor, float fadeMult) const;
+    void DrawTrailFromSnapshot(const Camera& cam, const PlayerSnapshot& snapshotToDraw, const RGBQUAD& trailColor,
+                               float fadeMult) const;
 
     // vars
 private:
@@ -99,6 +101,11 @@ private:
     PlayerAnimators playerAnimators;
     Animator* animatorPlaying;
     PlayerSnapshot rewindSnapshot;
+
+    // flicker when taking damage
+    int flickerCounter = 0;
+    int flickerInterval = 4;
+    bool flickerVisible = true;
 };
 
 

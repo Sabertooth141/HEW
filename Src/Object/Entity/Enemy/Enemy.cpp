@@ -9,14 +9,11 @@
 #include "../../../Systems/TimeManager.h"
 #include "../../../VFX/AttackVFXManager.h"
 
-Enemy::Enemy() : target(nullptr), attackCooldown(0), attackCooldownTimer(0), isAttacking(false), canAttack(true),
-                 moveSpeed(0), damage(0),
+Enemy::Enemy() : target(nullptr), moveSpeed(0), damage(0), canAttack(true), attackCooldown(0),
+                 attackCooldownTimer(0), isAttacking(false),
                  attackDistance(0),
-                 detectionDistance(0),
-                 isInvic(false),
-                 invicCD(0),
-                 invicTimer(0), isAlive(true),
-                 stateMachine(EnemyState::DEFAULT)
+                 detectionDistance(0), isAlive(true),
+                 stateMachine(EnemyState::DEFAULT), spawnGroupID(0)
 {
 }
 
@@ -27,7 +24,6 @@ void Enemy::Initialize(const EnemyConfig& config)
     target = config.target;
     attackCooldown = config.attackCooldown;
     moveSpeed = config.moveSpeed;
-    invicCD = config.invicCooldown;
     attackDistance = config.attackDistance;
     detectionDistance = config.detectionDistance;
     damage = config.damage;
@@ -45,20 +41,9 @@ void Enemy::Start()
 
 void Enemy::Update(const float deltaTime, const float trueDeltaTime, Tilemap& tileMap)
 {
-    Entity::Update(deltaTime, tileMap);
+    Entity::Update(deltaTime, trueDeltaTime, tileMap);
 
     HandleAnimationUpdate(deltaTime);
-
-    if (isInvic)
-    {
-        invicTimer += trueDeltaTime;
-
-        if (invicTimer >= invicCD)
-        {
-            invicTimer = 0;
-            isInvic = false;
-        }
-    }
 
     if (CanStartAttack(deltaTime))
     {
@@ -154,7 +139,6 @@ void Enemy::TakeDamage(const float inDamage)
         return;
     }
 
-    isInvic = true;
     Entity::TakeDamage(inDamage);
 
     AttackVFXManager::Instance().PlayAttackVFX(&transform, {0, 0}, EnemyVFXType::HIT, false);
@@ -253,9 +237,10 @@ void Enemy::HandlePatrol(Tilemap& tilemap, const float deltaTime)
 
     const float newX = transform.topLeft.x + velX * deltaTime;
 
-    if (CheckCollisionX(tilemap, newX))
+    if (CheckCollisionX(tilemap, newX) || CheckCliffAhead(tilemap))
     {
         currSpeedX = -currSpeedX;
+        velX = 0;
     }
 }
 
@@ -285,4 +270,30 @@ void Enemy::PathfindToTarget(float deltaTime)
     {
         velX = -moveSpeed;
     }
+}
+
+bool Enemy::CheckCliffAhead(const Tilemap& tilemap) const
+{
+    float probeX;
+
+    if (currSpeedX > 0)
+    {
+        probeX = transform.topLeft.x + transform.size.x + 2;
+    }
+    else
+    {
+        probeX = transform.topLeft.x - 2;
+    }
+
+    float probeY = transform.topLeft.y + transform.size.y + 1;
+
+    int tileX = static_cast<int>(probeX) / tilemap.GetTileSize();
+    int tileY = static_cast<int>(probeY) / tilemap.GetTileSize();
+
+    if (tileX < 0 || tileX >= tilemap.GetWidthTiles() || tileY < 0 || tileY >= tilemap.GetHeightTiles())
+    {
+        return true;
+    }
+
+    return !tilemap.IsSolidAt(tileX, tileY);
 }

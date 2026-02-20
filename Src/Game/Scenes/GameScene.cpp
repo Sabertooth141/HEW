@@ -16,6 +16,7 @@
 #include "../Game.h"
 #include "../../Systems/GameManager.h"
 #include "../../Util/TriggerManager.h"
+#include "../../Util/UIManager.h"
 
 #define TEST_MAP_WIDTH 100
 #define TEST_MAP_HEIGHT 50
@@ -104,6 +105,11 @@ std::vector<EnemyAnimPaths<EnemyVFXType>> enemyHitVFXPaths =
         EnemyVFXType::HIT,
         "../Assets/Enemy/EnemyHitEffect/EnemyHitEffect.json",
         "../Assets/Enemy/EnemyHitEffect/EnemyHitEffect.bmp"
+    },
+    {
+    EnemyVFXType::CHARGE_UP,
+        "../Assets/Enemy/UGV/AttackWindup.json",
+        "../Assets/Enemy/UGV/AttackWindup.bmp"
     }
 };
 
@@ -212,6 +218,9 @@ bool GameScene::Initialize()
                                  static_cast<float>(tileMap.GetHeightPixels()));
     Camera::Instance().SetPosition(playerController.GetCenterPosition().x, playerController.GetCenterPosition().y);
 
+    UIManager::Instance().InitHPBar(20, GameConfig::VIEW_HEIGHT - 18, 200, 8, &playerController);
+    UIManager::Instance().Initialize();
+
     lastFrameTime = timeGetTime();
     isGameRunning = true;
 
@@ -248,7 +257,7 @@ void GameScene::Update(const float deltaTime)
         e->Update(worldDelta, deltaTime, tileMap);
     }
 
-    playerController.Update(deltaTime, tileMap);
+    playerController.Update(deltaTime, deltaTime, tileMap);
 
     TriggerManager::Instance().Update(playerController, deltaTime);
     AttackVFXManager::Instance().Update(deltaTime);
@@ -258,6 +267,7 @@ void GameScene::Update(const float deltaTime)
     camTarget.y = playerController.GetCenterPosition().y;
     Camera::Instance().FollowTarget(camTarget, 0.1f);
 
+    UIManager::Instance().Update(deltaTime);
     TrackPlayerStatus();
 }
 
@@ -298,6 +308,7 @@ void GameScene::Draw()
     // WriteText(20, 60, posBuf, 10);
 
     AttackVFXManager::Instance().Draw(Camera::Instance());
+    UIManager::Instance().Draw();
 
     int barH = Camera::Instance().GetLetterboxHeight();
     if (barH > 0)

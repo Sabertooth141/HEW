@@ -65,7 +65,7 @@ void TitleScene::HandleOptionInput()
         return;
     }
 
-    if (ChkKeyEdge(PK_UP))
+    if (globalInputConfig.selectUp.IsEdge())
     {
         selectedOptionIndex -= 1;
         if (selectedOptionIndex < 0)
@@ -74,7 +74,7 @@ void TitleScene::HandleOptionInput()
         }
     }
 
-    if (ChkKeyEdge(PK_DOWN))
+    if (globalInputConfig.selectDown.IsEdge())
     {
         selectedOptionIndex += 1;
         if (selectedOptionIndex >= titleOptions.size())
@@ -83,7 +83,7 @@ void TitleScene::HandleOptionInput()
         }
     }
 
-    if (ChkKeyEdge(PK_ENTER))
+    if (globalInputConfig.confirm.IsEdge())
     {
         titleOptions[selectedOptionIndex].onSelected();
     }
@@ -96,13 +96,13 @@ void TitleScene::HandleTutorialInput()
         return;
     }
 
-    if (ChkKeyEdge(PK_BS))
+    if (globalInputConfig.back.IsEdge())
     {
         currTitleState = TitleStates::TITLE;
         tutorialPage = 0;
     }
 
-    if (ChkKeyEdge(PK_LEFT))
+    if (globalInputConfig.selectLeft.IsEdge())
     {
         if (tutorialPage > 0)
         {
@@ -110,7 +110,7 @@ void TitleScene::HandleTutorialInput()
         }
     }
 
-    if (ChkKeyEdge(PK_RIGHT))
+    if (globalInputConfig.selectRight.IsEdge())
     {
         if (tutorialPage < totalTutorialPage - 1)
         {
@@ -120,7 +120,7 @@ void TitleScene::HandleTutorialInput()
 
     if (tutorialPage == totalTutorialPage - 1)
     {
-        if (ChkKeyEdge(PK_ENTER))
+        if (globalInputConfig.confirm.IsEdge())
         {
             GoToGame();
         }

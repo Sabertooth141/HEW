@@ -5,6 +5,7 @@
 #ifndef HEW_ENDSCENE_H
 #define HEW_ENDSCENE_H
 #include "../Scene.h"
+#include "../../Config/Input.h"
 #include "../../Config/Structs.h"
 
 
@@ -23,6 +24,8 @@ public:
 private:
     TitleText endSceneTitle{};
     std::vector<TitleText> endSceneOptions{};
+
+    GlobalInputConfig globalInputConfig{};
 
     int viewWidth = 0;
     int viewHeight = 0;

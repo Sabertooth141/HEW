@@ -108,6 +108,8 @@ struct EntityConfig : ObjectConfig
     float maxHp;
     bool isFacingRight;
 
+    float invicCooldown;
+
     float knockBackRecoveryTime;
 };
 
@@ -136,8 +138,6 @@ struct EnemyConfig : EntityConfig
     float detectionDistance;
     float damage;
 
-    float invicCooldown;
-
     int spawnGroupID;
 };
 
@@ -156,49 +156,13 @@ struct UGVConfig : EnemyConfig
     float attackWindupDuration;
 };
 
-// INPUT CONFIGS
-
-struct KeyBinding
-{
-    int primary = -1;
-    int secondary = -1;
-
-    [[nodiscard]] bool IsPressed() const
-    {
-        return ChkKeyPress(primary) || ChkKeyPress(secondary);
-    }
-
-    [[nodiscard]] bool IsEdge() const
-    {
-        return ChkKeyEdge(primary) || ChkKeyEdge(secondary);
-    }
-};
-
-struct GlobalInputConfig
-{
-    KeyBinding quitGame = {PK_ESC};
-};
-
-struct InputConfig
-{
-    // common
-    KeyBinding moveLeft = {PK_LEFT, PK_A};
-    KeyBinding moveRight = {PK_RIGHT, PK_D};
-    KeyBinding jump = {PK_SP, PK_W};
-    KeyBinding attack = {PK_J};
-
-    // time skills
-    KeyBinding timeStop = {PK_K};
-    KeyBinding timeRewind = {PK_SHIFT};
-};
-
 // PLAYER STRUCTS
-
 struct PlayerSnapshot
 {
     Transform transform;
     bool isFacingRight;
     Bmp* frame = nullptr;
+    float currHp;
 };
 
 struct AttkData

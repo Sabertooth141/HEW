@@ -6,10 +6,12 @@
 
 #include <memory>
 
+#include "../../../Game/Game.h"
 #include "../../../Game/Scenes/GameScene.h"
 #include "../../../Systems/TimeManager.h"
 #include "../../../Lib/conioex_custom.h"
 #include "../../../Systems/GameManager.h"
+#include "../../../Util/UIManager.h"
 
 PlayerController::PlayerController() : walkSpeed(0), normalDashSpeed(0), currDashSpeed(0),
                                        jumpForce(0),
@@ -19,8 +21,8 @@ PlayerController::PlayerController() : walkSpeed(0), normalDashSpeed(0), currDas
                                        currDashDuration(0),
                                        isDashing(false),
                                        snapshot(),
-                                       normalStateMachine(PlayerNormalState::DEFAULT),
-                                       animatorPlaying(nullptr)
+                                       normalStateMachine(PlayerNormalState::DEFAULT), attackController(),
+                                       animatorPlaying(nullptr), rewindSnapshot()
 {
 }
 
@@ -52,7 +54,7 @@ void PlayerController::Start()
     animatorPlaying->Play();
 }
 
-void PlayerController::Update(const float deltaTime, Tilemap& tileMap)
+void PlayerController::Update(const float deltaTime, const float trueDeltaTime, Tilemap& tileMap)
 {
     if (TimeManager::Instance().IsRewinding())
     {
@@ -65,6 +67,11 @@ void PlayerController::Update(const float deltaTime, Tilemap& tileMap)
                 transform.CalculateCenterPosition();
                 isFacingRight = rewind.isFacingRight;
                 rewindSnapshot = rewind;
+
+                if (currHp < rewind.currHp)
+                {
+                    currHp = rewind.currHp;
+                }
             }
         }
         else
@@ -72,7 +79,7 @@ void PlayerController::Update(const float deltaTime, Tilemap& tileMap)
             bool doAttack = false;
             TimeManager::RewindAttackFrame target;
             TimeManager::Instance().EndRewind(doAttack, target);
-
+            attackController.CancelCombo();
             if (doAttack)
             {
                 TriggerRewindAttack(target);
@@ -85,7 +92,22 @@ void PlayerController::Update(const float deltaTime, Tilemap& tileMap)
     attackController.Update(deltaTime, transform, isFacingRight);
     HandleAnimationUpdate(deltaTime);
 
-    Entity::Update(deltaTime, tileMap);
+    if (isInvic)
+    {
+        flickerCounter++;
+
+        if (flickerCounter % flickerInterval == 0)
+        {
+            flickerVisible = !flickerVisible;
+        }
+
+    }
+    else
+    {
+        flickerVisible = true;
+    }
+
+    Entity::Update(deltaTime, trueDeltaTime, tileMap);
 
     if (!isKnockedBack && normalStateMachine.GetCurrState() == PlayerNormalState::KNOCKBACK)
     {
@@ -100,6 +122,7 @@ void PlayerController::Update(const float deltaTime, Tilemap& tileMap)
     snapshot.transform = transform;
     snapshot.isFacingRight = isFacingRight;
     snapshot.frame = animatorPlaying ? animatorPlaying->GetCurrentFrameBmp() : nullptr;
+    snapshot.currHp = currHp;
 
     if (!TimeManager::Instance().IsRewinding())
     {
@@ -132,7 +155,22 @@ void PlayerController::Draw(Camera& cam)
 
     if (animatorPlaying != nullptr)
     {
-        animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, !isFacingRight);
+        if (flickerVisible)
+        {
+            animatorPlaying->Draw(cam, transform.topLeft.x, transform.topLeft.y, !isFacingRight);
+        }
+    }
+
+    UIManager::Instance().DrawMovementIndic(-35, 5);
+
+    if (TimeManager::Instance().CanTimeStop())
+    {
+        UIManager::Instance().DrawTimeStopIndic(GameConfig::VIEW_WIDTH - 210, -10);
+    }
+
+    if (TimeManager::Instance().CanTimeRewind())
+    {
+        UIManager::Instance().DrawTimeRewindIndic(GameConfig::VIEW_WIDTH - 210, 15);
     }
 
     // const PlayerSnapshot holoSnapshot = TimeManager::Instance().GetPlayerSnapshot();
@@ -273,7 +311,10 @@ void PlayerController::HandleMovement(const float deltaTime, Tilemap& tileMap)
         }
         else
         {
-            isDamageable = true;
+            if (attackController.GetCurrState() != PlayerCombatState::REWIND_ATTK)
+            {
+                isDamageable = true;
+            }
             dashTimer = 0;
             isDashing = false;
             trailFadeTimer = trailFadeDuration;
@@ -423,7 +464,6 @@ void PlayerController::TriggerRewindAttack(const TimeManager::RewindAttackFrame 
     velX = 0;
     velY = 0;
     attackController.StartRewindAttack(target.targetEnemy);
-
 }
 
 void PlayerController::HandleAnimationUpdate(const float deltaTime)

@@ -16,7 +16,7 @@ public:
 
     void Initialize(const EntityConfig& config);
     void Start() override;
-    void Update(float deltaTime, Tilemap& tileMap) override;
+    virtual void Update(float deltaTime, float trueDeltaTime, Tilemap& tileMap);
     void Draw(Camera& cam) override;
 
     virtual void TakeDamage(float inDamage);
@@ -24,6 +24,8 @@ public:
 
     virtual bool IsGrounded() { return isGrounded; }
     virtual bool IsFacingRight() { return isFacingRight; }
+    [[nodiscard]] float GetCurrentHp() const { return currHp; }
+    [[nodiscard]] float GetMaxHp() const { return maxHp; }
 
     /**
      *
@@ -60,6 +62,10 @@ protected:
     bool knockedBackDirection = false;
     float knockBackRecoveryDuration;
     float knockBackRecoveryTimer;
+
+    bool isInvic;
+    float invicCD;
+    float invicTimer;
 };
 
 

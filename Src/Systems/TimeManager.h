@@ -57,8 +57,10 @@ public:
     void TriggerHitStop(float duration);
     [[nodiscard]] bool IsHitStopped() const { return hitStopActive; }
 
-private:
+    [[nodiscard]] bool CanTimeRewind() const { return rewindCooldownTimer <= 0 && !isRewinding; }
+    [[nodiscard]] bool CanTimeStop() const { return timeStopCooldownTimer <= 0 && !isTimeStopped; }
 
+private:
     // time stop
     bool isTimeStopped = false;
     float timeStopDurationTimer = 0;

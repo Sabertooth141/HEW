@@ -52,6 +52,8 @@ inline void CheckConsoleCompatibility()
     }
 }
 
+GlobalInputConfig globalConfig{};
+
 int main()
 {
     CheckConsoleCompatibility();
@@ -84,10 +86,11 @@ int main()
         {
             lastFrameTime = currTime;
             GetKeyAll();
+            UpdateGamepad();
 
             sceneManager.Update(deltaTime);
 
-            if (ChkKeyEdge(PK_ESC))
+            if (globalConfig.quitGame.IsEdge())
             {
                 gameRunning = false;
             }

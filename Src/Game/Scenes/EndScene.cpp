@@ -22,7 +22,7 @@ void EndScene::HandleOptionInput()
         return;
     }
 
-    if (ChkKeyEdge(PK_UP))
+    if (globalInputConfig.selectUp.IsEdge())
     {
         selectedOptionIndex -= 1;
         if (selectedOptionIndex < 0)
@@ -31,7 +31,7 @@ void EndScene::HandleOptionInput()
         }
     }
 
-    if (ChkKeyEdge(PK_DOWN))
+    if (globalInputConfig.selectDown.IsEdge())
     {
         selectedOptionIndex += 1;
         if (selectedOptionIndex >= endSceneOptions.size())
@@ -40,7 +40,7 @@ void EndScene::HandleOptionInput()
         }
     }
 
-    if (ChkKeyEdge(PK_ENTER))
+    if (globalInputConfig.confirm.IsEdge())
     {
         endSceneOptions[selectedOptionIndex].onSelected();
     }

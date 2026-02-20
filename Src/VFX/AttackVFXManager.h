@@ -18,6 +18,7 @@ enum class EnemyVFXType : unsigned char
     MINE,
     UGV,
     HIT,
+    CHARGE_UP,
     DEFAULT
 };
 

@@ -5,6 +5,7 @@
 #include "UGV.h"
 
 #include "../../../../Lib/conioex_custom.h"
+#include "../../../../VFX/AttackVFXManager.h"
 
 void UGV::Initialize(const UGVConfig& config)
 {
@@ -21,6 +22,17 @@ void UGV::Update(const float deltaTime, const float trueDeltaTime, Tilemap& tile
     if (attackWindUpTimer > 0)
     {
         attackWindUpTimer -= deltaTime;
+        if (attackWindUpTimer <= 0.75)
+        {
+            if (isFacingRight)
+            {
+                AttackVFXManager::Instance().PlayAttackVFX(&transform, {-10, 10}, EnemyVFXType::CHARGE_UP, false);
+            }
+            else
+            {
+                AttackVFXManager::Instance().PlayAttackVFX(&transform, {10, 10}, EnemyVFXType::CHARGE_UP, false);
+            }
+        }
         if (deltaTime > 0)
         {
             if (target->transform.center.x > transform.center.x)

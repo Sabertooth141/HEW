@@ -26,7 +26,9 @@ namespace config
 
         config.trailFadeDuration = 0.5;
 
-        config.maxHp = 300;
+        config.maxHp = 200;
+
+        config.invicCooldown = 0.5;
 
         config.isFacingRight = true;
         config.timeStopDuration = 3.0f;
@@ -102,7 +104,7 @@ namespace config
 
         config.moveSpeed = 200.0f;
 
-        config.invicCooldown = 0.5;
+        config.invicCooldown = 0.35;
 
         config.spawnGroupID = -1;
 
@@ -130,7 +132,7 @@ namespace config
         config.explosionRadius = 128;
         config.timeToExplode = 1.5;
 
-        config.invicCooldown = 0.5;
+        config.invicCooldown = 0.35;
 
         return config;
     }
@@ -158,7 +160,7 @@ namespace config
 
         config.moveSpeed = 200.0f;
 
-        config.invicCooldown = 0.5;
+        config.invicCooldown = 0.35;
 
         return config;
     }

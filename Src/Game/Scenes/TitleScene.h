@@ -6,6 +6,7 @@
 #define HEW_TITLESCENE_H
 
 #include "../Scene.h"
+#include "../../Config/Input.h"
 #include "../../Config/Structs.h"
 
 enum class TitleStates : uint8_t
@@ -51,6 +52,7 @@ private:
     TitleStates currTitleState = TitleStates::DEFAULT;
 
     std::vector<BmpImage> tutorialImages{};
+    GlobalInputConfig globalInputConfig{};
 
     int viewWidth = 0;
     int viewHeight = 0;

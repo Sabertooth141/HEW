@@ -16,7 +16,7 @@ public:
 
     void Initialize(const EnemyConfig& config);
     void Start() override;
-    virtual void Update(float deltaTime, float trueDeltaTime, Tilemap& tileMap);
+    void Update(float deltaTime, float trueDeltaTime, Tilemap& tileMap) override;
     void Draw(Camera& cam) override;
     void TakeDamage(float inDamage) override;
     void InitAnimation(const EnemyAnimPaths<EnemyState>& path);
@@ -38,6 +38,8 @@ protected:
     virtual void HandlePatrol (Tilemap& tilemap, float deltaTime);
     virtual void PathfindToTarget(float deltaTime);
 
+    bool CheckCliffAhead(const Tilemap& tilemap) const;
+
 protected:
     Entity* target;
 
@@ -50,10 +52,6 @@ protected:
     bool isAttacking;
     float attackDistance;
     float detectionDistance;
-
-    bool isInvic;
-    float invicCD;
-    float invicTimer;
 
     bool isAlive;
 

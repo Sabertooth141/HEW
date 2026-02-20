@@ -66,6 +66,7 @@
   "frameTags": [
   ],
   "layers": [
+   { "name": "Layer 3", "opacity": 255, "blendMode": "normal" },
    { "name": "Layer 1", "opacity": 255, "blendMode": "normal" },
    { "name": "Layer 2", "opacity": 255, "blendMode": "normal" }
   ],

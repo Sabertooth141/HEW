@@ -21,6 +21,8 @@ void Entity::Initialize(const EntityConfig& config)
     maxHp = config.maxHp;
     isFacingRight = config.isFacingRight;
     knockBackRecoveryDuration = config.knockBackRecoveryTime;
+    invicCD = config.invicCooldown;
+    invicTimer = 0;
 
     if (currHp == 0)
     {
@@ -33,7 +35,7 @@ void Entity::Start()
     Object::Start();
 }
 
-void Entity::Update(const float deltaTime, Tilemap& tileMap)
+void Entity::Update(const float deltaTime, const float trueDeltaTime, Tilemap& tileMap)
 {
     Object::Update(deltaTime, tileMap);
     ApplyPhysics(deltaTime);
@@ -49,6 +51,17 @@ void Entity::Update(const float deltaTime, Tilemap& tileMap)
     {
         knockBackRecoveryTimer = 0;
         isKnockedBack = false;
+    }
+
+    if (isInvic)
+    {
+        invicTimer += trueDeltaTime;
+
+        if (invicTimer >= invicCD)
+        {
+            invicTimer = 0;
+            isInvic = false;
+        }
     }
 
     transform.CalculateCenterPosition();
@@ -140,6 +153,13 @@ void Entity::HandleMovement(const float deltaTime, Tilemap& tileMap)
 
 void Entity::TakeDamage(const float inDamage)
 {
+    if (isInvic)
+    {
+        return;
+    }
+
+    isInvic = true;
+
     currHp -= inDamage;
     if (currHp <= 0)
     {
