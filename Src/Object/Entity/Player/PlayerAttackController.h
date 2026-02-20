@@ -16,10 +16,12 @@ class PlayerAttackController
 {
 public:
     PlayerAttackController() = default;
+    ~PlayerAttackController();
 
     void Initialize(const PlayerAttackConfig& config, PlayerController* controller);
     void Update(float deltaTime, Transform& playerTransform, bool isFacingRight);
     void LoadAttackDuration();
+    void Shutdown();
 
     // returns true if can attack
     bool TryAttack();
@@ -68,6 +70,9 @@ private:
     // owner position
     Transform* ownerTransform = nullptr;
     bool ownerFacingRight = true;
+
+    // sfx
+    std::vector<int*> attackSFX;
 };
 
 #endif //HEW_PLAYERATTACKCONTROLLER_H

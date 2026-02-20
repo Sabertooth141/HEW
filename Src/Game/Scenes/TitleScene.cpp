@@ -129,7 +129,7 @@ void TitleScene::HandleTutorialInput()
 
 void TitleScene::InitTitleAndOptions()
 {
-    const wchar_t* titleString = L"なんとかタイトル";
+    const wchar_t* titleString = L"リワインドプロトコル";
     constexpr int titleSize = 40;
     Transform titleTransform{};
     titleTransform.size.x = static_cast<float>(CalculateTextWidth(titleString, titleSize));
@@ -264,6 +264,11 @@ void TitleScene::InitTutorial()
         tutorialImages.push_back(tutorialImage);
 
         tutorial = LoadBmp("../Assets/TutorialAssets/Tutorial4.bmp");
+        tutorialImage.image = tutorial;
+
+        tutorialImages.push_back(tutorialImage);
+
+        tutorial = LoadBmp("../Assets/TutorialAssets/Tutorial5.bmp");
         tutorialImage.image = tutorial;
 
         tutorialImages.push_back(tutorialImage);

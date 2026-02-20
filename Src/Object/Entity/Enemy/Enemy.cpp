@@ -139,14 +139,12 @@ void Enemy::TakeDamage(const float inDamage)
         return;
     }
 
-    Entity::TakeDamage(inDamage);
-
     AttackVFXManager::Instance().PlayAttackVFX(&transform, {0, 0}, EnemyVFXType::HIT, false);
 
     TimeManager::Instance().TriggerHitStop(inDamage * 0.003);
     Camera::Instance().TriggerScreenShake(1, inDamage * 0.01);
 
-    DebugPrintf("ENEMY TAKING DAMAGE\n");
+    Entity::TakeDamage(inDamage);
 
     stateMachine.ChangeState(EnemyState::HURT);
 }

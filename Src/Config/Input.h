@@ -46,12 +46,14 @@ struct KeyBinding
 
     [[nodiscard]] bool IsPressed() const
     {
-        return ChkKeyPress(primary) || ChkKeyPress(secondary) || IsGamepadActive();
+        const bool kb = (primary != -1 && ChkKeyPress(primary)) || (secondary != -1 && ChkKeyPress(secondary));
+        return kb || IsGamepadActive();
     }
 
     [[nodiscard]] bool IsEdge() const
     {
-        return ChkKeyEdge(primary) || ChkKeyEdge(secondary) || IsGamepadEdge();
+        const bool kb = (primary != -1 && ChkKeyEdge(primary)) || (secondary != -1 && ChkKeyEdge(secondary));
+        return kb || IsGamepadEdge();
     }
 
 private:
@@ -98,11 +100,11 @@ private:
 struct GlobalInputConfig
 {
     // menu select
-    KeyBinding quitGame = {PK_ESC, -1, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_BACK}};
-    KeyBinding selectLeft = {PK_LEFT, PK_A, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_DPAD_LEFT}};
-    KeyBinding selectRight = {PK_RIGHT, PK_D, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_DPAD_RIGHT}};
-    KeyBinding selectUp = {PK_UP, PK_W, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_DPAD_UP}};
-    KeyBinding selectDown = {PK_DOWN, PK_S, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_DPAD_DOWN}};
+    KeyBinding quitGame = {PK_ESC, PK_DEL, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_BACK}};
+    KeyBinding selectLeft = {PK_A, PK_LEFT, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_DPAD_LEFT}};
+    KeyBinding selectRight = {PK_D, PK_RIGHT, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_DPAD_RIGHT}};
+    KeyBinding selectUp = {PK_W, PK_UP, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_DPAD_UP}};
+    KeyBinding selectDown = {PK_S, PK_DOWN, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_DPAD_DOWN}};
     KeyBinding confirm = {PK_SP, PK_ENTER, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_A}};
     KeyBinding back = {PK_BS, -1, {GamepadBinding::Type::BUTTON, XINPUT_GAMEPAD_B}};
 };

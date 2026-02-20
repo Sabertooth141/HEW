@@ -68,4 +68,7 @@ add_executable(HEW
         Src/Config/Input.cpp
         Src/Config/Input.h
         Src/Util/UIManager.cpp
-        Src/Util/UIManager.h)
+        Src/Util/UIManager.h
+)
+
+target_link_libraries(HEW PRIVATE xaudio2)

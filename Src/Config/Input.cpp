@@ -42,8 +42,8 @@ void UpdateGamepad(const int id)
     gamePad.leftStickY = deadzone(InputJoystickX(id, PJX_LYPOS), XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
     gamePad.rightStickX = deadzone(InputJoystickX(id, PJX_RXPOS), XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
     gamePad.rightStickY = deadzone(InputJoystickX(id, PJX_RYPOS), XINPUT_GAMEPAD_RIGHT_THUMB_DEADZONE);
-    gamePad.leftTrigger = InputJoystickX(id, PJX_LTRG) / 255.0f;
-    gamePad.leftTrigger = InputJoystickX(id, PJX_RTRG) / 255.0f;
+    gamePad.leftTrigger = static_cast<float>(InputJoystickX(id, PJX_LTRG)) / 255.0f;
+    gamePad.rightTrigger =  static_cast<float>(InputJoystickX(id, PJX_RTRG)) / 255.0f;
 }
 
 #include "Input.h"

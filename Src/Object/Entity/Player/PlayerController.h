@@ -106,6 +106,7 @@ private:
     int flickerCounter = 0;
     int flickerInterval = 4;
     bool flickerVisible = true;
+
 };
 
 

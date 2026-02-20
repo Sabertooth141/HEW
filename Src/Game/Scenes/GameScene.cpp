@@ -147,7 +147,6 @@ bool GameScene::Initialize()
         AttackVFXManager::Instance().InitAnimation(effect);
     }
 
-    // TODO: TEMP
     const float playerStartX = 128;
     const float playerStartY = 440;
 
@@ -169,6 +168,10 @@ bool GameScene::Initialize()
     }
 
     GameManager::Instance().RegisterPlayer(playerController);
+
+    bgm = MciOpenSound("../Assets/Audio/bgm.mp3");
+    MciSetVolume(bgm, 60);
+    MciPlaySound(bgm, 1);
 
     // for (int x = 0; x < mapWidth; x++)
     // {
@@ -273,6 +276,8 @@ void GameScene::Update(const float deltaTime)
 
 void GameScene::Shutdown()
 {
+    MciStopSound(bgm);
+    MciCloseSound(bgm);
     tileMap.Shutdown();
     EnemyManager::Instance().Reset();
     TriggerManager::Instance().Clear();

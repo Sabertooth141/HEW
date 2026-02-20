@@ -77,7 +77,7 @@ void PlayerController::Update(const float deltaTime, const float trueDeltaTime, 
         else
         {
             bool doAttack = false;
-            TimeManager::RewindAttackFrame target;
+            TimeManager::RewindAttackFrame target{};
             TimeManager::Instance().EndRewind(doAttack, target);
             attackController.CancelCombo();
             if (doAttack)
@@ -582,7 +582,7 @@ void PlayerController::DrawRewind(const Camera& cam) const
         bool isAttackFrame = TimeManager::Instance().HasAttackFrame() &&
             std::abs(readPos - TimeManager::Instance().GetBestAttackFrame().snapshotIndex) <= 1;
 
-        float t = 1 - (static_cast<float>(i) / (previewCount));
+        float t = 1 - static_cast<float>(i) / static_cast<float>(previewCount);
         BYTE brightness;
         RGBQUAD color;
 
@@ -594,7 +594,7 @@ void PlayerController::DrawRewind(const Camera& cam) const
         else
         {
             brightness = static_cast<BYTE>(150 * t);
-            color = {brightness, static_cast<BYTE>(brightness * 0.8f), static_cast<BYTE>(brightness * 0.3f), 0};
+            color = {brightness, static_cast<BYTE>(static_cast<float>(brightness) * 0.8f), static_cast<BYTE>(static_cast<float>(brightness) * 0.3f), 0};
             DrawTrailFromSnapshot(cam, preview, color, t);
         }
     }
@@ -612,7 +612,7 @@ void PlayerController::DrawTrailFromSnapshot(const Camera& cam, const PlayerSnap
     const int screenY = cam.WorldToScreenY(snapshotToDraw.transform.topLeft.y);
 
     if (!cam.IsVisible(snapshotToDraw.transform.topLeft.x, snapshotToDraw.transform.topLeft.y,
-                       snapshotToDraw.frame->width, snapshotToDraw.frame->height))
+                       static_cast<float>(snapshotToDraw.frame->width), static_cast<float>(snapshotToDraw.frame->height)))
     {
         return;
     }

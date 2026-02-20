@@ -40,6 +40,8 @@ private:
     VFXManager vfxManager{};
 
     DWORD lastFrameTime = 0;
+
+    int* bgm = nullptr;
 };
 
 #endif //HEW_GAME_H

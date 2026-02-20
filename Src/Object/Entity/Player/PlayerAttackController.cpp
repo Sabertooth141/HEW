@@ -9,8 +9,20 @@
 #include "../../../Lib/conioex_custom.h"
 #include "../../../VFX/AttackVFXManager.h"
 
+PlayerAttackController::~PlayerAttackController()
+{
+    Shutdown();
+}
+
 void PlayerAttackController::Initialize(const PlayerAttackConfig& config, PlayerController* controller)
 {
+    attackSFX.assign(4, nullptr);
+
+    attackSFX[0] = MciOpenSound("../Assets/Audio/Attk0.mp3");
+    attackSFX[1] = MciOpenSound("../Assets/Audio/Attk1.mp3");
+    attackSFX[2] = MciOpenSound("../Assets/Audio/Attk2.mp3");
+    attackSFX[3] = MciOpenSound("../Assets/Audio/Attk3.mp3");
+
     attackData = config.data;
 
     playerController = controller;
@@ -81,6 +93,7 @@ void PlayerAttackController::Update(const float deltaTime, Transform& playerTran
                             data.width, data.height, data.duration - data.recovery);
 
             playerController->Dash(2000, 0.1, true);
+            MciPlaySound(attackSFX[3], 0);
         }
     }
 
@@ -90,9 +103,6 @@ void PlayerAttackController::Update(const float deltaTime, Transform& playerTran
     // attack
     if (comboTimer <= data.duration)
     {
-        // char debug[64];
-        // sprintf_s(debug, "CurrentAttk: %d\n", currentState);
-        // OutputDebugStringA(debug);
     }
     // if combo buffered
     else if (comboTimer <= data.duration + data.recovery)
@@ -260,6 +270,15 @@ void PlayerAttackController::LoadAttackDuration()
     DebugPrintf("%f", rewindAttackDashStart);
 }
 
+void PlayerAttackController::Shutdown()
+{
+    for (const auto sfx : attackSFX)
+    {
+        MciStopSound(sfx);
+        MciCloseSound(sfx);
+    }
+}
+
 void PlayerAttackController::StartAttack(const PlayerCombatState combatState)
 {
     if (combatState == combatStateMachine.GetCurrState())
@@ -304,6 +323,7 @@ void PlayerAttackController::StartAttack(const PlayerCombatState combatState)
                                                    GetCurrState(), !ownerFacingRight);
     }
 
+    MciPlaySound(attackSFX[static_cast<int>(combatStateMachine.GetCurrState())], 0);
     hitbox.Activate(ownerTransform->center.x, ownerTransform->center.y, hitboxOffsetX, data.hitboxOffsetY, data.width,
                     data.height, data.duration - data.recovery);
 }
