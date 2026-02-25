@@ -4,6 +4,7 @@
 
 #include "Entity.h"
 
+#include "../../Lib/conioex_custom.h"
 #include "../../Util/Physics.h"
 
 class Camera;
@@ -212,13 +213,15 @@ bool Entity::CheckCollisionY(const Tilemap& tilemap, const float newY)
 
         if (currTileY < newTileY)
         {
-            if (tilemap.IsPlatformAt(leftX, newBottomY) || tilemap.IsPlatformAt(rightX, currBottomY))
+            if (tilemap.IsPlatformAt(leftX, newBottomY) || tilemap.IsPlatformAt(rightX, newBottomY))
             {
+                DebugPrintf("platform\n");
                 return true;
             }
         }
     }
 
+    DebugPrintf("not platform\n");
     return tilemap.IsSolidAt(leftX, checkY) || tilemap.IsSolidAt(rightX, checkY);
 }
 
