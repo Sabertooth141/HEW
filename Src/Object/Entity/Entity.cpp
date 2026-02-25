@@ -215,13 +215,11 @@ bool Entity::CheckCollisionY(const Tilemap& tilemap, const float newY)
         {
             if (tilemap.IsPlatformAt(leftX, newBottomY) || tilemap.IsPlatformAt(rightX, newBottomY))
             {
-                DebugPrintf("platform\n");
                 return true;
             }
         }
     }
 
-    DebugPrintf("not platform\n");
     return tilemap.IsSolidAt(leftX, checkY) || tilemap.IsSolidAt(rightX, checkY);
 }
 
