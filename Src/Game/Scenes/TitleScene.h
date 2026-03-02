@@ -47,8 +47,8 @@ private:
     void EndGame();
 
 private:
+    BmpImage titleImg{};
     std::vector<TitleText> titleOptions;
-    TitleText title{};
     TitleStates currTitleState = TitleStates::DEFAULT;
 
     std::vector<BmpImage> tutorialImages{};

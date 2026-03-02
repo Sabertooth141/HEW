@@ -4,7 +4,7 @@
 
 #ifndef HEW_TILEMAP_H
 #define HEW_TILEMAP_H
-#include <complex.h>
+#include <complex>
 
 #include "Tile.h"
 #include "Tileset.h"

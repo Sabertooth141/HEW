@@ -129,21 +129,14 @@ void TitleScene::HandleTutorialInput()
 
 void TitleScene::InitTitleAndOptions()
 {
-    const wchar_t* titleString = L"リワインドプロトコル";
-    constexpr int titleSize = 40;
-    Transform titleTransform{};
-    titleTransform.size.x = static_cast<float>(CalculateTextWidth(titleString, titleSize));
-    titleTransform.size.y = titleSize;
+    titleImg.image = LoadBmp("../Assets/Title/Title.bmp");
+    Vector2 centerLocation = {static_cast<float>(viewWidth) / 2, 70};
+    titleImg.transform.center = centerLocation;
 
-    Vector2 titlePos{};
-    titlePos.x = static_cast<float>(viewWidth) / 2;
-    titlePos.y = static_cast<float>(viewHeight) / 2 - 50;
-    titleTransform.topLeft = Transform::ToTopLeft(titlePos, titleTransform.size);
-    titleTransform.CalculateCenterPosition();
+    Vector2 titleSize = {static_cast<float>(titleImg.image->width), static_cast<float>(titleImg.image->height)};
+    titleImg.transform.size = titleSize;
 
-    title.text = titleString;
-    title.fontSize = titleSize;
-    title.transform = titleTransform;
+    titleImg.transform.CalculateTopLeftPosition();
 
     titleOptions.assign(3, TitleText{});
     for (int i = 0; i < 3; i++)
@@ -188,7 +181,7 @@ void TitleScene::InitTitleAndOptions()
 
         Vector2 optionPos{};
         optionPos.x = static_cast<float>(viewWidth) / 2;
-        optionPos.y = static_cast<float>(viewHeight) / 2 + 20.0f * i;
+        optionPos.y = static_cast<float>(viewHeight) / 2 + 20 + 20 * i;
         optionTransform.topLeft = Transform::ToTopLeft(optionPos, optionTransform.size);
         optionTransform.CalculateCenterPosition();
 
@@ -202,12 +195,8 @@ void TitleScene::InitTitleAndOptions()
 
 void TitleScene::DrawTitleAndOptions() const
 {
-    WriteTextW(
-        static_cast<int>(title.transform.topLeft.x),
-        static_cast<int>(title.transform.topLeft.y),
-        title.text,
-        title.fontSize
-    );
+    DrawBmp(static_cast<int>(titleImg.transform.topLeft.x), static_cast<int>(titleImg.transform.topLeft.y),
+            titleImg.image);
 
     for (int i = 0; i < titleOptions.size(); i++)
     {
